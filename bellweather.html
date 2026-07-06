@@ -1,0 +1,1227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bellwether — Tell us what you're waiting for</title>
+    <meta
+      name="description"
+      content="Describe any future event in a plain sentence. Bellwether watches the web and tells you when it actually happens."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================================================
+   Bellwether — landing page
+   Palette
+   ink        #0C0F12   page background
+   surface    #14181D   cards, input
+   line       #242B33   borders
+   text       #E9ECEF   primary text
+   muted      #94A0AB   secondary text
+   brass      #E4B04A   accent (the bell)
+   signal     #4CC38A   triggered / positive states only
+   ============================================================ */
+
+      :root {
+        --ink: #0c0f12;
+        --surface: #14181d;
+        --surface-raised: #181d23;
+        --line: #242b33;
+        --text: #e9ecef;
+        --muted: #94a0ab;
+        --brass: #e4b04a;
+        --brass-dim: rgba(228, 176, 74, 0.14);
+        --signal: #4cc38a;
+        --signal-dim: rgba(76, 195, 138, 0.12);
+        --noise: #c4553d;
+        --noise-dim: rgba(196, 85, 61, 0.1);
+
+        --font-body: "Inter", -apple-system, "Segoe UI", sans-serif;
+        --font-display: "Newsreader", Georgia, serif;
+        --font-mono: "IBM Plex Mono", "SF Mono", Consolas, monospace;
+
+        --radius: 10px;
+        --radius-lg: 14px;
+        --content: 1060px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--ink);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .mono {
+        font-family: var(--font-mono);
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      /* ---------- type ---------- */
+
+      h1,
+      h2 {
+        font-family: var(--font-body);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.12;
+      }
+
+      h1 {
+        font-size: clamp(2.4rem, 6vw, 4rem);
+      }
+      h2 {
+        font-size: clamp(1.7rem, 4vw, 2.5rem);
+      }
+
+      h1 em,
+      h2 em,
+      .final-cta em {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 500;
+        color: var(--brass);
+        letter-spacing: 0;
+      }
+
+      .eyebrow {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--brass);
+        margin-bottom: 14px;
+      }
+
+      .section-sub,
+      .hero-sub {
+        color: var(--muted);
+        max-width: 560px;
+        margin-top: 16px;
+      }
+
+      /* ---------- nav ---------- */
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(12, 15, 18, 0.82);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-inner {
+        max-width: var(--content);
+        margin: 0 auto;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+
+      .brand-mark {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--brass);
+        box-shadow: 0 0 0 4px var(--brass-dim);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 22px;
+        margin-left: auto;
+      }
+
+      .nav-links a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.15s ease;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+      }
+
+      /* ---------- buttons ---------- */
+
+      .btn {
+        display: inline-block;
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 12px 22px;
+        border-radius: var(--radius);
+        border: 1px solid transparent;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        transition:
+          transform 0.12s ease,
+          background 0.15s ease,
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn-primary {
+        background: var(--brass);
+        color: #14100a;
+      }
+
+      .btn-primary:hover {
+        background: #efc066;
+        box-shadow: 0 4px 24px rgba(228, 176, 74, 0.25);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text);
+        border-color: var(--line);
+      }
+
+      .btn-ghost:hover {
+        border-color: var(--muted);
+      }
+
+      .btn-small {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+      }
+      .btn-large {
+        padding: 15px 30px;
+        font-size: 1.05rem;
+      }
+
+      .btn:focus-visible,
+      a:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--brass);
+        outline-offset: 2px;
+      }
+
+      /* ---------- hero ---------- */
+
+      .hero {
+        max-width: var(--content);
+        margin: 0 auto;
+        padding: clamp(72px, 12vh, 130px) 24px 90px;
+        text-align: center;
+      }
+
+      .hero-sub {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-note {
+        margin-top: 18px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      /* the watch box */
+
+      .watch-box {
+        max-width: 720px;
+        margin: 44px auto 0;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 16px 18px 18px;
+        text-align: left;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .watch-box.is-focused {
+        border-color: rgba(228, 176, 74, 0.55);
+        box-shadow: 0 0 0 4px var(--brass-dim);
+      }
+
+      .watch-box-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--signal);
+        animation: pulse 2.4s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 var(--signal-dim);
+        }
+        50% {
+          box-shadow: 0 0 0 5px var(--signal-dim);
+        }
+      }
+
+      .watch-box-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+
+      .watch-box-stamp {
+        margin-left: auto;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      .watch-input-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .watch-input-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .watch-input {
+        width: 100%;
+        background: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        color: var(--text);
+        font-size: 0.95rem;
+        padding: 13px 14px;
+        transition: border-color 0.15s ease;
+      }
+
+      .watch-input:focus {
+        border-color: rgba(228, 176, 74, 0.55);
+        outline: none;
+      }
+
+      .type-ghost {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        color: var(--muted);
+        font-size: 0.95rem;
+        pointer-events: none;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      .type-ghost.hidden {
+        display: none;
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 1px;
+        height: 1.15em;
+        margin-left: 2px;
+        background: var(--brass);
+        animation: blink 1.05s steps(1) infinite;
+        vertical-align: text-bottom;
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* ---------- sections ---------- */
+
+      .section {
+        max-width: var(--content);
+        margin: 0 auto;
+        padding: 90px 24px;
+        border-top: 1px solid var(--line);
+      }
+
+      /* ---------- examples ---------- */
+
+      .example-grid {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 14px;
+      }
+
+      .example-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        transition:
+          transform 0.15s ease,
+          border-color 0.15s ease;
+      }
+
+      .example-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(228, 176, 74, 0.4);
+      }
+
+      .example-sentence {
+        font-size: 0.85rem;
+        line-height: 1.55;
+        color: var(--text);
+      }
+
+      .example-tag {
+        margin-top: auto;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      /* ---------- difference ---------- */
+
+      .compare {
+        margin-top: 48px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 26px;
+      }
+
+      .compare-watch {
+        font-size: 0.85rem;
+        color: var(--brass);
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .compare-cols {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        margin-top: 22px;
+      }
+
+      .compare-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      .compare-col-watch .compare-title {
+        color: var(--brass);
+      }
+
+      .feed {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .feed-item {
+        background: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+      }
+
+      .feed-headline {
+        display: block;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .feed-verdict {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.72rem;
+      }
+
+      .fired-noise {
+        border-color: rgba(196, 85, 61, 0.35);
+        background: var(--noise-dim);
+      }
+      .fired-noise .feed-verdict {
+        color: var(--noise);
+      }
+
+      .skipped {
+        opacity: 0.55;
+      }
+      .skipped .feed-verdict {
+        color: var(--muted);
+      }
+
+      .fired-signal {
+        border-color: rgba(228, 176, 74, 0.55);
+        background: var(--brass-dim);
+      }
+      .fired-signal .feed-verdict {
+        color: var(--brass);
+      }
+
+      .compare-tally {
+        margin-top: 14px;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .compare-tally-signal {
+        color: var(--brass);
+      }
+
+      .compare-footnote {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        font-size: 0.9rem;
+        color: var(--muted);
+        max-width: 620px;
+      }
+
+      /* ---------- how it works ---------- */
+
+      .steps {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      .step {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px 20px;
+      }
+
+      .step-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--brass);
+        margin-bottom: 10px;
+      }
+
+      .step-body {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      /* ---------- pricing ---------- */
+
+      .pricing-grid {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        max-width: 720px;
+      }
+
+      .plan {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .plan-featured {
+        border-color: rgba(228, 176, 74, 0.5);
+      }
+
+      .plan-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+
+      .plan-featured .plan-name {
+        color: var(--brass);
+      }
+
+      .plan-price {
+        margin: 14px 0 18px;
+      }
+
+      .plan-amount {
+        font-size: 2.2rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .plan-period {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-left: 4px;
+      }
+
+      .plan-features {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 26px;
+        color: var(--muted);
+        font-size: 0.93rem;
+      }
+
+      .plan-features li {
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .plan-features li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.55em;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--brass-dim);
+        border: 1px solid var(--brass);
+      }
+
+      .plan .btn {
+        margin-top: auto;
+      }
+
+      /* ---------- final cta ---------- */
+
+      .final-cta {
+        text-align: center;
+        padding-top: 110px;
+        padding-bottom: 110px;
+      }
+
+      .final-cta .btn {
+        margin-top: 34px;
+      }
+
+      /* ---------- footer ---------- */
+
+      .footer {
+        border-top: 1px solid var(--line);
+      }
+
+      .footer-inner {
+        max-width: var(--content);
+        margin: 0 auto;
+        padding: 28px 24px;
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+      }
+
+      .footer-muted {
+        color: var(--muted);
+      }
+
+      /* ---------- reveal on scroll ---------- */
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(14px);
+        transition:
+          opacity 0.5s ease,
+          transform 0.5s ease;
+      }
+
+      .reveal.visible {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* ---------- reduced motion ---------- */
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001s !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001s !important;
+        }
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      /* ---------- responsive ---------- */
+
+      @media (max-width: 760px) {
+        .nav-links {
+          display: none;
+        }
+
+        .watch-input-row {
+          flex-direction: column;
+        }
+        .watch-box-stamp {
+          display: none;
+        }
+
+        .compare-cols {
+          grid-template-columns: 1fr;
+        }
+        .steps {
+          grid-template-columns: 1fr;
+        }
+        .pricing-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .section {
+          padding: 64px 20px;
+        }
+        .hero {
+          padding-bottom: 64px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true"></span>
+          Bellwether
+        </a>
+        <nav class="nav-links" aria-label="Main">
+          <a href="#difference">Why it's different</a>
+          <a href="#how">How it works</a>
+          <a href="#pricing">Pricing</a>
+        </nav>
+        <a class="btn btn-small btn-primary" href="#top">Create a watch</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- ============ HERO ============ -->
+      <section class="hero">
+        <h1>Tell us what you're<br /><em>waiting for.</em></h1>
+        <p class="hero-sub">
+          Describe any future event in an ordinary sentence. Bellwether watches
+          the web, and tells you if and when it actually happens.
+        </p>
+
+        <div class="watch-box" id="watch-box">
+          <div class="watch-box-top">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span class="watch-box-label">New watch</span>
+            <span class="watch-box-stamp mono" id="watch-stamp"></span>
+          </div>
+          <div class="watch-input-row">
+            <label class="visually-hidden" for="watch-input"
+              >Describe what you want to know about</label
+            >
+            <div class="watch-input-wrap">
+              <input
+                type="text"
+                id="watch-input"
+                class="watch-input mono"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder=""
+                aria-label="Describe what you want to know about"
+              />
+              <span class="type-ghost mono" id="type-ghost" aria-hidden="true"
+                ><span id="type-text"></span><span class="cursor"></span
+              ></span>
+            </div>
+            <button class="btn btn-primary" id="create-watch-btn" type="button">
+              Create watch
+            </button>
+          </div>
+        </div>
+
+        <p class="hero-note">3 watches free · No credit card required</p>
+      </section>
+
+      <!-- ============ EXAMPLES ============ -->
+      <section class="section" id="examples">
+        <p class="eyebrow mono">Watch almost anything</p>
+        <h2>One sentence is the whole setup.</h2>
+        <p class="section-sub">
+          No categories to pick, no rules to configure, no specialised site to
+          hunt down. If you can describe it, you can watch for it.
+        </p>
+
+        <div class="example-grid">
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Tell me if Australian partner visa fees increase."
+            </p>
+            <p class="example-tag">Immigration &amp; visas</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Notify me when Bitcoin passes $100,000."
+            </p>
+            <p class="example-tag">Markets &amp; crypto</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Tell me if New Zealand changes its foreign investment tax rules."
+            </p>
+            <p class="example-tag">Government &amp; policy</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Let me know if this company announces an IPO."
+            </p>
+            <p class="example-tag">Companies &amp; launches</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Tell me when a direct Sydney–Ulaanbaatar flight is announced."
+            </p>
+            <p class="example-tag">Travel &amp; routes</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Notify me when a new hair loss treatment completes Phase 3
+              trials."
+            </p>
+            <p class="example-tag">Science &amp; medicine</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Tell me when the next Raspberry Pi is released."
+            </p>
+            <p class="example-tag">Technology</p>
+          </article>
+          <article class="example-card">
+            <p class="example-sentence mono">
+              "Let me know if my council approves the new ferry terminal."
+            </p>
+            <p class="example-tag">Local developments</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============ DIFFERENCE ============ -->
+      <section class="section" id="difference">
+        <p class="eyebrow mono">Not a keyword alert</p>
+        <h2>We watch for the event,<br />not the words.</h2>
+        <p class="section-sub">
+          Keyword alerts fire on any page that contains the right words. A watch
+          fires when credible new information shows the thing has actually
+          happened.
+        </p>
+
+        <div class="compare">
+          <p class="compare-watch mono">
+            Watch: "Tell me if Australian partner visa fees increase."
+          </p>
+
+          <div class="compare-cols">
+            <div class="compare-col compare-col-keyword">
+              <h3 class="compare-title">Keyword alert</h3>
+              <ul class="feed">
+                <li class="feed-item fired-noise">
+                  <span class="feed-headline"
+                    >Complete guide to partner visa fees in 2026</span
+                  >
+                  <span class="feed-verdict mono"
+                    >Alert sent — it's just a guide</span
+                  >
+                </li>
+                <li class="feed-item fired-noise">
+                  <span class="feed-headline"
+                    >Forum thread: how much did your partner visa cost?</span
+                  >
+                  <span class="feed-verdict mono"
+                    >Alert sent — it's a forum post</span
+                  >
+                </li>
+                <li class="feed-item fired-noise">
+                  <span class="feed-headline"
+                    >Home Affairs confirms partner visa fee increase from 1
+                    July</span
+                  >
+                  <span class="feed-verdict mono"
+                    >Alert sent — buried in the noise</span
+                  >
+                </li>
+              </ul>
+              <p class="compare-tally mono">3 alerts · 1 that mattered</p>
+            </div>
+
+            <div class="compare-col compare-col-watch">
+              <h3 class="compare-title">Bellwether watch</h3>
+              <ul class="feed">
+                <li class="feed-item skipped">
+                  <span class="feed-headline"
+                    >Complete guide to partner visa fees in 2026</span
+                  >
+                  <span class="feed-verdict mono"
+                    >Checked — nothing new happened</span
+                  >
+                </li>
+                <li class="feed-item skipped">
+                  <span class="feed-headline"
+                    >Forum thread: how much did your partner visa cost?</span
+                  >
+                  <span class="feed-verdict mono"
+                    >Checked — nothing new happened</span
+                  >
+                </li>
+                <li class="feed-item fired-signal">
+                  <span class="feed-headline"
+                    >Home Affairs confirms partner visa fee increase from 1
+                    July</span
+                  >
+                  <span class="feed-verdict mono"
+                    >Notified — the fee actually changed</span
+                  >
+                </li>
+              </ul>
+              <p class="compare-tally compare-tally-signal mono">
+                1 alert · the one that mattered
+              </p>
+            </div>
+          </div>
+
+          <p class="compare-footnote">
+            Watches are also forward-looking. Each one is timestamped when you
+            create it, so you hear about new developments, not old articles that
+            happen to match.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ HOW IT WORKS ============ -->
+      <section class="section" id="how">
+        <p class="eyebrow mono">How it works</p>
+        <h2>Three steps. Two of them are ours.</h2>
+
+        <div class="steps">
+          <div class="step">
+            <p class="step-label mono">Describe it</p>
+            <p class="step-body">
+              Write a sentence describing exactly what you want to know.
+            </p>
+          </div>
+          <div class="step">
+            <p class="step-label mono">We watch</p>
+            <p class="step-body">
+              Bellwether continuously checks for new developments relevant to
+              your watch.
+            </p>
+          </div>
+          <div class="step">
+            <p class="step-label mono">You know</p>
+            <p class="step-body">
+              When the event actually happens, you get notified. Until then,
+              silence.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRICING ============ -->
+      <section class="section" id="pricing">
+        <p class="eyebrow mono">Pricing</p>
+        <h2>Start free. Stay free if you like.</h2>
+
+        <div class="pricing-grid">
+          <div class="plan">
+            <h3 class="plan-name">Free</h3>
+            <p class="plan-price"><span class="plan-amount">$0</span></p>
+            <ul class="plan-features">
+              <li>3 active watches</li>
+              <li>Email notifications</li>
+              <li>No credit card required</li>
+            </ul>
+            <a class="btn btn-ghost" href="#top">Create a watch</a>
+          </div>
+
+          <div class="plan plan-featured">
+            <h3 class="plan-name">Plus</h3>
+            <!-- Change the paid price here -->
+            <p class="plan-price">
+              <span class="plan-amount">$9</span
+              ><span class="plan-period">/month</span>
+            </p>
+            <ul class="plan-features">
+              <li>25 active watches</li>
+              <li>More frequent checks</li>
+              <li>Push, SMS and webhook notifications</li>
+              <li>Watch history and evidence trail</li>
+            </ul>
+            <a class="btn btn-primary" href="#top">Start with Plus</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FINAL CTA ============ -->
+      <section class="section final-cta">
+        <h2>Stop checking.<br /><em>Start knowing.</em></h2>
+        <a class="btn btn-primary btn-large" href="#top"
+          >Create your first watch</a
+        >
+        <p class="hero-note">3 watches free · No credit card required</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span class="mono">Bellwether</span>
+        <span class="footer-muted"
+          >Tell us what you're waiting for. We'll tell you when it
+          happens.</span
+        >
+      </div>
+    </footer>
+
+    <script>
+      /* ============================================================
+   Bellwether — landing page interactions
+   ============================================================ */
+
+      (function () {
+        "use strict";
+
+        var reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        /* ---------- watch timestamp (forward-looking detail) ---------- */
+
+        var stamp = document.getElementById("watch-stamp");
+        if (stamp) {
+          var now = new Date();
+          var opts = {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          };
+          stamp.textContent =
+            "watching from " + now.toLocaleString(undefined, opts);
+        }
+
+        /* ---------- typewriter ---------- */
+
+        var examples = [
+          "Tell me if Australian partner visa fees increase\u2026",
+          "Notify me when Bitcoin passes $100,000\u2026",
+          "Tell me if Australia announces another lockdown\u2026",
+          "Let me know if Singapore changes its remote work visa rules\u2026",
+          "Tell me when a direct Sydney\u2013Ulaanbaatar flight is announced\u2026",
+          "Notify me if this company announces an IPO\u2026",
+        ];
+
+        var typeText = document.getElementById("type-text");
+        var ghost = document.getElementById("type-ghost");
+        var input = document.getElementById("watch-input");
+        var box = document.getElementById("watch-box");
+
+        var TYPE_MS = 42; // per character while typing
+        var DELETE_MS = 16; // per character while deleting
+        var HOLD_MS = 2100; // pause at full sentence
+        var GAP_MS = 500; // pause before next sentence
+
+        var exampleIndex = 0;
+        var charIndex = 0;
+        var deleting = false;
+        var timer = null;
+        var stopped = false;
+
+        function tick() {
+          if (stopped) return;
+
+          var sentence = examples[exampleIndex];
+
+          if (!deleting) {
+            charIndex++;
+            typeText.textContent = sentence.slice(0, charIndex);
+            if (charIndex === sentence.length) {
+              deleting = true;
+              timer = setTimeout(tick, HOLD_MS);
+              return;
+            }
+            timer = setTimeout(tick, TYPE_MS);
+          } else {
+            charIndex--;
+            typeText.textContent = sentence.slice(0, charIndex);
+            if (charIndex === 0) {
+              deleting = false;
+              exampleIndex = (exampleIndex + 1) % examples.length;
+              timer = setTimeout(tick, GAP_MS);
+              return;
+            }
+            timer = setTimeout(tick, DELETE_MS);
+          }
+        }
+
+        function stopTypewriter() {
+          stopped = true;
+          if (timer) clearTimeout(timer);
+          ghost.classList.add("hidden");
+        }
+
+        function maybeRestartTypewriter() {
+          if (input.value.length === 0 && document.activeElement !== input) {
+            stopped = false;
+            deleting = false;
+            charIndex = 0;
+            typeText.textContent = "";
+            ghost.classList.remove("hidden");
+            timer = setTimeout(tick, GAP_MS);
+          }
+        }
+
+        if (typeText && ghost && input) {
+          if (reduceMotion) {
+            // Static example instead of animation
+            typeText.textContent = examples[0];
+            input.addEventListener("focus", function () {
+              ghost.classList.add("hidden");
+            });
+            input.addEventListener("blur", function () {
+              if (input.value.length === 0) ghost.classList.remove("hidden");
+            });
+          } else {
+            timer = setTimeout(tick, 600);
+            input.addEventListener("focus", stopTypewriter);
+            input.addEventListener("blur", maybeRestartTypewriter);
+            input.addEventListener("input", stopTypewriter);
+          }
+        }
+
+        /* ---------- input focus styling on the whole box ---------- */
+
+        if (input && box) {
+          input.addEventListener("focus", function () {
+            box.classList.add("is-focused");
+          });
+          input.addEventListener("blur", function () {
+            box.classList.remove("is-focused");
+          });
+        }
+
+        /* ---------- create watch button (prototype behaviour) ---------- */
+
+        var btn = document.getElementById("create-watch-btn");
+        if (btn && input) {
+          btn.addEventListener("click", function () {
+            if (input.value.trim().length === 0) {
+              input.focus();
+              return;
+            }
+            btn.textContent = "Watch created \u2713";
+            btn.disabled = true;
+            setTimeout(function () {
+              btn.textContent = "Create watch";
+              btn.disabled = false;
+              input.value = "";
+              maybeRestartTypewriter();
+            }, 2200);
+          });
+
+          input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") btn.click();
+          });
+        }
+
+        /* ---------- reveal on scroll ---------- */
+
+        var revealTargets = document.querySelectorAll(
+          ".example-card, .compare, .step, .plan, .final-cta h2, .final-cta .btn",
+        );
+
+        revealTargets.forEach(function (el) {
+          el.classList.add("reveal");
+        });
+
+        if ("IntersectionObserver" in window && !reduceMotion) {
+          var observer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("visible");
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.12 },
+          );
+
+          revealTargets.forEach(function (el) {
+            observer.observe(el);
+          });
+        } else {
+          revealTargets.forEach(function (el) {
+            el.classList.add("visible");
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

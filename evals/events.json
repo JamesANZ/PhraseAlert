@@ -1,0 +1,295 @@
+{
+  "events": [
+    {
+      "id": "us-election-2024",
+      "description": "2024 US presidential election winner",
+      "raw_input": "Tell me who wins the 2024 US presidential election",
+      "created_at": "2024-10-01T00:00:00-04:00",
+      "known_event_date": "2024-11-06T03:00:00-05:00",
+      "expected_outcome": "should_trigger",
+      "known_answer": "Donald Trump elected president",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.nytimes.com/2024/10/15/us/politics/election-polls.html",
+            "domain": "nytimes.com",
+            "title": "Polls show tight race in final weeks of 2024 campaign",
+            "snippet": "National surveys show a dead heat between the candidates with three weeks until Election Day. Analysts caution that polling errors could swing either way.",
+            "published_at": "2024-10-15T12:00:00-04:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.bbc.com/news/articles/c0election2024guide",
+            "domain": "bbc.com",
+            "title": "US election 2024: A complete guide to how it works",
+            "snippet": "The presidential election will be held on 5 November 2024. Here is how the electoral college works and what to watch on election night.",
+            "published_at": "2024-10-20T08:00:00+00:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://apnews.com/article/election-2024-trump-wins",
+            "domain": "apnews.com",
+            "title": "Donald Trump wins the 2024 presidential election, AP projects",
+            "snippet": "The Associated Press declares Donald Trump the winner of the 2024 presidential election after securing the 270 electoral votes needed.",
+            "published_at": "2024-11-06T08:14:00-05:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.reuters.com/world/us/trump-wins-2024-us-presidential-election-2024-11-06/",
+            "domain": "reuters.com",
+            "title": "Trump wins 2024 US presidential election",
+            "snippet": "Republican Donald Trump has won the 2024 US presidential election, defeating Vice President Kamala Harris, Edison Research projected.",
+            "published_at": "2024-11-06T09:30:00-05:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "us-election-2020",
+      "description": "2020 US presidential election called for Biden",
+      "raw_input": "Notify me when the 2020 US presidential election has an official winner",
+      "created_at": "2020-10-01T00:00:00-04:00",
+      "known_event_date": "2020-11-07T11:25:00-05:00",
+      "expected_outcome": "should_trigger",
+      "known_answer": "Joe Biden elected president",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.cnn.com/2020/10/28/politics/election-what-to-watch",
+            "domain": "cnn.com",
+            "title": "What to watch in the final days of the 2020 election",
+            "snippet": "With less than a week to go, both campaigns are making their closing arguments in battleground states. No winner has been declared.",
+            "published_at": "2020-10-28T18:00:00-04:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.ap.org/election-2020-biden-wins",
+            "domain": "ap.org",
+            "title": "AP: Joe Biden wins the presidency",
+            "snippet": "Democrat Joe Biden has won the 2020 presidential election, the Associated Press declared Saturday, defeating President Donald Trump.",
+            "published_at": "2020-11-07T11:25:00-05:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.cnn.com/2020/11/07/politics/joe-biden-wins-election",
+            "domain": "cnn.com",
+            "title": "CNN projects Joe Biden wins the presidency",
+            "snippet": "CNN projects Joe Biden will become the 46th president of the United States, defeating incumbent Donald Trump after a four-day vote count.",
+            "published_at": "2020-11-07T12:00:00-05:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "uk-election-2024",
+      "description": "2024 UK general election — Labour majority",
+      "raw_input": "Tell me who wins the 2024 UK general election",
+      "created_at": "2024-06-01T00:00:00+01:00",
+      "known_event_date": "2024-07-05T05:00:00+01:00",
+      "expected_outcome": "should_trigger",
+      "known_answer": "Labour Party wins with Keir Starmer as PM",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.theguardian.com/politics/2024/jun/20/uk-election-polls",
+            "domain": "theguardian.com",
+            "title": "UK election polls: Labour maintains double-digit lead",
+            "snippet": "Polls suggest Labour is on course for a large majority, but the election has not yet been held and no result is official.",
+            "published_at": "2024-06-20T12:00:00+01:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.bbc.com/news/election-2024-labour-wins",
+            "domain": "bbc.com",
+            "title": "Labour wins UK general election with large majority",
+            "snippet": "The Labour Party has won the 2024 UK general election. Keir Starmer will become prime minister after Rishi Sunak concedes defeat.",
+            "published_at": "2024-07-05T05:30:00+01:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.reuters.com/world/uk/labour-wins-uk-election-2024-07-05/",
+            "domain": "reuters.com",
+            "title": "Labour wins UK election in landslide, Starmer to be PM",
+            "snippet": "Keir Starmer's Labour Party won a landslide victory in Britain's general election, ending 14 years of Conservative government.",
+            "published_at": "2024-07-05T06:15:00+01:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "super-bowl-2024",
+      "description": "Super Bowl LVIII winner (Chiefs)",
+      "raw_input": "Tell me who wins Super Bowl LVIII",
+      "created_at": "2024-01-15T00:00:00-08:00",
+      "known_event_date": "2024-02-11T22:30:00-08:00",
+      "expected_outcome": "should_trigger",
+      "known_answer": "Kansas City Chiefs beat San Francisco 49ers",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.espn.com/nfl/story/super-bowl-preview-2024",
+            "domain": "espn.com",
+            "title": "Super Bowl LVIII preview: Chiefs vs 49ers",
+            "snippet": "Kansas City and San Francisco meet in Las Vegas. Here is everything you need to know before kickoff on Sunday.",
+            "published_at": "2024-02-09T10:00:00-08:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.espn.com/nfl/story/chiefs-win-super-bowl-2024",
+            "domain": "espn.com",
+            "title": "Chiefs beat 49ers in overtime to win Super Bowl LVIII",
+            "snippet": "The Kansas City Chiefs defeated the San Francisco 49ers 25-22 in overtime to win Super Bowl LVIII, their third title in five years.",
+            "published_at": "2024-02-11T23:45:00-08:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bitcoin-100k",
+      "description": "Bitcoin crosses $100,000",
+      "raw_input": "Notify me when Bitcoin passes $100,000",
+      "created_at": "2024-11-01T00:00:00+00:00",
+      "known_event_date": "2024-12-05T03:00:00+00:00",
+      "expected_outcome": "should_trigger",
+      "known_answer": "BTC price exceeded $100,000",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.coindesk.com/markets/2024/11/20/bitcoin-nears-record",
+            "domain": "coindesk.com",
+            "title": "Bitcoin nears all-time high but stays below $100,000",
+            "snippet": "Bitcoin rallied to $99,200 overnight, approaching but not yet crossing the psychologically important $100,000 level.",
+            "published_at": "2024-11-20T14:00:00+00:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "positive",
+          "expect_verdict": "TRIGGERED",
+          "candidate": {
+            "url": "https://www.coindesk.com/markets/2024/12/05/bitcoin-100k",
+            "domain": "coindesk.com",
+            "title": "Bitcoin tops $100,000 for the first time",
+            "snippet": "Bitcoin crossed $100,000 for the first time in its history, according to CoinDesk data, amid post-election crypto enthusiasm.",
+            "published_at": "2024-12-05T03:15:00+00:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "australia-lockdown-never",
+      "description": "Australia nationwide lockdown that never happened (2024)",
+      "raw_input": "Tell me if Australia announces another nationwide COVID lockdown",
+      "created_at": "2024-01-01T00:00:00+11:00",
+      "known_event_date": null,
+      "expected_outcome": "should_not_trigger",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.abc.net.au/news/2024-03-10/covid-restrictions-history",
+            "domain": "abc.net.au",
+            "title": "How Australia's COVID lockdowns unfolded — and why they're unlikely to return",
+            "snippet": "Experts say widespread lockdowns are politically and economically untenable. States have shifted to targeted public health measures only.",
+            "published_at": "2024-03-10T09:00:00+11:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.smh.com.au/national/nsw-covid-update-2024",
+            "domain": "smh.com.au",
+            "title": "NSW records rise in COVID cases but no new restrictions",
+            "snippet": "Health authorities urged vulnerable people to mask up but ruled out any statewide lockdown or border closures.",
+            "published_at": "2024-06-15T08:00:00+10:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    },
+    {
+      "id": "btc-200k-never-2024",
+      "description": "Bitcoin $200K watch in 2024 — never triggered",
+      "raw_input": "Notify me when Bitcoin passes $200,000",
+      "created_at": "2024-01-01T00:00:00+00:00",
+      "known_event_date": null,
+      "expected_outcome": "should_not_trigger",
+      "fixtures": [
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.coindesk.com/markets/2024/03/analysts-btc-200k",
+            "domain": "coindesk.com",
+            "title": "Analysts speculate Bitcoin could reach $200,000 by year end",
+            "snippet": "Several analysts published bullish targets of $150,000 to $200,000 for Bitcoin in 2024, though the price has not reached those levels.",
+            "published_at": "2024-03-12T12:00:00+00:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
+          "label": "negative",
+          "expect_verdict": "NOT_TRIGGERED",
+          "candidate": {
+            "url": "https://www.coindesk.com/markets/2024/12/bitcoin-year-review",
+            "domain": "coindesk.com",
+            "title": "Bitcoin ends 2024 near $95,000 after volatile year",
+            "snippet": "Bitcoin gained over 120% in 2024, peaking above $108,000 in December but never approaching $200,000.",
+            "published_at": "2024-12-28T10:00:00+00:00",
+            "retrieval_source": "fixture"
+          }
+        }
+      ]
+    }
+  ]
+}
