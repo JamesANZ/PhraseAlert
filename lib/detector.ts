@@ -1,10 +1,10 @@
-import { completeJson } from "./inference.js";
+import { completeJson } from "./inference";
 import {
   DetectionResultSchema,
   type DetectionResult,
   type RetrievalCandidate,
   type WatchSpec,
-} from "../types/index.js";
+} from "@/types";
 
 const DETECT_SYSTEM = `You decide whether a web source shows that a watched event has ACTUALLY occurred.
 You are not doing keyword matching. The event must have happened per the source, not merely be discussed.

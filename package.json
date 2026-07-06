@@ -4,18 +4,38 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
     "eval": "tsx evals/run.ts",
     "eval:compiler": "tsx evals/run.ts --compiler-only",
     "eval:detector": "tsx evals/run.ts --detector-only",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.8.0",
     "@huggingface/inference": "^3.15.0",
+    "better-sqlite3": "^11.8.1",
+    "drizzle-orm": "^0.40.1",
+    "next": "^15.2.4",
+    "next-auth": "^5.0.0-beta.25",
+    "nodemailer": "^7.0.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.1.2",
     "dotenv": "^16.4.7",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.10",
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "drizzle-kit": "^0.30.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

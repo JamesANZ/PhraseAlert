@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { completeJson } from "./inference.js";
+import { completeJson } from "./inference";
 import {
   VaguenessResultSchema,
   WatchSpecSchema,
   type VaguenessResult,
   type WatchSpec,
-} from "../types/index.js";
+} from "@/types";
 
 const VAGUENESS_SYSTEM = `You assess whether a user's event-watch sentence is clear enough to monitor.
 Return ONLY valid JSON with this shape:

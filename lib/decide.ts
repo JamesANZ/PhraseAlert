@@ -3,7 +3,7 @@ import type {
   RetrievalCandidate,
   Verdict,
   WatchSpec,
-} from "../types/index.js";
+} from "@/types";
 
 export const TRIGGER_CONFIDENCE_THRESHOLD = 0.75;
 

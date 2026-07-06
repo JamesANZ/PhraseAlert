@@ -61,25 +61,41 @@ Three keyword alerts. One mattered. Bellwether sent that one.
 
 ## This repository
 
-Phase 1 only:
+**Phase 1** (judgment layer):
 
 - Watch compiler (vagueness + structured watch spec generation)
 - Detection and decision pipeline
 - Backdated eval harness with historical fixtures
 - Hugging Face Inference integration for small-model testing
 
-Not built yet: product UI, auth, scheduler, live retrieval APIs, billing.
+**Phase 2** (product shell, in progress):
 
-## Architecture
+- Next.js App Router app with landing page
+- Watch creation flow with clarification step
+- Dashboard at `/watches`
+- SQLite database (local dev) via Drizzle
+- API routes for create, confirm, pause, delete
+- Cron endpoint stub at `/api/checks/run`
 
-- `lib/inference.ts` - Hugging Face chat client, model registry, JSON parsing
-- `lib/compiler.ts` - user input to validated `WatchSpec`
-- `lib/filter.ts` - forward-looking filter (drops pre-watch items and duplicates)
-- `lib/detector.ts` - per-candidate verdict: `TRIGGERED | NOT_TRIGGERED | AMBIGUOUS`
-- `lib/decide.ts` - notification logic (authoritative source or corroboration)
-- `types/index.ts` - Zod schemas and shared types
-- `evals/events.json` - historical events and fixture candidates
-- `evals/run.ts` - eval runner with summary metrics
+Not built yet: live retrieval, email notifications, Stripe billing.
+
+Auth uses NextAuth with email magic links. In development, links print to the server console. In production, set `RESEND_API_KEY` and `EMAIL_FROM`.
+
+## App structure
+
+```
+app/
+  page.tsx                 Landing page
+  watches/page.tsx         Dashboard
+  watches/new/page.tsx     Create + clarify flow
+  api/watch/create/        Vagueness check
+  api/watch/confirm/       Compile + persist watch
+  api/watch/[id]/          Get, pause, delete
+  api/checks/run/          Scheduled checks (stub)
+components/                UI components
+lib/                       Compiler, detector, db, watches
+evals/                     Phase 1 eval harness
+```
 
 ## Getting started
 
@@ -93,12 +109,32 @@ Create a `.env` file:
 
 ```bash
 HUGGINGFACE_API_KEY=hf_...
+AUTH_SECRET=generate-with-openssl-rand-base64-32
+DATABASE_URL=./data/bellwether.db
 ```
 
-Optional model override:
+For email sign-in in production:
+
+```bash
+RESEND_API_KEY=re_...
+EMAIL_FROM=Bellwether <hello@yourdomain.com>
+```
+
+Without Resend in development, magic links are logged to the terminal running `npm run dev`.
+
+Run the app:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+Optional:
 
 ```bash
 HF_MODEL=meta-llama/Meta-Llama-3.1-8B-Instruct
+CRON_SECRET=your-secret
 ```
 
 ## Run evals
@@ -135,9 +171,9 @@ npm run typecheck
 
 ## Retrieval
 
-Phase 1 evals use fixture candidates in `evals/events.json` to test the judgment layer. Live retrieval (Tavily, Brave, RSS) comes in Phase 2.
+Phase 1 evals use fixture candidates in `evals/events.json` to test the judgment layer. Live retrieval (Tavily, Brave, RSS) is not wired into the app yet.
 
 ## Roadmap
 
-- **Phase 2:** Next.js app, watch creation flow, dashboard, Postgres, cron, email notifications
+- **Phase 2 (remaining):** live retrieval, email notifications for watches, Postgres for production
 - **Phase 3:** Stripe subscriptions, faster checks, SMS/push/webhooks, evidence trail UI

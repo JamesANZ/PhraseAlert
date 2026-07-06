@@ -1,4 +1,4 @@
-import type { RetrievalCandidate } from "../types/index.js";
+import type { RetrievalCandidate } from "@/types";
 
 export function normalizeUrl(url: string): string {
   try {

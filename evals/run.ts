@@ -1,17 +1,18 @@
+import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { compileWatchSpec } from "../lib/compiler.js";
-import { decideFromEvidence } from "../lib/decide.js";
-import { detectEvent } from "../lib/detector.js";
-import { applyRetrievalFilters } from "../lib/filter.js";
-import { getModel } from "../lib/inference.js";
+import { compileWatchSpec } from "../lib/compiler";
+import { decideFromEvidence } from "../lib/decide";
+import { detectEvent } from "../lib/detector";
+import { applyRetrievalFilters } from "../lib/filter";
+import { getModel } from "../lib/inference";
 import {
   EvalEventsFileSchema,
   type EvalEvent,
   type EvalScores,
   type Verdict,
-} from "../types/index.js";
+} from "../types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

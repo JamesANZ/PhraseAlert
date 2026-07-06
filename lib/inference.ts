@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { InferenceClient } from "@huggingface/inference";
 
 export const DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct";
