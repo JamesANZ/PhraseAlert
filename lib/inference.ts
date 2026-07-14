@@ -1,7 +1,15 @@
+/**
+ * @title Hugging Face inference client
+ * @notice Shared LLM completion layer for compiler, detector, and eval harness.
+ * @dev Uses @huggingface/inference chatCompletion with low temperature for structured JSON outputs.
+ * @custom:env HUGGINGFACE_API_KEY (required), HF_MODEL (optional override)
+ */
 import { InferenceClient } from "@huggingface/inference";
 
+/** @dev Default instruct model when HF_MODEL is unset. */
 export const DEFAULT_MODEL = "meta-llama/Llama-3.3-70B-Instruct";
 
+/** @dev Models supported for eval comparison runs. */
 export const CANDIDATE_MODELS = [
   "meta-llama/Llama-3.3-70B-Instruct",
   "meta-llama/Meta-Llama-3.1-8B-Instruct",
@@ -11,6 +19,7 @@ export const CANDIDATE_MODELS = [
 
 let client: InferenceClient | null = null;
 
+/** @dev Lazy singleton InferenceClient; throws if HUGGINGFACE_API_KEY missing. */
 function getClient(): InferenceClient {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
   if (!apiKey) {
@@ -22,10 +31,22 @@ function getClient(): InferenceClient {
   return client;
 }
 
+/**
+ * @notice Resolve the active model id from env or default.
+ * @return Model string passed to chatCompletion.
+ */
 export function getModel(): string {
   return process.env.HF_MODEL ?? DEFAULT_MODEL;
 }
 
+/**
+ * @notice Run a chat completion and parse the assistant message as JSON.
+ * @dev temperature 0.1, max_tokens 1200. Use Zod schemas on `parsed` at call sites.
+ * @param systemPrompt System role instructions (compiler/detect/vagueness prompts).
+ * @param userPrompt User role content (watch text, candidate source, etc.).
+ * @param model Optional model override.
+ * @return Raw text, parsed JSON, and model id.
+ */
 export async function completeJson<T>(
   systemPrompt: string,
   userPrompt: string,
@@ -46,6 +67,12 @@ export async function completeJson<T>(
   return { raw, parsed, model };
 }
 
+/**
+ * @notice Extract JSON from model output, including fenced ```json blocks.
+ * @dev Falls back to first `{...}` substring if direct parse fails.
+ * @param text Raw assistant message.
+ * @return Parsed value cast to T (caller should validate with Zod).
+ */
 export function parseJsonFromModel<T>(text: string): T {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const candidate = fenced?.[1]?.trim() ?? text.trim();

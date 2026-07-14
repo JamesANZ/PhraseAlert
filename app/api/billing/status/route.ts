@@ -1,3 +1,8 @@
+/**
+ * @title GET /api/billing/status
+ * @notice Returns plan, watch limit, active watch count, and billing period for the session user.
+ * @custom:auth Required session
+ */
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/auth/session";
 import { getBillingStatus } from "@/lib/billing/entitlements";

@@ -1,11 +1,22 @@
+/**
+ * @title Live retrieval orchestrator
+ * @notice Runs Tavily search and extract for a WatchSpec's search_queries and builds RetrievalCandidates.
+ * @dev Phase 2. Constrains results to post-watch window via Tavily start_date; dedupes by normalized URL.
+ * @custom:pipeline step 2 — retrieve
+ * @custom:env TAVILY_API_KEY
+ */
 import { normalizeUrl } from "@/lib/filter";
 import type { RetrievalCandidate, WatchSpec } from "@/types";
 import { tavilyExtract, tavilySearch, type TavilySearchResult } from "./tavily";
 
+/** @dev Max Tavily search hits per query before merge. */
 const MAX_RESULTS_PER_QUERY = 5;
+/** @dev Top unique URLs sent to Tavily extract for richer snippets. */
 const MAX_EXTRACT_URLS = 5;
+/** @dev Parallel Tavily search calls (one per search_query). */
 const SEARCH_CONCURRENCY = 2;
 
+/** @dev Hostname without www prefix; "unknown" on parse failure. */
 function domainFromUrl(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -14,6 +25,7 @@ function domainFromUrl(url: string): string {
   }
 }
 
+/** @dev Normalize Tavily published_date to ISO; falls back to retrievedAt when missing or invalid. */
 function toIsoDate(value: string | null | undefined, fallback: string): string {
   if (!value) return fallback;
 
@@ -31,12 +43,14 @@ function toIsoDate(value: string | null | undefined, fallback: string): string {
   return fallback;
 }
 
+/** @dev YYYY-MM-DD slice of watch created_at for Tavily start_date filter. */
 function startDateFromCreatedAt(createdAt: string): string | undefined {
   const d = new Date(createdAt);
   if (Number.isNaN(d.getTime())) return undefined;
   return d.toISOString().slice(0, 10);
 }
 
+/** @dev Bounded-concurrency map for parallel Tavily searches. */
 async function mapPool<T, R>(
   items: T[],
   concurrency: number,
@@ -60,12 +74,20 @@ async function mapPool<T, R>(
   return results;
 }
 
+/** @dev Collapse whitespace and cap snippet length for detector prompts. */
 function truncateSnippet(text: string, max = 2500): string {
   const cleaned = text.replace(/\s+/g, " ").trim();
   if (cleaned.length <= max) return cleaned;
   return `${cleaned.slice(0, max - 1)}…`;
 }
 
+/**
+ * @notice Retrieve web candidates for a watch using its compiled search_queries.
+ * @dev Merges search results, optionally enriches top URLs via extract, returns RetrievalCandidate[].
+ * @param spec WatchSpec with search_queries and created_at.
+ * @param options.retrievedAt Fallback published_at when Tavily omits dates.
+ * @return Deduplicated candidates ready for applyRetrievalFilters.
+ */
 export async function retrieveCandidates(
   spec: WatchSpec,
   options: { retrievedAt?: string } = {},

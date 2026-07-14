@@ -1,9 +1,15 @@
+/**
+ * @title Watch persistence
+ * @notice CRUD and quota enforcement for user watches stored in SQLite via Drizzle.
+ * @dev Phase 2 product layer. Active watch count excludes paused; limits come from billing entitlements.
+ */
 import { db } from "@/lib/db";
 import { watches } from "@/lib/db/schema";
 import { getWatchLimit } from "@/lib/billing/entitlements";
 import type { WatchSpec } from "@/types";
 import { and, desc, eq, ne } from "drizzle-orm";
 
+/** @dev Application-level watch record with camelCase fields and embedded WatchSpec JSON. */
 export interface WatchRow {
   id: string;
   userId: string;
@@ -14,6 +20,7 @@ export interface WatchRow {
   triggeredAt: string | null;
 }
 
+/** @dev Maps Drizzle row to WatchRow. */
 function mapWatch(row: typeof watches.$inferSelect): WatchRow {
   return {
     id: row.id,
@@ -26,6 +33,10 @@ function mapWatch(row: typeof watches.$inferSelect): WatchRow {
   };
 }
 
+/**
+ * @notice Count non-paused watches for quota checks.
+ * @param userId Authenticated user id.
+ */
 export function countActiveWatches(userId: string): number {
   const rows = db
     .select()
@@ -35,14 +46,20 @@ export function countActiveWatches(userId: string): number {
   return rows.length;
 }
 
+/** @notice True when user is under their plan's active watch limit. */
 export function canCreateWatch(userId: string): boolean {
   return countActiveWatches(userId) < getWatchLimit(userId);
 }
 
+/** @notice True when resuming a paused watch would not exceed the limit. */
 export function canResumeWatch(userId: string): boolean {
   return countActiveWatches(userId) < getWatchLimit(userId);
 }
 
+/**
+ * @notice List all watches for a user, newest first.
+ * @param userId Owner id.
+ */
 export function listWatches(userId: string): WatchRow[] {
   return db
     .select()
@@ -53,6 +70,10 @@ export function listWatches(userId: string): WatchRow[] {
     .map(mapWatch);
 }
 
+/**
+ * @notice Fetch one watch scoped to owner.
+ * @return WatchRow or null if not found / wrong user.
+ */
 export function getWatch(id: string, userId: string): WatchRow | null {
   const row = db
     .select()
@@ -62,6 +83,13 @@ export function getWatch(id: string, userId: string): WatchRow | null {
   return row ? mapWatch(row) : null;
 }
 
+/**
+ * @notice Persist a compiled WatchSpec as a new watch.
+ * @dev Throws if watch limit exceeded. Embeds user_id on the stored spec JSON.
+ * @param spec Compiled WatchSpec from compiler.
+ * @param userId Owner id.
+ * @return Created WatchRow.
+ */
 export function createWatch(spec: WatchSpec, userId: string): WatchRow {
   if (!spec.user_id && !userId) {
     throw new Error("User ID is required");
@@ -93,6 +121,11 @@ export function createWatch(spec: WatchSpec, userId: string): WatchRow {
   return created;
 }
 
+/**
+ * @notice Update watch lifecycle status (pause, resume, or mark triggered).
+ * @dev Resume enforces active watch limit. Setting triggered records triggeredAt timestamp.
+ * @return Updated WatchRow or null if not found.
+ */
 export function updateWatchStatus(
   id: string,
   userId: string,
@@ -126,6 +159,10 @@ export function updateWatchStatus(
   return getWatch(id, userId);
 }
 
+/**
+ * @notice Permanently delete a watch for the owning user.
+ * @return True if a row was deleted.
+ */
 export function deleteWatch(id: string, userId: string): boolean {
   const result = db
     .delete(watches)
@@ -134,6 +171,10 @@ export function deleteWatch(id: string, userId: string): boolean {
   return result.changes > 0;
 }
 
+/**
+ * @notice All watches in `watching` status — used by the cron check runner.
+ * @dev Not scoped to user; internal scheduler only.
+ */
 export function listWatchingWatches(): WatchRow[] {
   return db
     .select()

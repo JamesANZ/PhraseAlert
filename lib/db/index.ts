@@ -1,3 +1,8 @@
+/**
+ * @title SQLite database bootstrap
+ * @notice Drizzle client, WAL pragmas, and idempotent schema migration for local dev.
+ * @dev DATABASE_URL defaults to ./data/bellwether.db. Call initDb() before first API use.
+ */
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { mkdirSync } from "fs";
@@ -14,6 +19,7 @@ sqlite.pragma("foreign_keys = ON");
 
 export const db = drizzle(sqlite, { schema });
 
+/** @dev Read column names from PRAGMA table_info for lightweight migrations. */
 function tableColumns(table: string): Set<string> {
   const rows = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{
     name: string;
@@ -28,6 +34,10 @@ function ensureColumn(table: string, column: string, ddl: string): void {
   }
 }
 
+/**
+ * @notice Create tables if missing and add billing columns to legacy user rows.
+ * @dev Safe to call on every cron/API cold start.
+ */
 export function initDb(): void {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS user (

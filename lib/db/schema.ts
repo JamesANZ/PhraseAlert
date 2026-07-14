@@ -1,3 +1,8 @@
+/**
+ * @title Database schema (Drizzle SQLite)
+ * @notice Table definitions for auth, billing, watches, checks, and evidence.
+ * @dev WatchSpec stored as JSON on watches.spec. NextAuth adapter tables follow Auth.js conventions.
+ */
 import {
   integer,
   primaryKey,
@@ -8,6 +13,7 @@ import {
 import type { AdapterAccount } from "next-auth/adapters";
 import type { WatchSpec } from "@/types";
 
+/** @notice NextAuth user row extended with plan and Stripe/Helio billing fields. */
 export const authUsers = sqliteTable("user", {
   id: text("id")
     .primaryKey()
@@ -28,6 +34,7 @@ export const authUsers = sqliteTable("user", {
     .default("none"),
 });
 
+/** @dev Stripe or Helio subscription/prepaid records linked to user. */
 export const subscriptions = sqliteTable(
   "subscriptions",
   {
@@ -59,6 +66,7 @@ export const subscriptions = sqliteTable(
   }),
 );
 
+/** @dev Idempotent webhook event log (provider + event id) for Stripe and Helio. */
 export const billingEvents = sqliteTable("billing_events", {
   id: text("id").primaryKey(),
   provider: text("provider", { enum: ["stripe", "helio"] }).notNull(),
@@ -68,6 +76,7 @@ export const billingEvents = sqliteTable("billing_events", {
     .$defaultFn(() => new Date()),
 });
 
+/** @dev OAuth provider accounts (NextAuth adapter). */
 export const accounts = sqliteTable(
   "account",
   {
@@ -92,6 +101,7 @@ export const accounts = sqliteTable(
   }),
 );
 
+/** @dev Active login sessions (NextAuth adapter). */
 export const sessions = sqliteTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
@@ -100,6 +110,7 @@ export const sessions = sqliteTable("session", {
   expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
 });
 
+/** @dev Email magic-link tokens (NextAuth adapter). */
 export const verificationTokens = sqliteTable(
   "verificationToken",
   {
@@ -112,6 +123,10 @@ export const verificationTokens = sqliteTable(
   }),
 );
 
+/**
+ * @title watches
+ * @notice User-created event watches with embedded compiled WatchSpec JSON.
+ */
 export const watches = sqliteTable("watches", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -126,6 +141,7 @@ export const watches = sqliteTable("watches", {
   triggeredAt: text("triggered_at"),
 });
 
+/** @dev One scheduled or manual check run against a watch. */
 export const checks = sqliteTable("checks", {
   id: text("id").primaryKey(),
   watchId: text("watch_id")
@@ -141,6 +157,7 @@ export const checks = sqliteTable("checks", {
   costCents: integer("cost_cents").notNull().default(0),
 });
 
+/** @dev Per-URL judgment stored for a check (audit trail for notifications). */
 export const evidence = sqliteTable("evidence", {
   id: text("id").primaryKey(),
   checkId: text("check_id")

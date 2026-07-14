@@ -1,3 +1,9 @@
+/**
+ * @title Eval harness CLI
+ * @notice Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval against fixtures.
+ * @dev Run via `npm run eval` with flags: --compiler-only, --detector-only, --dialogues-only, --retrieval-only, --smoke.
+ * @custom:phase 1
+ */
 import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -252,7 +258,9 @@ async function runDialogueEval(dialogues: EvalDialogue[]): Promise<boolean> {
 
     for (let i = 0; i < dialogue.steps.length; i++) {
       const step = dialogue.steps[i]!;
-      process.stdout.write(`  step ${i + 1}: "${step.input.slice(0, 50)}" ... `);
+      process.stdout.write(
+        `  step ${i + 1}: "${step.input.slice(0, 50)}" ... `,
+      );
 
       try {
         const vagueness = await assessVagueness(step.input);

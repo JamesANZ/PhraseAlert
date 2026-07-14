@@ -1,9 +1,20 @@
+/**
+ * @title POST /api/watch/[id]/check
+ * @notice Manually run one check now for a watching watch (dev / dashboard "Check now").
+ * @dev Full pipeline: Tavily retrieve → filter → detect → decide → persist.
+ * @custom:auth Required session
+ * @custom:env TAVILY_API_KEY
+ */
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/auth/session";
 import { runCheckForWatch } from "@/lib/check";
 import { initDb } from "@/lib/db";
 import { getWatch } from "@/lib/watches";
 
+/**
+ * @notice Run check for one watch owned by the user.
+ * @return 200 check summary with evidence | 404 | 409 non-watching | 503 no Tavily key
+ */
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },

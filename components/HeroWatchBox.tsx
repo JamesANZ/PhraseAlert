@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * @title HeroWatchBox
+ * @notice Landing page watch input with rotating examples; routes to /watches/new with the sentence.
+ */
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 

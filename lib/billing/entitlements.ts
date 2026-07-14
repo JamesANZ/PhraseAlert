@@ -1,3 +1,8 @@
+/**
+ * @title Billing entitlements
+ * @notice Resolves effective plan, watch limits, and Plus grant/revoke for a user.
+ * @dev Plus is active for subscription (until period end) or prepaid (until planPeriodEnd).
+ */
 import { eq } from "drizzle-orm";
 import { FREE_TIER_MAX_WATCHES, PLUS_TIER_MAX_WATCHES } from "@/lib/constants";
 import { db } from "@/lib/db";
@@ -6,6 +11,7 @@ import { authUsers, type DbUser } from "@/lib/db/schema";
 export type BillingMode = "none" | "subscription" | "prepaid";
 export type Plan = "free" | "plus";
 
+/** @notice Snapshot returned by GET /api/billing/status. */
 export interface BillingStatus {
   plan: Plan;
   effectivePlan: Plan;
@@ -16,6 +22,7 @@ export interface BillingStatus {
   email: string | null;
 }
 
+/** @dev Subscription stays active without period end; prepaid requires future planPeriodEnd. */
 function isPlusActive(user: DbUser, now = Date.now()): boolean {
   if (user.plan !== "plus") return false;
 
@@ -45,6 +52,7 @@ export function getWatchLimitForUser(user: DbUser, now = Date.now()): number {
     : FREE_TIER_MAX_WATCHES;
 }
 
+/** @notice Active watch cap for a user id (free default if user missing). */
 export function getWatchLimit(userId: string, now = Date.now()): number {
   const user = getUser(userId);
   if (!user) return FREE_TIER_MAX_WATCHES;

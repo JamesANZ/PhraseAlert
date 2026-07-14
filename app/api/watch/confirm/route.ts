@@ -1,3 +1,9 @@
+/**
+ * @title POST /api/watch/confirm
+ * @notice Finalize and persist a watch after the user has clarified a CLEAR sentence.
+ * @dev Re-runs vagueness on clarified text, compiles WatchSpec, inserts watch row.
+ * @custom:auth Required session
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth/session";
@@ -9,6 +15,10 @@ const BodySchema = z.object({
   clarified_statement: z.string().trim().min(3).max(1000).optional(),
 });
 
+/**
+ * @notice Compile and save watch.
+ * @return 200 { watch } | 400 still VAGUE | 403 watch limit | 401 unauthorized
+ */
 export async function POST(request: Request) {
   try {
     const userId = await requireUserId();

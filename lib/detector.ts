@@ -1,3 +1,9 @@
+/**
+ * @title Event detector
+ * @notice Judges whether a single web source shows the watched event actually occurred.
+ * @dev Phase 1 judgment layer. Not keyword matching — requires credible evidence of the event post-watch.
+ * @custom:pipeline step 3 — detect
+ */
 import { completeJson } from "./inference";
 import {
   DetectionResultSchema,
@@ -6,6 +12,7 @@ import {
   type WatchSpec,
 } from "@/types";
 
+/** @dev System prompt for per-candidate TRIGGERED / NOT_TRIGGERED / AMBIGUOUS classification. */
 const DETECT_SYSTEM = `You decide whether a web source shows that a watched event has ACTUALLY occurred.
 You are not doing keyword matching. The event must have happened per the source, not merely be discussed.
 
@@ -21,6 +28,13 @@ TRIGGERED: credible evidence the event occurred after the watch was created.
 NOT_TRIGGERED: related coverage but the event has not happened, or it is speculation/recap/noise.
 AMBIGUOUS: plausible trigger but insufficient certainty from this source alone.`;
 
+/**
+ * @notice Run detection for one retrieval candidate against a WatchSpec.
+ * @dev Includes trigger/non-trigger conditions and watch creation timestamp in the user prompt.
+ * @param spec Compiled watch specification.
+ * @param candidate Filtered web source to evaluate.
+ * @return DetectionResult plus the HF model id used for this call.
+ */
 export async function detectEvent(
   spec: WatchSpec,
   candidate: RetrievalCandidate,

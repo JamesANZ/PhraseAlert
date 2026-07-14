@@ -1,8 +1,18 @@
+/**
+ * @title POST /api/checks/run
+ * @notice Cron endpoint: run checks for all watches in `watching` status.
+ * @dev Protected by Authorization: Bearer CRON_SECRET when CRON_SECRET is set.
+ * @custom:env TAVILY_API_KEY, CRON_SECRET (optional)
+ */
 import { NextResponse } from "next/server";
 import { runCheckForWatch } from "@/lib/check";
 import { initDb } from "@/lib/db";
 import { listWatchingWatches } from "@/lib/watches";
 
+/**
+ * @notice Batch check all active watches.
+ * @return 200 { ok, checked, triggered, errors, results } | 401 bad cron secret | 503 no Tavily
+ */
 export async function POST(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");

@@ -1,5 +1,12 @@
+/**
+ * @title Tavily API client
+ * @notice Thin fetch wrapper for Tavily /search and /extract endpoints.
+ * @dev Used by lib/retrieval/index.ts. Requires TAVILY_API_KEY in environment.
+ * @custom:env TAVILY_API_KEY
+ */
 const TAVILY_BASE = "https://api.tavily.com";
 
+/** @dev Single result from Tavily search API. */
 export interface TavilySearchResult {
   title: string;
   url: string;
@@ -9,21 +16,25 @@ export interface TavilySearchResult {
   raw_content?: string | null;
 }
 
+/** @dev Response envelope from POST /search. */
 export interface TavilySearchResponse {
   results: TavilySearchResult[];
   response_time?: number;
 }
 
+/** @dev Extracted page content for one URL. */
 export interface TavilyExtractResult {
   url: string;
   raw_content: string;
 }
 
+/** @dev Response envelope from POST /extract. */
 export interface TavilyExtractResponse {
   results: TavilyExtractResult[];
   failed_results?: Array<{ url: string; error: string }>;
 }
 
+/** @dev Options for tavilySearch. startDate limits to content after watch creation. */
 export interface TavilySearchOptions {
   maxResults?: number;
   searchDepth?: "basic" | "advanced";
@@ -31,12 +42,14 @@ export interface TavilySearchOptions {
   topic?: "general" | "news" | "finance";
 }
 
+/** @dev Options for tavilyExtract. query enables chunked relevance extraction. */
 export interface TavilyExtractOptions {
   query?: string;
   chunksPerSource?: number;
   extractDepth?: "basic" | "advanced";
 }
 
+/** @dev Reads TAVILY_API_KEY; throws if missing. */
 function getApiKey(): string {
   const key = process.env.TAVILY_API_KEY;
   if (!key) {
@@ -45,6 +58,7 @@ function getApiKey(): string {
   return key;
 }
 
+/** @dev Shared POST helper with Bearer auth and error surfacing. */
 async function tavilyFetch<T>(
   path: string,
   body: Record<string, unknown>,
@@ -68,6 +82,11 @@ async function tavilyFetch<T>(
   return (await response.json()) as T;
 }
 
+/**
+ * @notice Run a Tavily web search for one query string.
+ * @param query Search phrase from WatchSpec.search_queries.
+ * @param opts maxResults, searchDepth, startDate (YYYY-MM-DD), topic.
+ */
 export async function tavilySearch(
   query: string,
   opts: TavilySearchOptions = {},
@@ -87,6 +106,11 @@ export async function tavilySearch(
   return tavilyFetch<TavilySearchResponse>("/search", body);
 }
 
+/**
+ * @notice Fetch full or chunked page content for a list of URLs.
+ * @param urls Up to MAX_EXTRACT_URLS in practice from retrieval layer.
+ * @param opts query + chunksPerSource for relevance-focused excerpts.
+ */
 export async function tavilyExtract(
   urls: string[],
   opts: TavilyExtractOptions = {},

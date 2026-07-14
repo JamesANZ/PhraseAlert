@@ -1,11 +1,25 @@
+/**
+ * @title Bellwether core types
+ * @notice Shared Zod schemas and TypeScript types for watches, detection, retrieval, and eval fixtures.
+ * @dev All runtime validation flows through these schemas. API routes and the judgment pipeline import from here.
+ * @custom:phase 1
+ */
 import { z } from "zod";
 
+/** @notice Lifecycle state of a saved watch. @dev `paused` watches are excluded from cron checks and active-watch limits. */
 export const WatchStatusSchema = z.enum(["watching", "triggered", "paused"]);
 export type WatchStatus = z.infer<typeof WatchStatusSchema>;
 
+/** @notice How often a watch is scheduled for retrieval and judgment. @dev Hourly is reserved for future tiers. */
 export const CheckFrequencySchema = z.enum(["daily", "hourly"]);
 export type CheckFrequency = z.infer<typeof CheckFrequencySchema>;
 
+/**
+ * @title WatchSpec
+ * @notice Structured specification produced when a user's sentence is compiled into a monitorable watch.
+ * @dev Persisted as JSON on the `watches` row. Drives search queries, detection prompts, and notification rules.
+ * @custom:pipeline compile → retrieve → filter → detect → decide
+ */
 export const WatchSpecSchema = z.object({
   id: z.string(),
   user_id: z.string().optional(),
@@ -22,6 +36,11 @@ export const WatchSpecSchema = z.object({
 });
 export type WatchSpec = z.infer<typeof WatchSpecSchema>;
 
+/**
+ * @title VaguenessResult
+ * @notice Outcome of the vagueness gate before a watch can be saved.
+ * @dev CLEAR proceeds to compilation; VAGUE returns up to three concrete alternative sentences.
+ */
 export const VaguenessResultSchema = z.object({
   classification: z.enum(["CLEAR", "VAGUE"]),
   interpretations: z.array(z.string()).max(3).optional(),
@@ -29,6 +48,10 @@ export const VaguenessResultSchema = z.object({
 });
 export type VaguenessResult = z.infer<typeof VaguenessResultSchema>;
 
+/**
+ * @notice Per-source judgment on whether credible evidence shows the watched event occurred.
+ * @dev TRIGGERED does not alone imply notification — `decideFromEvidence` applies corroboration rules.
+ */
 export const VerdictSchema = z.enum([
   "TRIGGERED",
   "NOT_TRIGGERED",
@@ -36,6 +59,7 @@ export const VerdictSchema = z.enum([
 ]);
 export type Verdict = z.infer<typeof VerdictSchema>;
 
+/** @notice LLM output for a single retrieval candidate against a WatchSpec. */
 export const DetectionResultSchema = z.object({
   verdict: VerdictSchema,
   confidence: z.number().min(0).max(1),
@@ -44,6 +68,11 @@ export const DetectionResultSchema = z.object({
 });
 export type DetectionResult = z.infer<typeof DetectionResultSchema>;
 
+/**
+ * @title RetrievalCandidate
+ * @notice A web page (or fixture) candidate passed to the detector after retrieval and filtering.
+ * @dev `published_at` must be on or after watch creation for the candidate to survive filtering.
+ */
 export const RetrievalCandidateSchema = z.object({
   url: z.string().url(),
   domain: z.string(),
@@ -56,6 +85,7 @@ export const RetrievalCandidateSchema = z.object({
 });
 export type RetrievalCandidate = z.infer<typeof RetrievalCandidateSchema>;
 
+/** @dev Backdated eval fixture: labeled candidate with optional expected verdict for regression scoring. */
 export const EvalFixtureSchema = z.object({
   label: z.enum(["positive", "negative", "distractor"]),
   candidate: RetrievalCandidateSchema,
@@ -63,6 +93,10 @@ export const EvalFixtureSchema = z.object({
 });
 export type EvalFixture = z.infer<typeof EvalFixtureSchema>;
 
+/**
+ * @title EvalEvent
+ * @notice A historical scenario used by the eval harness to score detection quality without live retrieval.
+ */
 export const EvalEventSchema = z.object({
   id: z.string(),
   description: z.string(),
@@ -81,6 +115,7 @@ export const EvalEventsFileSchema = z.object({
 });
 export type EvalEventsFile = z.infer<typeof EvalEventsFileSchema>;
 
+/** @dev Aggregate metrics returned by `evals/run.ts` after fixture and dialogue runs. */
 export interface EvalScores {
   detection_rate: number;
   false_positive_rate: number;
@@ -95,6 +130,7 @@ export interface EvalScores {
   distractors_total: number;
 }
 
+/** @dev One turn in a multi-step vagueness/clarification smoke dialogue eval. */
 export const DialogueStepSchema = z.object({
   input: z.string(),
   expect_classification: z.enum(["CLEAR", "VAGUE"]),
@@ -116,6 +152,10 @@ export const EvalDialoguesFileSchema = z.object({
 });
 export type EvalDialoguesFile = z.infer<typeof EvalDialoguesFileSchema>;
 
+/**
+ * @title LiveRetrievalCase
+ * @notice Integration eval that hits Tavily with real queries and exercises the full check pipeline.
+ */
 export const LiveRetrievalCaseSchema = z.object({
   id: z.string(),
   description: z.string(),

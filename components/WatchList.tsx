@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @title WatchList
+ * @notice Dashboard list of saved watches with pause, resume, delete, and check-now actions.
+ * @dev Client component; mutates via /api/watch/[id] PATCH and DELETE.
+ */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

@@ -1,3 +1,9 @@
+/**
+ * @title Check orchestrator
+ * @notice Runs one full retrieval → filter → detect → decide cycle for a single watch.
+ * @dev Phase 1+2 bridge. Persists check and evidence rows; updates watch status on notification.
+ * @custom:pipeline step 5 — check (orchestrates retrieve, filter, detect, decide)
+ */
 import {
   createCheck,
   createEvidence,
@@ -13,8 +19,10 @@ import { applyRetrievalFilters } from "@/lib/filter";
 import { retrieveCandidates } from "@/lib/retrieval";
 import { updateWatchStatus, type WatchRow } from "@/lib/watches";
 
+/** @dev Cap on candidates sent to the detector per check to control latency and inference cost. */
 const MAX_CANDIDATES_TO_EVALUATE = 8;
 
+/** @dev Summary returned to API routes and cron after a check completes. */
 export interface CheckRunResult {
   watchId: string;
   checkId: string;
@@ -25,6 +33,12 @@ export interface CheckRunResult {
   modelUsed: string | null;
 }
 
+/**
+ * @notice Execute a scheduled or manual check for one watch.
+ * @dev Skips already-seen URLs, evaluates up to MAX_CANDIDATES_TO_EVALUATE survivors, marks watch triggered when decision says notify.
+ * @param watch WatchRow with embedded WatchSpec.
+ * @return CheckRunResult with persisted check id and decision summary.
+ */
 export async function runCheckForWatch(
   watch: WatchRow,
 ): Promise<CheckRunResult> {

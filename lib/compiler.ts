@@ -1,3 +1,9 @@
+/**
+ * @title Watch compiler
+ * @notice Turns a plain-language watch sentence into a structured WatchSpec, with a vagueness gate first.
+ * @dev Phase 1 judgment layer. Uses Hugging Face chat completion via `completeJson` with strict system prompts.
+ * @custom:pipeline step 1 — compile
+ */
 import { z } from "zod";
 import { completeJson } from "./inference";
 import {
@@ -7,6 +13,7 @@ import {
   type WatchSpec,
 } from "@/types";
 
+/** @dev System prompt for the vagueness classifier. Conservative: prefers VAGUE when unsure. */
 const VAGUENESS_SYSTEM = `You assess whether a user's event-watch sentence is specific enough to monitor.
 Return ONLY valid JSON with this shape:
 {
@@ -36,6 +43,7 @@ When VAGUE, interpretations must be concrete candidate watch sentences the user 
 Examples of good interpretations: "Notify me when Bitcoin passes $100,000",
 "Tell me if Australian onshore partner visa application fees increase".`;
 
+/** @dev System prompt for WatchSpec body generation (trigger/non-trigger conditions, queries, domains). */
 const COMPILE_SYSTEM = `You compile event watches into structured JSON for a monitoring system.
 Return ONLY valid JSON matching this schema:
 {
@@ -50,6 +58,7 @@ non_triggers is critical: list coverage that should NOT fire the watch (guides, 
 search_queries should be 2-4 concrete web search phrases.
 authoritative_domains should be official or primary sources where applicable.`;
 
+/** @dev Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code). */
 const CompiledSpecBodySchema = WatchSpecSchema.omit({
   id: true,
   user_id: true,
@@ -59,6 +68,12 @@ const CompiledSpecBodySchema = WatchSpecSchema.omit({
   status: true,
 });
 
+/**
+ * @notice Classify whether a watch sentence is specific enough to monitor.
+ * @dev First step in watch creation. Returns VAGUE with suggested concrete alternatives when rejected.
+ * @param rawInput User's watch sentence (3–500 chars at API layer).
+ * @return VaguenessResult with CLEAR or VAGUE classification.
+ */
 export async function assessVagueness(
   rawInput: string,
 ): Promise<VaguenessResult> {
@@ -69,6 +84,16 @@ export async function assessVagueness(
   return VaguenessResultSchema.parse(parsed);
 }
 
+/**
+ * @notice Compile a cleared watch sentence into a full WatchSpec ready for persistence.
+ * @dev Assigns id, user_id, created_at, check_frequency, and status unless overridden in options.
+ * @param rawInput Original user input (preserved on the spec).
+ * @param options.clarifiedStatement Final unambiguous statement after clarification.
+ * @param options.createdAt ISO timestamp anchoring the post-watch-only filter.
+ * @param options.id Optional watch id (defaults to `w_<uuid8>`).
+ * @param options.userId Owner user id.
+ * @return Validated WatchSpec.
+ */
 export async function compileWatchSpec(
   rawInput: string,
   options: {
@@ -103,6 +128,13 @@ Compile this into a Watch Spec body.`,
   });
 }
 
+/**
+ * @notice Combined vagueness check and compile for eval harness and smoke tests.
+ * @dev Skips compilation when classification is VAGUE.
+ * @param rawInput Watch sentence.
+ * @param createdAt Fixed timestamp for reproducible eval runs.
+ * @return Vagueness result and optional compiled spec.
+ */
 export async function compileWithClarification(
   rawInput: string,
   createdAt: string,

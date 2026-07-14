@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @title WatchCreator
+ * @notice Multi-step UI: enter sentence → clarify if vague → confirm and save watch.
+ * @dev Calls POST /api/watch/create for vagueness and POST /api/watch/confirm to persist.
+ */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

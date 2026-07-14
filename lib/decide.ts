@@ -1,3 +1,9 @@
+/**
+ * @title Notification decision layer
+ * @notice Aggregates per-source detection verdicts and decides whether to notify the user.
+ * @dev Phase 1 judgment layer. Implements corroboration: authoritative high-confidence OR two independent triggers.
+ * @custom:pipeline step 4 — decide
+ */
 import type {
   DetectionResult,
   RetrievalCandidate,
@@ -5,13 +11,16 @@ import type {
   WatchSpec,
 } from "@/types";
 
+/** @dev Minimum confidence from an authoritative domain required for solo-trigger notification. */
 export const TRIGGER_CONFIDENCE_THRESHOLD = 0.75;
 
+/** @dev One retrieval candidate paired with its detection result. */
 export interface EvidenceRecord {
   candidate: RetrievalCandidate;
   detection: DetectionResult;
 }
 
+/** @dev Final outcome of the decide step for a single check run. */
 export interface DecideResult {
   should_notify: boolean;
   top_verdict: Verdict;
@@ -21,6 +30,11 @@ export interface DecideResult {
   reasoning: string;
 }
 
+/**
+ * @dev True when domain matches an entry in spec.authoritative_domains (supports subdomains).
+ * @param domain Candidate hostname.
+ * @param spec Watch spec with authoritative_domains list.
+ */
 function isAuthoritative(domain: string, spec: WatchSpec): boolean {
   const normalized = domain.toLowerCase().replace(/^www\./, "");
   return spec.authoritative_domains.some((d) => {
@@ -29,6 +43,14 @@ function isAuthoritative(domain: string, spec: WatchSpec): boolean {
   });
 }
 
+/**
+ * @notice Decide whether evidence from a check warrants user notification.
+ * @dev Notification paths: (1) authoritative source ≥0.75 confidence TRIGGERED, or (2) ≥2 TRIGGERED from distinct domains.
+ *      Single non-authoritative trigger sets needs_corroboration without notifying.
+ * @param spec Watch spec (for authoritative domain list).
+ * @param evidence Filtered candidates with detection results from this check.
+ * @return DecideResult with should_notify, top verdict, and human-readable reasoning.
+ */
 export function decideFromEvidence(
   spec: WatchSpec,
   evidence: EvidenceRecord[],

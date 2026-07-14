@@ -16,6 +16,7 @@
     "eval:dialogues": "tsx evals/run.ts --dialogues-only",
     "eval:retrieval": "tsx evals/run.ts --retrieval-only",
     "eval:smoke": "tsx evals/run.ts --smoke",
+    "docs:extract": "tsx scripts/extract-natspec.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

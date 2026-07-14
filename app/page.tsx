@@ -1,3 +1,7 @@
+/**
+ * @title Landing page
+ * @notice Marketing home with hero watch box, example watches, and how-it-works sections.
+ */
 import Link from "next/link";
 import { HeroWatchBox } from "@/components/HeroWatchBox";
 import { RevealOnScroll } from "@/components/RevealOnScroll";
@@ -119,9 +123,9 @@ export default function HomePage() {
             not when the words show up.
           </h2>
           <p className="section-sub">
-            Keyword alerts ping you for guides, forum posts, and old articles.
-            A watch only fires when new evidence shows the thing you asked for
-            has happened.
+            Keyword alerts ping you for guides, forum posts, and old articles. A
+            watch only fires when new evidence shows the thing you asked for has
+            happened.
           </p>
           <div className="compare reveal">
             <p className="compare-watch">

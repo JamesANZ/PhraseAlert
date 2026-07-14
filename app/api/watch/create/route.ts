@@ -1,12 +1,23 @@
+/**
+ * @title POST /api/watch/create
+ * @notice Assess vagueness of a watch sentence before saving (clarification step).
+ * @dev Does not persist a watch. Returns VaguenessResult for the WatchCreator UI.
+ * @custom:auth Required session
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth/session";
 import { assessVagueness } from "@/lib/compiler";
 
+/** @dev Request body: raw_input 3–500 chars. */
 const BodySchema = z.object({
   raw_input: z.string().trim().min(3).max(500),
 });
 
+/**
+ * @notice Run vagueness classification on raw_input.
+ * @return 200 VaguenessResult | 401 unauthorized | 400 validation error
+ */
 export async function POST(request: Request) {
   try {
     await requireUserId();

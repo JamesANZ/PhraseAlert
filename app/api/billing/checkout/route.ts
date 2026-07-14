@@ -1,3 +1,8 @@
+/**
+ * @title POST /api/billing/checkout
+ * @notice Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect URL.
+ * @custom:auth Required session
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth/session";

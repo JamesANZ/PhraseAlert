@@ -1,3 +1,8 @@
+/**
+ * @title /api/watch/[id]
+ * @notice Get, pause/resume, or delete a single watch owned by the session user.
+ * @custom:auth Required session
+ */
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth/session";
@@ -7,6 +12,7 @@ const PatchSchema = z.object({
   action: z.enum(["pause", "resume"]),
 });
 
+/** @notice GET — fetch one watch by id. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -28,6 +34,7 @@ export async function GET(
   }
 }
 
+/** @notice PATCH — pause or resume watch. Resume may 403 if at active watch limit. */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -59,6 +66,7 @@ export async function PATCH(
   }
 }
 
+/** @notice DELETE — permanently remove watch. */
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },

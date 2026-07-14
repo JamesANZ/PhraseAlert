@@ -1,3 +1,7 @@
+/**
+ * @title Watches dashboard
+ * @notice Server-rendered list of the user's watches with plan/limit banner.
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WatchList } from "@/components/WatchList";

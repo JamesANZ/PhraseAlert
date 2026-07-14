@@ -1,0 +1,1342 @@
+{
+  "version": 1,
+  "blocks": [
+    {
+      "file": "app/api/billing/checkout/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["POST /api/billing/checkout"],
+        "@notice": [
+          "Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect URL."
+        ],
+        "@custom:auth": ["Required session"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/billing/status/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["GET /api/billing/status"],
+        "@notice": [
+          "Returns plan, watch limit, active watch count, and billing period for the session user."
+        ],
+        "@custom:auth": ["Required session"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/checks/run/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["POST /api/checks/run"],
+        "@notice": [
+          "Cron endpoint: run checks for all watches in `watching` status."
+        ],
+        "@dev": [
+          "Protected by Authorization: Bearer CRON_SECRET when CRON_SECRET is set."
+        ],
+        "@custom:env": ["TAVILY_API_KEY, CRON_SECRET (optional)"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/checks/run/route.ts",
+      "line": 7,
+      "tags": {
+        "@notice": ["Batch check all active watches."],
+        "@return": [
+          "200 { ok, checked, triggered, errors, results } | 401 bad cron secret | 503 no Tavily"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/[id]/check/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["POST /api/watch/[id]/check"],
+        "@notice": [
+          "Manually run one check now for a watching watch (dev / dashboard \"Check now\")."
+        ],
+        "@dev": [
+          "Full pipeline: Tavily retrieve → filter → detect → decide → persist."
+        ],
+        "@custom:auth": ["Required session"],
+        "@custom:env": ["TAVILY_API_KEY"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/[id]/check/route.ts",
+      "line": 8,
+      "tags": {
+        "@notice": ["Run check for one watch owned by the user."],
+        "@return": [
+          "200 check summary with evidence | 404 | 409 non-watching | 503 no Tavily key"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/[id]/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["/api/watch/[id]"],
+        "@notice": [
+          "Get, pause/resume, or delete a single watch owned by the session user."
+        ],
+        "@custom:auth": ["Required session"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/confirm/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["POST /api/watch/confirm"],
+        "@notice": [
+          "Finalize and persist a watch after the user has clarified a CLEAR sentence."
+        ],
+        "@dev": [
+          "Re-runs vagueness on clarified text, compiles WatchSpec, inserts watch row."
+        ],
+        "@custom:auth": ["Required session"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/confirm/route.ts",
+      "line": 13,
+      "tags": {
+        "@notice": ["Compile and save watch."],
+        "@return": [
+          "200 { watch } | 400 still VAGUE | 403 watch limit | 401 unauthorized"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/create/route.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["POST /api/watch/create"],
+        "@notice": [
+          "Assess vagueness of a watch sentence before saving (clarification step)."
+        ],
+        "@dev": [
+          "Does not persist a watch. Returns VaguenessResult for the WatchCreator UI."
+        ],
+        "@custom:auth": ["Required session"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/create/route.ts",
+      "line": 7,
+      "tags": {
+        "@dev": ["Request body: raw_input 3–500 chars."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "app/api/watch/create/route.ts",
+      "line": 12,
+      "tags": {
+        "@notice": ["Run vagueness classification on raw_input."],
+        "@return": [
+          "200 VaguenessResult | 401 unauthorized | 400 validation error"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "components/WatchCreator.tsx",
+      "line": 3,
+      "tags": {
+        "@title": ["WatchCreator"],
+        "@notice": [
+          "Multi-step UI: enter sentence → clarify if vague → confirm and save watch."
+        ],
+        "@dev": [
+          "Calls POST /api/watch/create for vagueness and POST /api/watch/confirm to persist."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "components/WatchList.tsx",
+      "line": 3,
+      "tags": {
+        "@title": ["WatchList"],
+        "@notice": [
+          "Dashboard list of saved watches with pause, resume, delete, and check-now actions."
+        ],
+        "@dev": [
+          "Client component; mutates via /api/watch/[id] PATCH and DELETE."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "evals/run.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Eval harness CLI"],
+        "@notice": [
+          "Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval against fixtures."
+        ],
+        "@dev": [
+          "Run via `npm run eval` with flags: --compiler-only, --detector-only, --dialogues-only, --retrieval-only, --smoke."
+        ],
+        "@custom:phase": ["1"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/auth/session.ts",
+      "line": 4,
+      "tags": {
+        "@notice": ["Require an authenticated session and return the user id."],
+        "@dev": [
+          "Throws \"Unauthorized\" — map to HTTP 401 in route catch blocks."
+        ],
+        "@return": ["Session user id string."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/auth.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["NextAuth server configuration"],
+        "@notice": [
+          "Auth.js setup with Drizzle adapter and SQLite user/session tables."
+        ],
+        "@dev": [
+          "Exports handlers, auth, signIn, signOut. initDb() runs at module load."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/billing/enforce-limits.ts",
+      "line": 13,
+      "tags": {
+        "@notice": [
+          "Called when Plus expires so free users retain their 3 most recently created active watches."
+        ],
+        "@param": ["userId User whose excess watches should be paused."],
+        "@return": ["Summary of watches that were paused."]
+      },
+      "untagged": [
+        "Pause newest active watches until the user is at or under the free-tier cap."
+      ]
+    },
+    {
+      "file": "lib/billing/entitlements.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Billing entitlements"],
+        "@notice": [
+          "Resolves effective plan, watch limits, and Plus grant/revoke for a user."
+        ],
+        "@dev": [
+          "Plus is active for subscription (until period end) or prepaid (until planPeriodEnd)."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/billing/entitlements.ts",
+      "line": 21,
+      "tags": {
+        "@dev": [
+          "Subscription stays active without period end; prepaid requires future planPeriodEnd."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/check.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Check orchestrator"],
+        "@notice": [
+          "Runs one full retrieval → filter → detect → decide cycle for a single watch."
+        ],
+        "@dev": [
+          "Phase 1+2 bridge. Persists check and evidence rows; updates watch status on notification."
+        ],
+        "@custom:pipeline": [
+          "step 5 — check (orchestrates retrieve, filter, detect, decide)"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/check.ts",
+      "line": 17,
+      "tags": {
+        "@dev": [
+          "Cap on candidates sent to the detector per check to control latency and inference cost."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/check.ts",
+      "line": 20,
+      "tags": {
+        "@dev": [
+          "Summary returned to API routes and cron after a check completes."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/check.ts",
+      "line": 31,
+      "tags": {
+        "@notice": ["Execute a scheduled or manual check for one watch."],
+        "@dev": [
+          "Skips already-seen URLs, evaluates up to MAX_CANDIDATES_TO_EVALUATE survivors, marks watch triggered when decision says notify."
+        ],
+        "@param": ["watch WatchRow with embedded WatchSpec."],
+        "@return": [
+          "CheckRunResult with persisted check id and decision summary."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/checks.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Check and evidence persistence"],
+        "@notice": [
+          "Records each check run and per-source evidence for audit trails and URL deduplication."
+        ],
+        "@dev": [
+          "Phase 2. Confidence stored as 0–100 integer in SQLite; evidence snippets truncated at insert."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/checks.ts",
+      "line": 7,
+      "tags": {
+        "@dev": ["Input for inserting one check row after decide completes."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/checks.ts",
+      "line": 18,
+      "tags": {
+        "@dev": ["One evidence row linked to a check (one evaluated URL)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/checks.ts",
+      "line": 28,
+      "tags": {
+        "@notice": ["Insert a check record and return its id."],
+        "@dev": [
+          "Id format: `chk_<uuid12>`. Confidence clamped to [0,1] then stored as percent."
+        ],
+        "@param": ["input Aggregated check metadata."],
+        "@return": ["New check id."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/checks.ts",
+      "line": 54,
+      "tags": {
+        "@notice": ["Bulk-insert evidence rows for a check."],
+        "@param": [
+          "checkId Parent check id from createCheck.",
+          "rows Per-candidate detection outcomes."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/checks.ts",
+      "line": 77,
+      "tags": {
+        "@notice": [
+          "Normalized URLs previously stored as evidence for any check on this watch."
+        ],
+        "@dev": [
+          "Used by applyRetrievalFilters to skip re-judging the same article."
+        ],
+        "@param": ["watchId Watch id."],
+        "@return": ["Set of normalized URLs."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Watch compiler"],
+        "@notice": [
+          "Turns a plain-language watch sentence into a structured WatchSpec, with a vagueness gate first."
+        ],
+        "@dev": [
+          "Phase 1 judgment layer. Uses Hugging Face chat completion via `completeJson` with strict system prompts."
+        ],
+        "@custom:pipeline": ["step 1 — compile"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 11,
+      "tags": {
+        "@dev": [
+          "System prompt for the vagueness classifier. Conservative: prefers VAGUE when unsure."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 41,
+      "tags": {
+        "@dev": [
+          "System prompt for WatchSpec body generation (trigger/non-trigger conditions, queries, domains)."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 56,
+      "tags": {
+        "@dev": [
+          "Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code)."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 66,
+      "tags": {
+        "@notice": [
+          "Classify whether a watch sentence is specific enough to monitor."
+        ],
+        "@dev": [
+          "First step in watch creation. Returns VAGUE with suggested concrete alternatives when rejected."
+        ],
+        "@param": [
+          "rawInput User's watch sentence (3–500 chars at API layer)."
+        ],
+        "@return": ["VaguenessResult with CLEAR or VAGUE classification."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 77,
+      "tags": {
+        "@notice": [
+          "Compile a cleared watch sentence into a full WatchSpec ready for persistence."
+        ],
+        "@dev": [
+          "Assigns id, user_id, created_at, check_frequency, and status unless overridden in options."
+        ],
+        "@param": [
+          "rawInput Original user input (preserved on the spec).",
+          "options.clarifiedStatement Final unambiguous statement after clarification.",
+          "options.createdAt ISO timestamp anchoring the post-watch-only filter.",
+          "options.id Optional watch id (defaults to `w_<uuid8>`).",
+          "options.userId Owner user id."
+        ],
+        "@return": ["Validated WatchSpec."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/compiler.ts",
+      "line": 112,
+      "tags": {
+        "@notice": [
+          "Combined vagueness check and compile for eval harness and smoke tests."
+        ],
+        "@dev": ["Skips compilation when classification is VAGUE."],
+        "@param": [
+          "rawInput Watch sentence.",
+          "createdAt Fixed timestamp for reproducible eval runs."
+        ],
+        "@return": ["Vagueness result and optional compiled spec."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/constants.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Product constants"],
+        "@notice": [
+          "Tier limits and billing amounts shared across entitlements and UI."
+        ],
+        "@dev": [
+          "Single source of truth for free vs plus watch caps and prepaid period length."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/constants.ts",
+      "line": 12,
+      "tags": {
+        "@dev": ["Prepaid Helio period duration in milliseconds (30 days)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/constants.ts",
+      "line": 15,
+      "tags": {
+        "@dev": [
+          "Days-before-expiry offsets for prepaid renewal reminder emails."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/index.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["SQLite database bootstrap"],
+        "@notice": [
+          "Drizzle client, WAL pragmas, and idempotent schema migration for local dev."
+        ],
+        "@dev": [
+          "DATABASE_URL defaults to ./data/bellwether.db. Call initDb() before first API use."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/index.ts",
+      "line": 18,
+      "tags": {
+        "@dev": [
+          "Read column names from PRAGMA table_info for lightweight migrations."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/index.ts",
+      "line": 33,
+      "tags": {
+        "@notice": [
+          "Create tables if missing and add billing columns to legacy user rows."
+        ],
+        "@dev": ["Safe to call on every cron/API cold start."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Database schema (Drizzle SQLite)"],
+        "@notice": [
+          "Table definitions for auth, billing, watches, checks, and evidence."
+        ],
+        "@dev": [
+          "WatchSpec stored as JSON on watches.spec. NextAuth adapter tables follow Auth.js conventions."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 33,
+      "tags": {
+        "@dev": ["Stripe or Helio subscription/prepaid records linked to user."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 65,
+      "tags": {
+        "@dev": [
+          "Idempotent webhook event log (provider + event id) for Stripe and Helio."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 75,
+      "tags": {
+        "@dev": ["OAuth provider accounts (NextAuth adapter)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 100,
+      "tags": {
+        "@dev": ["Active login sessions (NextAuth adapter)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 109,
+      "tags": {
+        "@dev": ["Email magic-link tokens (NextAuth adapter)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 137,
+      "tags": {
+        "@dev": ["One scheduled or manual check run against a watch."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/db/schema.ts",
+      "line": 153,
+      "tags": {
+        "@dev": [
+          "Per-URL judgment stored for a check (audit trail for notifications)."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/decide.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Notification decision layer"],
+        "@notice": [
+          "Aggregates per-source detection verdicts and decides whether to notify the user."
+        ],
+        "@dev": [
+          "Phase 1 judgment layer. Implements corroboration: authoritative high-confidence OR two independent triggers."
+        ],
+        "@custom:pipeline": ["step 4 — decide"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/decide.ts",
+      "line": 9,
+      "tags": {
+        "@dev": [
+          "Minimum confidence from an authoritative domain required for solo-trigger notification."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/decide.ts",
+      "line": 12,
+      "tags": {
+        "@dev": ["One retrieval candidate paired with its detection result."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/decide.ts",
+      "line": 18,
+      "tags": {
+        "@dev": ["Final outcome of the decide step for a single check run."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/decide.ts",
+      "line": 28,
+      "tags": {
+        "@dev": [
+          "True when domain matches an entry in spec.authoritative_domains (supports subdomains)."
+        ],
+        "@param": [
+          "domain Candidate hostname.",
+          "spec Watch spec with authoritative_domains list."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/decide.ts",
+      "line": 37,
+      "tags": {
+        "@notice": [
+          "Decide whether evidence from a check warrants user notification."
+        ],
+        "@dev": [
+          "Notification paths: (1) authoritative source ≥0.75 confidence TRIGGERED, or (2) ≥2 TRIGGERED from distinct domains.",
+          "Single non-authoritative trigger sets needs_corroboration without notifying."
+        ],
+        "@param": [
+          "spec Watch spec (for authoritative domain list).",
+          "evidence Filtered candidates with detection results from this check."
+        ],
+        "@return": [
+          "DecideResult with should_notify, top verdict, and human-readable reasoning."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/detector.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Event detector"],
+        "@notice": [
+          "Judges whether a single web source shows the watched event actually occurred."
+        ],
+        "@dev": [
+          "Phase 1 judgment layer. Not keyword matching — requires credible evidence of the event post-watch."
+        ],
+        "@custom:pipeline": ["step 3 — detect"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/detector.ts",
+      "line": 10,
+      "tags": {
+        "@dev": [
+          "System prompt for per-candidate TRIGGERED / NOT_TRIGGERED / AMBIGUOUS classification."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/detector.ts",
+      "line": 26,
+      "tags": {
+        "@notice": [
+          "Run detection for one retrieval candidate against a WatchSpec."
+        ],
+        "@dev": [
+          "Includes trigger/non-trigger conditions and watch creation timestamp in the user prompt."
+        ],
+        "@param": [
+          "spec Compiled watch specification.",
+          "candidate Filtered web source to evaluate."
+        ],
+        "@return": ["DetectionResult plus the HF model id used for this call."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/filter.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Retrieval filters"],
+        "@notice": [
+          "Drops candidates that are too old, already evaluated, or on a denylist before detection."
+        ],
+        "@dev": [
+          "Phase 1 judgment layer. Enforces the post-watch-only rule central to Bellwether's value prop."
+        ],
+        "@custom:pipeline": ["step 2 — filter"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/filter.ts",
+      "line": 4,
+      "tags": {
+        "@notice": ["Canonicalize a URL for deduplication across check runs."],
+        "@dev": [
+          "Strips hash fragments and trailing slashes. Invalid URLs pass through unchanged."
+        ],
+        "@param": ["url Raw candidate URL."],
+        "@return": ["Normalized URL string."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/filter.ts",
+      "line": 18,
+      "tags": {
+        "@notice": [
+          "True when the source was published on or after the watch was created."
+        ],
+        "@dev": [
+          "Pre-watch articles (guides, old news) must not trigger alerts."
+        ],
+        "@param": [
+          "candidate Retrieval candidate with published_at.",
+          "watchCreatedAt ISO datetime from watch creation."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/filter.ts",
+      "line": 26,
+      "tags": {
+        "@notice": [
+          "Apply post-watch, dedup, and domain deny filters to a candidate list."
+        ],
+        "@dev": [
+          "Called after Tavily retrieval and before detection. Order preserved from input."
+        ],
+        "@param": [
+          "candidates Raw retrieval results.",
+          "watchCreatedAt Watch creation timestamp for temporal filter.",
+          "seenUrls Normalized URLs from prior checks on this watch (default empty).",
+          "denylistDomains Hostnames to exclude (default empty)."
+        ],
+        "@return": ["Filtered candidates eligible for detection."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Hugging Face inference client"],
+        "@notice": [
+          "Shared LLM completion layer for compiler, detector, and eval harness."
+        ],
+        "@dev": [
+          "Uses @huggingface/inference chatCompletion with low temperature for structured JSON outputs."
+        ],
+        "@custom:env": [
+          "HUGGINGFACE_API_KEY (required), HF_MODEL (optional override)"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 4,
+      "tags": {
+        "@dev": ["Default instruct model when HF_MODEL is unset."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 7,
+      "tags": {
+        "@dev": ["Models supported for eval comparison runs."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 17,
+      "tags": {
+        "@dev": [
+          "Lazy singleton InferenceClient; throws if HUGGINGFACE_API_KEY missing."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 29,
+      "tags": {
+        "@notice": ["Resolve the active model id from env or default."],
+        "@return": ["Model string passed to chatCompletion."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 34,
+      "tags": {
+        "@notice": [
+          "Run a chat completion and parse the assistant message as JSON."
+        ],
+        "@dev": [
+          "temperature 0.1, max_tokens 1200. Use Zod schemas on `parsed` at call sites."
+        ],
+        "@param": [
+          "systemPrompt System role instructions (compiler/detect/vagueness prompts).",
+          "userPrompt User role content (watch text, candidate source, etc.).",
+          "model Optional model override."
+        ],
+        "@return": ["Raw text, parsed JSON, and model id."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/inference.ts",
+      "line": 55,
+      "tags": {
+        "@notice": [
+          "Extract JSON from model output, including fenced ```json blocks."
+        ],
+        "@dev": [
+          "Falls back to first `{...}` substring if direct parse fails."
+        ],
+        "@param": ["text Raw assistant message."],
+        "@return": ["Parsed value cast to T (caller should validate with Zod)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Live retrieval orchestrator"],
+        "@notice": [
+          "Runs Tavily search and extract for a WatchSpec's search_queries and builds RetrievalCandidates."
+        ],
+        "@dev": [
+          "Phase 2. Constrains results to post-watch window via Tavily start_date; dedupes by normalized URL."
+        ],
+        "@custom:pipeline": ["step 2 — retrieve"],
+        "@custom:env": ["TAVILY_API_KEY"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 6,
+      "tags": {
+        "@dev": ["Max Tavily search hits per query before merge."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 8,
+      "tags": {
+        "@dev": ["Top unique URLs sent to Tavily extract for richer snippets."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 10,
+      "tags": {
+        "@dev": ["Parallel Tavily search calls (one per search_query)."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 13,
+      "tags": {
+        "@dev": ["Hostname without www prefix; \"unknown\" on parse failure."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 22,
+      "tags": {
+        "@dev": [
+          "Normalize Tavily published_date to ISO; falls back to retrievedAt when missing or invalid."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 40,
+      "tags": {
+        "@dev": [
+          "YYYY-MM-DD slice of watch created_at for Tavily start_date filter."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 47,
+      "tags": {
+        "@dev": ["Bounded-concurrency map for parallel Tavily searches."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 71,
+      "tags": {
+        "@dev": [
+          "Collapse whitespace and cap snippet length for detector prompts."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/index.ts",
+      "line": 78,
+      "tags": {
+        "@notice": [
+          "Retrieve web candidates for a watch using its compiled search_queries."
+        ],
+        "@dev": [
+          "Merges search results, optionally enriches top URLs via extract, returns RetrievalCandidate[]."
+        ],
+        "@param": [
+          "spec WatchSpec with search_queries and created_at.",
+          "options.retrievedAt Fallback published_at when Tavily omits dates."
+        ],
+        "@return": ["Deduplicated candidates ready for applyRetrievalFilters."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Tavily API client"],
+        "@notice": [
+          "Thin fetch wrapper for Tavily /search and /extract endpoints."
+        ],
+        "@dev": [
+          "Used by lib/retrieval/index.ts. Requires TAVILY_API_KEY in environment."
+        ],
+        "@custom:env": ["TAVILY_API_KEY"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 4,
+      "tags": {
+        "@dev": ["Single result from Tavily search API."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 14,
+      "tags": {
+        "@dev": ["Response envelope from POST /search."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 20,
+      "tags": {
+        "@dev": ["Extracted page content for one URL."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 26,
+      "tags": {
+        "@dev": ["Response envelope from POST /extract."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 32,
+      "tags": {
+        "@dev": [
+          "Options for tavilySearch. startDate limits to content after watch creation."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 40,
+      "tags": {
+        "@dev": [
+          "Options for tavilyExtract. query enables chunked relevance extraction."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 47,
+      "tags": {
+        "@dev": ["Reads TAVILY_API_KEY; throws if missing."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 56,
+      "tags": {
+        "@dev": ["Shared POST helper with Bearer auth and error surfacing."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 80,
+      "tags": {
+        "@notice": ["Run a Tavily web search for one query string."],
+        "@param": [
+          "query Search phrase from WatchSpec.search_queries.",
+          "opts maxResults, searchDepth, startDate (YYYY-MM-DD), topic."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/retrieval/tavily.ts",
+      "line": 100,
+      "tags": {
+        "@notice": ["Fetch full or chunked page content for a list of URLs."],
+        "@param": [
+          "urls Up to MAX_EXTRACT_URLS in practice from retrieval layer.",
+          "opts query + chunksPerSource for relevance-focused excerpts."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Watch persistence"],
+        "@notice": [
+          "CRUD and quota enforcement for user watches stored in SQLite via Drizzle."
+        ],
+        "@dev": [
+          "Phase 2 product layer. Active watch count excludes paused; limits come from billing entitlements."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 8,
+      "tags": {
+        "@dev": [
+          "Application-level watch record with camelCase fields and embedded WatchSpec JSON."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 19,
+      "tags": {
+        "@dev": ["Maps Drizzle row to WatchRow."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 32,
+      "tags": {
+        "@notice": ["Count non-paused watches for quota checks."],
+        "@param": ["userId Authenticated user id."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 52,
+      "tags": {
+        "@notice": ["List all watches for a user, newest first."],
+        "@param": ["userId Owner id."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 63,
+      "tags": {
+        "@notice": ["Fetch one watch scoped to owner."],
+        "@return": ["WatchRow or null if not found / wrong user."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 73,
+      "tags": {
+        "@notice": ["Persist a compiled WatchSpec as a new watch."],
+        "@dev": [
+          "Throws if watch limit exceeded. Embeds user_id on the stored spec JSON."
+        ],
+        "@param": [
+          "spec Compiled WatchSpec from compiler.",
+          "userId Owner id."
+        ],
+        "@return": ["Created WatchRow."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 105,
+      "tags": {
+        "@notice": [
+          "Update watch lifecycle status (pause, resume, or mark triggered)."
+        ],
+        "@dev": [
+          "Resume enforces active watch limit. Setting triggered records triggeredAt timestamp."
+        ],
+        "@return": ["Updated WatchRow or null if not found."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 139,
+      "tags": {
+        "@notice": ["Permanently delete a watch for the owning user."],
+        "@return": ["True if a row was deleted."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "lib/watches.ts",
+      "line": 148,
+      "tags": {
+        "@notice": [
+          "All watches in `watching` status — used by the cron check runner."
+        ],
+        "@dev": ["Not scoped to user; internal scheduler only."]
+      },
+      "untagged": []
+    },
+    {
+      "file": "middleware.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Auth middleware"],
+        "@notice": [
+          "Redirects unauthenticated users to /login for protected app routes."
+        ],
+        "@dev": [
+          "Matcher covers /watches/* and /billing. Public landing and API routes are excluded."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "scripts/extract-natspec.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["NatSpec comment extractor"],
+        "@notice": [
+          "Walks TypeScript sources and emits userdoc + devdoc JSON from /** ... *\\/ blocks."
+        ],
+        "@dev": [
+          "Run: npm run docs:extract — writes docs/natspec-userdoc.json and docs/natspec-devdoc.json"
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 1,
+      "tags": {
+        "@title": ["Bellwether core types"],
+        "@notice": [
+          "Shared Zod schemas and TypeScript types for watches, detection, retrieval, and eval fixtures."
+        ],
+        "@dev": [
+          "All runtime validation flows through these schemas. API routes and the judgment pipeline import from here."
+        ],
+        "@custom:phase": ["1"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 12,
+      "tags": {
+        "@title": ["WatchSpec"],
+        "@notice": [
+          "Structured specification produced when a user's sentence is compiled into a monitorable watch."
+        ],
+        "@dev": [
+          "Persisted as JSON on the `watches` row. Drives search queries, detection prompts, and notification rules."
+        ],
+        "@custom:pipeline": ["compile → retrieve → filter → detect → decide"]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 29,
+      "tags": {
+        "@title": ["VaguenessResult"],
+        "@notice": [
+          "Outcome of the vagueness gate before a watch can be saved."
+        ],
+        "@dev": [
+          "CLEAR proceeds to compilation; VAGUE returns up to three concrete alternative sentences."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 37,
+      "tags": {
+        "@notice": [
+          "Per-source judgment on whether credible evidence shows the watched event occurred."
+        ],
+        "@dev": [
+          "TRIGGERED does not alone imply notification — `decideFromEvidence` applies corroboration rules."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 54,
+      "tags": {
+        "@title": ["RetrievalCandidate"],
+        "@notice": [
+          "A web page (or fixture) candidate passed to the detector after retrieval and filtering."
+        ],
+        "@dev": [
+          "`published_at` must be on or after watch creation for the candidate to survive filtering."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 67,
+      "tags": {
+        "@dev": [
+          "Backdated eval fixture: labeled candidate with optional expected verdict for regression scoring."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 94,
+      "tags": {
+        "@dev": [
+          "Aggregate metrics returned by `evals/run.ts` after fixture and dialogue runs."
+        ]
+      },
+      "untagged": []
+    },
+    {
+      "file": "types/index.ts",
+      "line": 109,
+      "tags": {
+        "@dev": [
+          "One turn in a multi-step vagueness/clarification smoke dialogue eval."
+        ]
+      },
+      "untagged": []
+    }
+  ]
+}

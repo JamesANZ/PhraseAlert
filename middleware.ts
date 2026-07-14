@@ -1,3 +1,8 @@
+/**
+ * @title Auth middleware
+ * @notice Redirects unauthenticated users to /login for protected app routes.
+ * @dev Matcher covers /watches/* and /billing. Public landing and API routes are excluded.
+ */
 import { NextResponse } from "next/server";
 import { middlewareAuth } from "@/lib/auth/edge";
 

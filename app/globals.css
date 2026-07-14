@@ -11,7 +11,8 @@
   --signal-dim: rgba(107, 196, 154, 0.12);
   --noise: #c97866;
   --noise-dim: rgba(201, 120, 102, 0.1);
-  --font-body: var(--font-nunito), "Nunito", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body:
+    var(--font-nunito), "Nunito", "Avenir Next", "Segoe UI", sans-serif;
   --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-mono: var(--font-ibm-plex-mono), "SF Mono", Consolas, monospace;
   --radius: 10px;

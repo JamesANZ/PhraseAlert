@@ -1,8 +1,14 @@
+/**
+ * @title Check and evidence persistence
+ * @notice Records each check run and per-source evidence for audit trails and URL deduplication.
+ * @dev Phase 2. Confidence stored as 0–100 integer in SQLite; evidence snippets truncated at insert.
+ */
 import { db } from "@/lib/db";
 import { checks, evidence } from "@/lib/db/schema";
 import { normalizeUrl } from "@/lib/filter";
 import { eq, inArray } from "drizzle-orm";
 
+/** @dev Input for inserting one check row after decide completes. */
 export interface CreateCheckInput {
   watchId: string;
   sourcesRetrieved: number;
@@ -13,6 +19,7 @@ export interface CreateCheckInput {
   escalated?: boolean;
 }
 
+/** @dev One evidence row linked to a check (one evaluated URL). */
 export interface CreateEvidenceInput {
   url: string;
   domain: string;
@@ -22,6 +29,12 @@ export interface CreateEvidenceInput {
   reasoning: string | null;
 }
 
+/**
+ * @notice Insert a check record and return its id.
+ * @dev Id format: `chk_<uuid12>`. Confidence clamped to [0,1] then stored as percent.
+ * @param input Aggregated check metadata.
+ * @return New check id.
+ */
 export function createCheck(input: CreateCheckInput): string {
   const id = `chk_${crypto.randomUUID().slice(0, 12)}`;
   const confidence =
@@ -47,6 +60,11 @@ export function createCheck(input: CreateCheckInput): string {
   return id;
 }
 
+/**
+ * @notice Bulk-insert evidence rows for a check.
+ * @param checkId Parent check id from createCheck.
+ * @param rows Per-candidate detection outcomes.
+ */
 export function createEvidence(
   checkId: string,
   rows: CreateEvidenceInput[],
@@ -69,7 +87,12 @@ export function createEvidence(
   }
 }
 
-/** Normalized URLs previously stored as evidence for any check on this watch. */
+/**
+ * @notice Normalized URLs previously stored as evidence for any check on this watch.
+ * @dev Used by applyRetrievalFilters to skip re-judging the same article.
+ * @param watchId Watch id.
+ * @return Set of normalized URLs.
+ */
 export function listEvidenceUrlsForWatch(watchId: string): Set<string> {
   const checkIds = db
     .select({ id: checks.id })

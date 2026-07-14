@@ -1,3 +1,7 @@
+/**
+ * @title Downgrade watch enforcement
+ * @notice Pauses newest active watches when a user drops to free tier over the cap.
+ */
 import { and, desc, eq, ne } from "drizzle-orm";
 import { FREE_TIER_MAX_WATCHES } from "@/lib/constants";
 import { db } from "@/lib/db";
@@ -11,6 +15,9 @@ export interface PausedWatchSummary {
 
 /**
  * Pause newest active watches until the user is at or under the free-tier cap.
+ * @notice Called when Plus expires so free users retain their 3 most recently created active watches.
+ * @param userId User whose excess watches should be paused.
+ * @return Summary of watches that were paused.
  */
 export function pauseExcessWatches(userId: string): PausedWatchSummary[] {
   const activeCount = countActiveWatches(userId);
