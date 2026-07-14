@@ -14,6 +14,20 @@ sqlite.pragma("foreign_keys = ON");
 
 export const db = drizzle(sqlite, { schema });
 
+function tableColumns(table: string): Set<string> {
+  const rows = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name: string;
+  }>;
+  return new Set(rows.map((r) => r.name));
+}
+
+function ensureColumn(table: string, column: string, ddl: string): void {
+  const cols = tableColumns(table);
+  if (!cols.has(column)) {
+    sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+  }
+}
+
 export function initDb(): void {
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS user (
@@ -22,7 +36,10 @@ export function initDb(): void {
       email TEXT NOT NULL UNIQUE,
       emailVerified INTEGER,
       image TEXT,
-      plan TEXT NOT NULL DEFAULT 'free'
+      plan TEXT NOT NULL DEFAULT 'free',
+      stripe_customer_id TEXT,
+      plan_period_end INTEGER,
+      billing_mode TEXT NOT NULL DEFAULT 'none'
     );
 
     CREATE TABLE IF NOT EXISTS account (
@@ -86,5 +103,35 @@ export function initDb(): void {
       verdict TEXT,
       reasoning TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+      provider TEXT NOT NULL,
+      provider_ref TEXT NOT NULL,
+      mode TEXT NOT NULL,
+      status TEXT NOT NULL,
+      current_period_end INTEGER,
+      amount_cents INTEGER NOT NULL DEFAULT 900,
+      currency TEXT NOT NULL DEFAULT 'usd',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      UNIQUE (provider, provider_ref)
+    );
+
+    CREATE TABLE IF NOT EXISTS billing_events (
+      id TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      processed_at INTEGER NOT NULL
+    );
   `);
+
+  ensureColumn("user", "stripe_customer_id", "stripe_customer_id TEXT");
+  ensureColumn("user", "plan_period_end", "plan_period_end INTEGER");
+  ensureColumn(
+    "user",
+    "billing_mode",
+    "billing_mode TEXT NOT NULL DEFAULT 'none'",
+  );
 }

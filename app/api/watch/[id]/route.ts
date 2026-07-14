@@ -48,7 +48,14 @@ export async function PATCH(
     if (message === "Unauthorized") {
       return NextResponse.json({ error: message }, { status: 401 });
     }
-    return NextResponse.json({ error: message }, { status: 400 });
+    const status = message.includes("Watch limit") ? 403 : 400;
+    return NextResponse.json(
+      {
+        error: message,
+        upgradeUrl: status === 403 ? "/billing" : undefined,
+      },
+      { status },
+    );
   }
 }
 

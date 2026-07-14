@@ -2,42 +2,58 @@ import Link from "next/link";
 import { HeroWatchBox } from "@/components/HeroWatchBox";
 import { RevealOnScroll } from "@/components/RevealOnScroll";
 
-const EXAMPLES = [
+const EXAMPLE_GROUPS = [
   {
-    sentence: "Tell me if Australian partner visa fees increase.",
-    tag: "Immigration & visas",
+    label: "Everyday watches",
+    description: "Broad topics anyone might care about.",
+    tone: "generic" as const,
+    examples: [
+      {
+        sentence: "Notify me when mortgage rates drop below 5%.",
+        tag: "Money & rates",
+      },
+      {
+        sentence: "Tell me if this product goes on sale.",
+        tag: "Shopping",
+      },
+      {
+        sentence: "Let me know when my favorite artist announces a tour.",
+        tag: "Entertainment",
+      },
+      {
+        sentence: "Tell me when a company I follow gets acquired.",
+        tag: "Business",
+      },
+    ],
   },
   {
-    sentence: "Notify me when Bitcoin passes $100,000.",
-    tag: "Markets & crypto",
-  },
-  {
-    sentence:
-      "Tell me if New Zealand changes its foreign investment tax rules.",
-    tag: "Government & policy",
-  },
-  {
-    sentence: "Let me know if this company announces an IPO.",
-    tag: "Companies & launches",
-  },
-  {
-    sentence: "Tell me when a direct Sydney–Ulaanbaatar flight is announced.",
-    tag: "Travel & routes",
-  },
-  {
-    sentence:
-      "Notify me when a new hair loss treatment completes Phase 3 trials.",
-    tag: "Science & medicine",
-  },
-  {
-    sentence: "Tell me when the next Raspberry Pi is released.",
-    tag: "Technology",
-  },
-  {
-    sentence: "Let me know if my council approves the new ferry terminal.",
-    tag: "Local developments",
+    label: "Niche watches",
+    description: "Hyper-specific — the weirder, the better.",
+    tone: "specific" as const,
+    examples: [
+      {
+        sentence: "Tell me if Australian partner visa fees increase.",
+        tag: "Immigration & visas",
+      },
+      {
+        sentence:
+          "Notify me when a direct Sydney–Ulaanbaatar flight is announced.",
+        tag: "Travel & routes",
+      },
+      {
+        sentence:
+          "Let me know when FDA approves donanemab for early Alzheimer’s.",
+        tag: "Science & medicine",
+      },
+      {
+        sentence: "Tell me when Raspberry Pi 6 is officially released.",
+        tag: "Technology",
+      },
+    ],
   },
 ];
+
+const COMPARE_WATCH = "Notify me when mortgage rates drop below 5%.";
 
 export default function HomePage() {
   return (
@@ -49,7 +65,7 @@ export default function HomePage() {
           <em>waiting for.</em>
         </h1>
         <p className="hero-sub">
-          Describe any future event in an ordinary sentence. Bellwether watches
+          Describe any future event in an ordinary sentence. bellweather watches
           the web, and tells you if and when it actually happens.
         </p>
         <HeroWatchBox />
@@ -61,17 +77,38 @@ export default function HomePage() {
           <p className="eyebrow mono">Watch almost anything</p>
           <h2>One sentence is the whole setup.</h2>
           <p className="section-sub">
-            No categories to pick, no rules to configure. If you can describe
-            it, you can watch for it.
+            No categories to pick, no rules to configure. From everyday news to
+            oddly specific obsessions — if you can describe it, you can watch
+            for it.
           </p>
-          <div className="example-grid">
-            {EXAMPLES.map((item) => (
-              <article key={item.sentence} className="example-card reveal">
-                <p className="example-sentence mono">
-                  &quot;{item.sentence}&quot;
-                </p>
-                <p className="example-tag">{item.tag}</p>
-              </article>
+          <div className="example-groups">
+            {EXAMPLE_GROUPS.map((group) => (
+              <div key={group.label} className="example-group reveal">
+                <div className="example-group-header">
+                  <div>
+                    <h3 className="example-group-title">{group.label}</h3>
+                    <p className="example-group-desc">{group.description}</p>
+                  </div>
+                  <span
+                    className={`example-tone mono example-tone-${group.tone}`}
+                  >
+                    {group.tone === "generic" ? "Broad" : "Hyper-specific"}
+                  </span>
+                </div>
+                <div className="example-grid">
+                  {group.examples.map((item) => (
+                    <article
+                      key={item.sentence}
+                      className={`example-card example-card-${group.tone}`}
+                    >
+                      <p className="example-sentence mono">
+                        &quot;{item.sentence}&quot;
+                      </p>
+                      <p className="example-tag">{item.tag}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>
@@ -90,8 +127,7 @@ export default function HomePage() {
           </p>
           <div className="compare reveal">
             <p className="compare-watch mono">
-              Watch: &quot;Tell me if Australian partner visa fees
-              increase.&quot;
+              Watch: &quot;{COMPARE_WATCH}&quot;
             </p>
             <div className="compare-cols">
               <div className="compare-col compare-col-keyword">
@@ -99,7 +135,7 @@ export default function HomePage() {
                 <ul className="feed">
                   <li className="feed-item fired-noise">
                     <span className="feed-headline">
-                      Complete guide to partner visa fees in 2026
+                      Complete guide to mortgage rates in 2026
                     </span>
                     <span className="feed-verdict mono">
                       Alert sent: just a guide
@@ -107,7 +143,7 @@ export default function HomePage() {
                   </li>
                   <li className="feed-item fired-noise">
                     <span className="feed-headline">
-                      Forum thread: how much did your partner visa cost?
+                      Forum thread: will rates ever drop below 5%?
                     </span>
                     <span className="feed-verdict mono">
                       Alert sent: forum post
@@ -115,8 +151,7 @@ export default function HomePage() {
                   </li>
                   <li className="feed-item fired-noise">
                     <span className="feed-headline">
-                      Home Affairs confirms partner visa fee increase from 1
-                      July
+                      Fed cuts rates; average 30-year mortgage now 4.8%
                     </span>
                     <span className="feed-verdict mono">
                       Alert sent: buried in noise
@@ -126,11 +161,11 @@ export default function HomePage() {
                 <p className="compare-tally mono">3 alerts · 1 that mattered</p>
               </div>
               <div className="compare-col compare-col-watch">
-                <h3 className="compare-title">Bellwether watch</h3>
+                <h3 className="compare-title">bellweather watch</h3>
                 <ul className="feed">
                   <li className="feed-item skipped">
                     <span className="feed-headline">
-                      Complete guide to partner visa fees in 2026
+                      Complete guide to mortgage rates in 2026
                     </span>
                     <span className="feed-verdict mono">
                       Checked, no change
@@ -138,7 +173,7 @@ export default function HomePage() {
                   </li>
                   <li className="feed-item skipped">
                     <span className="feed-headline">
-                      Forum thread: how much did your partner visa cost?
+                      Forum thread: will rates ever drop below 5%?
                     </span>
                     <span className="feed-verdict mono">
                       Checked, no change
@@ -146,11 +181,10 @@ export default function HomePage() {
                   </li>
                   <li className="feed-item fired-signal">
                     <span className="feed-headline">
-                      Home Affairs confirms partner visa fee increase from 1
-                      July
+                      Fed cuts rates; average 30-year mortgage now 4.8%
                     </span>
                     <span className="feed-verdict mono">
-                      Notified: fee changed
+                      Notified: rate below 5%
                     </span>
                   </li>
                 </ul>
@@ -179,7 +213,7 @@ export default function HomePage() {
             <div className="step reveal">
               <p className="step-label mono">We watch</p>
               <p className="step-body">
-                Bellwether checks for new developments relevant to your watch.
+                bellweather checks for new developments relevant to your watch.
               </p>
             </div>
             <div className="step reveal">
@@ -222,7 +256,7 @@ export default function HomePage() {
                 <li>Push, SMS and webhook notifications</li>
                 <li>Watch history and evidence trail</li>
               </ul>
-              <Link className="btn btn-primary" href="/watches/new">
+              <Link className="btn btn-primary" href="/billing">
                 Start with Plus
               </Link>
             </div>

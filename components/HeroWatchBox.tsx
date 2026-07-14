@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const EXAMPLES = [
+  "Notify me when mortgage rates drop below 5%…",
+  "Tell me if this product goes on sale…",
+  "Let me know when my favorite artist announces a tour…",
   "Tell me if Australian partner visa fees increase…",
-  "Notify me when Bitcoin passes $100,000…",
-  "Tell me if Australia announces another lockdown…",
-  "Let me know if Singapore changes its remote work visa rules…",
-  "Tell me when a direct Sydney–Ulaanbaatar flight is announced…",
-  "Notify me if this company announces an IPO…",
+  "Notify me when a direct Sydney–Ulaanbaatar flight is announced…",
+  "Tell me when Raspberry Pi 6 is officially released…",
 ];
 
 export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {

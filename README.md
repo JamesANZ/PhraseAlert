@@ -77,23 +77,60 @@ Three keyword alerts. One mattered. Bellwether sent that one.
 - API routes for create, confirm, pause, delete
 - Cron endpoint stub at `/api/checks/run`
 
-Not built yet: live retrieval, email notifications, Stripe billing.
+Not built yet: live retrieval, email notifications for watches.
 
-Auth uses NextAuth with email magic links. In development, links print to the server console. In production, set `RESEND_API_KEY` and `EMAIL_FROM`.
+Auth uses NextAuth with Google sign-in only. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI for local development.
+
+## Billing (Plus)
+
+Plus unlocks 25 active watches for $9/month. Users can:
+
+- **Subscribe** with a card (Stripe Checkout subscription)
+- **Pay one month** with a card (Stripe Checkout payment) or **crypto** (Helio / MoonPay Commerce)
+- **Top up** prepaid months before they expire (reminders at 7, 3, and 1 days)
+
+When prepaid Plus expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active watches are paused until at most 3 remain.
+
+### Stripe setup
+
+1. Create a Product “Bellwether Plus” with a recurring monthly price ($9) → set `STRIPE_PRICE_ID_PLUS_MONTHLY`
+2. Optional one-time $9 price → `STRIPE_PRICE_ID_PLUS_PREPAID` (otherwise Checkout uses inline `price_data`)
+3. Add webhook endpoint `POST /api/billing/webhook/stripe` for:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.paid`
+   - `invoice.payment_failed`
+4. Enable Customer Portal in Stripe Dashboard for cancel/update card
+
+### Helio setup
+
+1. Create a $9 pay link in the Helio / MoonPay Commerce dashboard → `HELIO_PAYLINK_ID`
+2. Public API key → `HELIO_API_KEY`, secret → `HELIO_SECRET_KEY`
+3. Global webhook to `POST /api/billing/webhook/helio` → store `sharedToken` as `HELIO_WEBHOOK_SECRET`
+
+### Expiry emails
+
+Set `RESEND_API_KEY` and `EMAIL_FROM`. Daily cron `POST /api/billing/run` (see `vercel.json`) sends reminders and applies downgrades. Protect with `CRON_SECRET`.
 
 ## App structure
 
 ```
 app/
   page.tsx                 Landing page
+  billing/page.tsx         Plan status + checkout
   watches/page.tsx         Dashboard
   watches/new/page.tsx     Create + clarify flow
   api/watch/create/        Vagueness check
   api/watch/confirm/       Compile + persist watch
   api/watch/[id]/          Get, pause, delete
+  api/billing/checkout/    Stripe / Helio checkout
+  api/billing/portal/      Stripe Customer Portal
+  api/billing/webhook/     Stripe + Helio webhooks
+  api/billing/run/         Expiry reminders + downgrade
   api/checks/run/          Scheduled checks (stub)
 components/                UI components
-lib/                       Compiler, detector, db, watches
+lib/                       Compiler, detector, db, watches, billing
 evals/                     Phase 1 eval harness
 ```
 
@@ -113,14 +150,14 @@ AUTH_SECRET=generate-with-openssl-rand-base64-32
 DATABASE_URL=./data/bellwether.db
 ```
 
-For email sign-in in production:
+For Google sign-in:
 
 ```bash
-RESEND_API_KEY=re_...
-EMAIL_FROM=Bellwether <hello@yourdomain.com>
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
 ```
 
-Without Resend in development, magic links are logged to the terminal running `npm run dev`.
+Create OAuth credentials in Google Cloud Console and add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI.
 
 Run the app:
 
@@ -136,6 +173,8 @@ Optional:
 HF_MODEL=meta-llama/Meta-Llama-3.1-8B-Instruct
 CRON_SECRET=your-secret
 ```
+
+For Plus billing, copy Stripe / Helio / Resend keys from `.env.example`.
 
 ## Run evals
 
@@ -176,4 +215,4 @@ Phase 1 evals use fixture candidates in `evals/events.json` to test the judgment
 ## Roadmap
 
 - **Phase 2 (remaining):** live retrieval, email notifications for watches, Postgres for production
-- **Phase 3:** Stripe subscriptions, faster checks, SMS/push/webhooks, evidence trail UI
+- **Phase 3 (in progress):** Stripe + Helio billing (this repo), faster checks, SMS/push/webhooks, evidence trail UI

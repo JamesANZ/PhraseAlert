@@ -1,9 +1,9 @@
-import { sql } from "drizzle-orm";
 import {
   integer,
   primaryKey,
   sqliteTable,
   text,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 import type { AdapterAccount } from "next-auth/adapters";
 import type { WatchSpec } from "@/types";
@@ -19,6 +19,53 @@ export const authUsers = sqliteTable("user", {
   plan: text("plan", { enum: ["free", "plus"] })
     .notNull()
     .default("free"),
+  stripeCustomerId: text("stripe_customer_id"),
+  planPeriodEnd: integer("plan_period_end", { mode: "timestamp_ms" }),
+  billingMode: text("billing_mode", {
+    enum: ["none", "subscription", "prepaid"],
+  })
+    .notNull()
+    .default("none"),
+});
+
+export const subscriptions = sqliteTable(
+  "subscriptions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    provider: text("provider", { enum: ["stripe", "helio"] }).notNull(),
+    providerRef: text("provider_ref").notNull(),
+    mode: text("mode", { enum: ["subscription", "prepaid"] }).notNull(),
+    status: text("status").notNull(),
+    currentPeriodEnd: integer("current_period_end", { mode: "timestamp_ms" }),
+    amountCents: integer("amount_cents").notNull().default(900),
+    currency: text("currency").notNull().default("usd"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    providerRefUnique: uniqueIndex("subscriptions_provider_ref_unique").on(
+      table.provider,
+      table.providerRef,
+    ),
+  }),
+);
+
+export const billingEvents = sqliteTable("billing_events", {
+  id: text("id").primaryKey(),
+  provider: text("provider", { enum: ["stripe", "helio"] }).notNull(),
+  eventType: text("event_type").notNull(),
+  processedAt: integer("processed_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
 export const accounts = sqliteTable(

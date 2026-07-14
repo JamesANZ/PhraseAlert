@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WatchList } from "@/components/WatchList";
 import { auth } from "@/lib/auth";
-import { FREE_TIER_MAX_WATCHES } from "@/lib/constants";
+import { getBillingStatus } from "@/lib/billing/entitlements";
+import { initDb } from "@/lib/db";
 import { countActiveWatches, listWatches } from "@/lib/watches";
 
 export default async function WatchesPage() {
@@ -11,9 +12,13 @@ export default async function WatchesPage() {
     redirect("/login?callbackUrl=/watches");
   }
 
+  initDb();
   const userId = session.user.id;
   const watches = listWatches(userId);
   const activeCount = countActiveWatches(userId);
+  const billing = getBillingStatus(userId);
+  const limit = billing?.watchLimit ?? 3;
+  const planLabel = billing?.effectivePlan === "plus" ? "Plus" : "free";
 
   const items = watches.map((w) => ({
     id: w.id,
@@ -37,8 +42,14 @@ export default async function WatchesPage() {
         <div>
           <h1>Your watches</h1>
           <p>
-            Signed in as {session.user.email}. {activeCount} of{" "}
-            {FREE_TIER_MAX_WATCHES} free watches active.
+            Signed in as {session.user.email}. {activeCount} of {limit}{" "}
+            {planLabel} watches active.
+            {billing?.effectivePlan === "free" && (
+              <>
+                {" "}
+                <Link href="/billing">Upgrade to Plus</Link> for more.
+              </>
+            )}
           </p>
         </div>
         <Link className="btn btn-primary" href="/watches/new">

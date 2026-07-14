@@ -38,7 +38,14 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
 
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error ?? "Action failed");
+      const msg = data.error ?? "Action failed";
+      if (data.upgradeUrl) {
+        if (confirm(`${msg}\n\nOpen billing to upgrade?`)) {
+          router.push(data.upgradeUrl);
+        }
+        return;
+      }
+      alert(msg);
       return;
     }
 

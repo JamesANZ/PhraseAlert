@@ -15,6 +15,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
   const [customClarification, setCustomClarification] = useState("");
   const [error, setError] = useState("");
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
 
@@ -28,6 +29,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
   async function assessInput(input: string) {
     setLoading(true);
     setError("");
+    setUpgradeUrl(null);
     try {
       const res = await fetch("/api/watch/create", {
         method: "POST",
@@ -40,6 +42,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           router.push("/login?callbackUrl=/watches/new");
           return;
         }
+        if (data.upgradeUrl) setUpgradeUrl(data.upgradeUrl);
         throw new Error(data.error ?? "Failed to assess watch");
       }
 
@@ -61,6 +64,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
   async function confirmWatch(input: string, clarified: string) {
     setLoading(true);
     setError("");
+    setUpgradeUrl(null);
     setStep("compiling");
     try {
       const res = await fetch("/api/watch/confirm", {
@@ -77,6 +81,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           router.push("/login?callbackUrl=/watches/new");
           return;
         }
+        if (data.upgradeUrl) setUpgradeUrl(data.upgradeUrl);
         throw new Error(data.error ?? "Failed to create watch");
       }
       setStep("done");
@@ -109,7 +114,17 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             match, or tweak it below.
           </p>
         </div>
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="error-banner">
+            {error}
+            {upgradeUrl && (
+              <>
+                {" "}
+                <Link href={upgradeUrl}>Upgrade to Plus</Link>
+              </>
+            )}
+          </div>
+        )}
         <p
           className="mono"
           style={{ color: "var(--brass)", fontSize: "0.9rem" }}
@@ -186,14 +201,24 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           watch.
         </p>
       </div>
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="error-banner">
+          {error}
+          {upgradeUrl && (
+            <>
+              {" "}
+              <Link href={upgradeUrl}>Upgrade to Plus</Link>
+            </>
+          )}
+        </div>
+      )}
       <div className={`watch-box${rawInput ? " is-focused" : ""}`}>
         <div className="watch-input-row">
           <input
             className="watch-input mono"
             value={rawInput}
             onChange={(e) => setRawInput(e.target.value)}
-            placeholder="Tell me if Australian partner visa fees increase"
+            placeholder="Notify me when mortgage rates drop below 5%"
             onKeyDown={(e) => {
               if (e.key === "Enter" && rawInput.trim()) {
                 void assessInput(rawInput.trim());

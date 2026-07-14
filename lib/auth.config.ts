@@ -1,21 +1,13 @@
 import type { NextAuthConfig } from "next-auth";
-import Email from "next-auth/providers/email";
+import Google from "next-auth/providers/google";
 import { edgeAuthConfig } from "@/lib/auth.config.edge";
-import { sendMagicLink } from "@/lib/auth/email";
 
 export const serverAuthConfig = {
   ...edgeAuthConfig,
   providers: [
-    Email({
-      server: {
-        host: "127.0.0.1",
-        port: 1025,
-        auth: { user: "unused", pass: "unused" },
-      },
-      from: process.env.EMAIL_FROM ?? "Bellwether <onboarding@resend.dev>",
-      sendVerificationRequest: async ({ identifier, url }) => {
-        await sendMagicLink(identifier, url);
-      },
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {

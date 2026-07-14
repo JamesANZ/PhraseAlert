@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { watches } from "@/lib/db/schema";
-import { FREE_TIER_MAX_WATCHES } from "@/lib/constants";
+import { getWatchLimit } from "@/lib/billing/entitlements";
 import type { WatchSpec } from "@/types";
 import { and, desc, eq, ne } from "drizzle-orm";
 
@@ -36,7 +36,11 @@ export function countActiveWatches(userId: string): number {
 }
 
 export function canCreateWatch(userId: string): boolean {
-  return countActiveWatches(userId) < FREE_TIER_MAX_WATCHES;
+  return countActiveWatches(userId) < getWatchLimit(userId);
+}
+
+export function canResumeWatch(userId: string): boolean {
+  return countActiveWatches(userId) < getWatchLimit(userId);
 }
 
 export function listWatches(userId: string): WatchRow[] {
@@ -64,10 +68,11 @@ export function createWatch(spec: WatchSpec, userId: string): WatchRow {
   }
 
   const ownerId = userId;
+  const limit = getWatchLimit(ownerId);
 
   if (!canCreateWatch(ownerId)) {
     throw new Error(
-      `Free tier limit reached (${FREE_TIER_MAX_WATCHES} active watches).`,
+      `Watch limit reached (${limit} active watches). Upgrade to Plus for more.`,
     );
   }
 
@@ -95,6 +100,17 @@ export function updateWatchStatus(
 ): WatchRow | null {
   const existing = getWatch(id, userId);
   if (!existing) return null;
+
+  if (
+    status === "watching" &&
+    existing.status === "paused" &&
+    !canResumeWatch(userId)
+  ) {
+    const limit = getWatchLimit(userId);
+    throw new Error(
+      `Watch limit reached (${limit} active watches). Upgrade to Plus or pause another watch.`,
+    );
+  }
 
   db.update(watches)
     .set({

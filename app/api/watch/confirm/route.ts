@@ -28,7 +28,16 @@ export async function POST(request: Request) {
     if (message === "Unauthorized") {
       return NextResponse.json({ error: message }, { status: 401 });
     }
-    const status = message.includes("Free tier") ? 403 : 400;
-    return NextResponse.json({ error: message }, { status });
+    const status =
+      message.includes("Watch limit") || message.includes("Free tier")
+        ? 403
+        : 400;
+    return NextResponse.json(
+      {
+        error: message,
+        upgradeUrl: status === 403 ? "/billing" : undefined,
+      },
+      { status },
+    );
   }
 }

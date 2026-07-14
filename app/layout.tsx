@@ -23,9 +23,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bellwether",
+  title: "bellweather",
   description:
-    "Describe any future event in a plain sentence. Bellwether watches the web and tells you when it actually happens.",
+    "Describe any future event in a plain sentence. bellweather watches the web and tells you when it actually happens.",
 };
 
 export default function RootLayout({

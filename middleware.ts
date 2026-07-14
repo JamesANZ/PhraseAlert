@@ -10,5 +10,5 @@ export default middlewareAuth((req) => {
 });
 
 export const config = {
-  matcher: ["/watches/:path*"],
+  matcher: ["/watches/:path*", "/billing"],
 };
