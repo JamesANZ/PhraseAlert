@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { runCheckForWatch } from "@/lib/check";
 import { initDb } from "@/lib/db";
 import { listWatchingWatches } from "@/lib/watches";
 
@@ -10,16 +11,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!process.env.TAVILY_API_KEY) {
+    return NextResponse.json(
+      { error: "TAVILY_API_KEY is not configured" },
+      { status: 503 },
+    );
+  }
+
   initDb();
   const watches = listWatchingWatches();
+
+  let triggered = 0;
+  const errors: Array<{ watch_id: string; error: string }> = [];
+  const results: Array<{
+    watch_id: string;
+    check_id: string;
+    sources_retrieved: number;
+    sources_evaluated: number;
+    should_notify: boolean;
+    top_verdict: string;
+  }> = [];
+
+  for (const watch of watches) {
+    try {
+      const result = await runCheckForWatch(watch);
+      if (result.triggered) triggered += 1;
+      results.push({
+        watch_id: result.watchId,
+        check_id: result.checkId,
+        sources_retrieved: result.sourcesRetrieved,
+        sources_evaluated: result.sourcesEvaluated,
+        should_notify: result.decision.should_notify,
+        top_verdict: result.decision.top_verdict,
+      });
+    } catch (err) {
+      errors.push({
+        watch_id: watch.id,
+        error: err instanceof Error ? err.message : "Check failed",
+      });
+    }
+  }
 
   return NextResponse.json({
     ok: true,
     checked: watches.length,
-    message:
-      watches.length === 0
-        ? "No active watches"
-        : "Check run recorded. Live retrieval arrives in next phase.",
-    watch_ids: watches.map((w) => w.id),
+    triggered,
+    errors,
+    results,
   });
 }
