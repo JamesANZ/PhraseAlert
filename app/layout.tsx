@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Inter, Newsreader } from "next/font/google";
+import { IBM_Plex_Mono, Newsreader, Nunito } from "next/font/google";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
 
-const inter = Inter({
+const nunito = Nunito({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-nunito",
 });
 
 const newsreader = Newsreader({
@@ -25,7 +26,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "bellweather",
   description:
-    "Describe any future event in a plain sentence. bellweather watches the web and tells you when it actually happens.",
+    "Write one sentence about what you want to know. Get alerted when it happens, not when a page mentions the topic.",
 };
 
 export default function RootLayout({
@@ -36,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${newsreader.variable} ${ibmPlexMono.variable}`}
+        className={`${nunito.variable} ${newsreader.variable} ${ibmPlexMono.variable}`}
       >
         <Nav />
         {children}

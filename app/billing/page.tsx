@@ -49,15 +49,15 @@ export default async function BillingPage({
         <h1>Plus access</h1>
         <p>
           Free includes {FREE_TIER_MAX_WATCHES} active watches. Plus unlocks{" "}
-          {PLUS_TIER_MAX_WATCHES} for $9/month — subscribe with a card, or pay
-          one month by card or crypto.
+          {PLUS_TIER_MAX_WATCHES} for $9/month. Pay by card subscription, one
+          month by card, or crypto.
         </p>
       </div>
 
       {params.success && (
         <p className="billing-banner billing-banner-success" role="status">
-          Payment received. Your plan will update in a moment — refresh if you
-          still see Free.
+          Payment received. Your plan will update shortly. Refresh if you still
+          see Free.
         </p>
       )}
       {params.canceled && (

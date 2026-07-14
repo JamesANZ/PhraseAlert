@@ -4,8 +4,7 @@ export function Footer() {
       <div className="footer-inner">
         <span className="mono">bellweather</span>
         <span className="footer-muted">
-          Tell us what you&apos;re waiting for. We&apos;ll tell you when it
-          happens.
+          Alerts when events happen, not when keywords match.
         </span>
       </div>
     </footer>

@@ -5,7 +5,7 @@ import { RevealOnScroll } from "@/components/RevealOnScroll";
 const EXAMPLE_GROUPS = [
   {
     label: "Everyday watches",
-    description: "Broad topics anyone might care about.",
+    description: "Rates, sales, tours, company news.",
     tone: "generic" as const,
     examples: [
       {
@@ -28,7 +28,7 @@ const EXAMPLE_GROUPS = [
   },
   {
     label: "Niche watches",
-    description: "Hyper-specific — the weirder, the better.",
+    description: "Visa fees, drug approvals, product launches.",
     tone: "specific" as const,
     examples: [
       {
@@ -37,7 +37,7 @@ const EXAMPLE_GROUPS = [
       },
       {
         sentence:
-          "Notify me when a direct Sydney–Ulaanbaatar flight is announced.",
+          "Notify me when a direct Sydney to Ulaanbaatar flight is announced.",
         tag: "Travel & routes",
       },
       {
@@ -65,8 +65,8 @@ export default function HomePage() {
           <em>waiting for.</em>
         </h1>
         <p className="hero-sub">
-          Describe any future event in an ordinary sentence. bellweather watches
-          the web, and tells you if and when it actually happens.
+          Write one sentence about what you want to know. We alert you when it
+          happens, not when a page mentions the topic.
         </p>
         <HeroWatchBox />
         <p className="hero-note">3 watches free · No credit card required</p>
@@ -74,12 +74,10 @@ export default function HomePage() {
 
       <RevealOnScroll>
         <section className="section" id="examples">
-          <p className="eyebrow mono">Watch almost anything</p>
-          <h2>One sentence is the whole setup.</h2>
+          <p className="eyebrow mono">Examples</p>
+          <h2>One sentence. That&apos;s the setup.</h2>
           <p className="section-sub">
-            No categories to pick, no rules to configure. From everyday news to
-            oddly specific obsessions — if you can describe it, you can watch
-            for it.
+            No categories or rules. Describe the event and we handle the rest.
           </p>
           <div className="example-groups">
             {EXAMPLE_GROUPS.map((group) => (
@@ -92,7 +90,7 @@ export default function HomePage() {
                   <span
                     className={`example-tone mono example-tone-${group.tone}`}
                   >
-                    {group.tone === "generic" ? "Broad" : "Hyper-specific"}
+                    {group.tone === "generic" ? "Broad" : "Specific"}
                   </span>
                 </div>
                 <div className="example-grid">
@@ -101,7 +99,7 @@ export default function HomePage() {
                       key={item.sentence}
                       className={`example-card example-card-${group.tone}`}
                     >
-                      <p className="example-sentence mono">
+                      <p className="example-sentence">
                         &quot;{item.sentence}&quot;
                       </p>
                       <p className="example-tag">{item.tag}</p>
@@ -114,20 +112,20 @@ export default function HomePage() {
         </section>
 
         <section className="section" id="difference">
-          <p className="eyebrow mono">Not a keyword alert</p>
+          <p className="eyebrow mono">Why it&apos;s different</p>
           <h2>
-            We watch for the event,
+            Alerts when the event happens,
             <br />
-            not the words.
+            not when the words show up.
           </h2>
           <p className="section-sub">
-            Keyword alerts fire on any page that contains the right words. A
-            watch fires when credible new information shows the thing has
-            actually happened.
+            Keyword alerts ping you for guides, forum posts, and old articles.
+            A watch only fires when new evidence shows the thing you asked for
+            has happened.
           </p>
           <div className="compare reveal">
-            <p className="compare-watch mono">
-              Watch: &quot;{COMPARE_WATCH}&quot;
+            <p className="compare-watch">
+              Example watch: &quot;{COMPARE_WATCH}&quot;
             </p>
             <div className="compare-cols">
               <div className="compare-col compare-col-keyword">
@@ -137,28 +135,22 @@ export default function HomePage() {
                     <span className="feed-headline">
                       Complete guide to mortgage rates in 2026
                     </span>
-                    <span className="feed-verdict mono">
-                      Alert sent: just a guide
-                    </span>
+                    <span className="feed-verdict">Alert sent</span>
                   </li>
                   <li className="feed-item fired-noise">
                     <span className="feed-headline">
                       Forum thread: will rates ever drop below 5%?
                     </span>
-                    <span className="feed-verdict mono">
-                      Alert sent: forum post
-                    </span>
+                    <span className="feed-verdict">Alert sent</span>
                   </li>
                   <li className="feed-item fired-noise">
                     <span className="feed-headline">
                       Fed cuts rates; average 30-year mortgage now 4.8%
                     </span>
-                    <span className="feed-verdict mono">
-                      Alert sent: buried in noise
-                    </span>
+                    <span className="feed-verdict">Alert sent</span>
                   </li>
                 </ul>
-                <p className="compare-tally mono">3 alerts · 1 that mattered</p>
+                <p className="compare-tally">3 notifications</p>
               </div>
               <div className="compare-col compare-col-watch">
                 <h3 className="compare-title">bellweather watch</h3>
@@ -167,60 +159,53 @@ export default function HomePage() {
                     <span className="feed-headline">
                       Complete guide to mortgage rates in 2026
                     </span>
-                    <span className="feed-verdict mono">
-                      Checked, no change
-                    </span>
+                    <span className="feed-verdict">No change</span>
                   </li>
                   <li className="feed-item skipped">
                     <span className="feed-headline">
                       Forum thread: will rates ever drop below 5%?
                     </span>
-                    <span className="feed-verdict mono">
-                      Checked, no change
-                    </span>
+                    <span className="feed-verdict">No change</span>
                   </li>
                   <li className="feed-item fired-signal">
                     <span className="feed-headline">
                       Fed cuts rates; average 30-year mortgage now 4.8%
                     </span>
-                    <span className="feed-verdict mono">
-                      Notified: rate below 5%
-                    </span>
+                    <span className="feed-verdict">Notified</span>
                   </li>
                 </ul>
-                <p className="compare-tally compare-tally-signal mono">
-                  1 alert · the one that mattered
+                <p className="compare-tally compare-tally-signal">
+                  1 notification
                 </p>
               </div>
             </div>
             <p className="compare-footnote">
-              Watches are timestamped when you create them, so you hear about
-              new developments, not old articles that happen to match.
+              Each watch starts from the moment you create it, so you only hear
+              about new developments.
             </p>
           </div>
         </section>
 
         <section className="section" id="how">
           <p className="eyebrow mono">How it works</p>
-          <h2>Three steps. Two of them are ours.</h2>
+          <h2>Set it up in seconds.</h2>
           <div className="steps">
             <div className="step reveal">
-              <p className="step-label mono">Describe it</p>
+              <p className="step-label mono">1. Describe it</p>
               <p className="step-body">
-                Write a sentence describing exactly what you want to know.
+                Write what you want to know in plain English.
               </p>
             </div>
             <div className="step reveal">
-              <p className="step-label mono">We watch</p>
+              <p className="step-label mono">2. We watch</p>
               <p className="step-body">
-                bellweather checks for new developments relevant to your watch.
+                We check the web for new evidence that matches your watch.
               </p>
             </div>
             <div className="step reveal">
-              <p className="step-label mono">You know</p>
+              <p className="step-label mono">3. You get notified</p>
               <p className="step-body">
-                When the event actually happens, you get notified. Until then,
-                silence.
+                If the event happens, we tell you. If not, you hear nothing.
               </p>
             </div>
           </div>
@@ -228,7 +213,7 @@ export default function HomePage() {
 
         <section className="section" id="pricing">
           <p className="eyebrow mono">Pricing</p>
-          <h2>Start free. Stay free if you like.</h2>
+          <h2>Free to start. Upgrade when you need more.</h2>
           <div className="pricing-grid">
             <div className="plan reveal">
               <h3 className="plan-name">Free</h3>
@@ -265,9 +250,9 @@ export default function HomePage() {
 
         <section className="section final-cta">
           <h2 className="reveal">
-            Stop checking.
+            Create a watch.
             <br />
-            <em>Start knowing.</em>
+            <em>We&apos;ll do the checking.</em>
           </h2>
           <Link
             className="btn btn-primary btn-large reveal"

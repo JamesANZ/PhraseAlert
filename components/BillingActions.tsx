@@ -61,7 +61,7 @@ export function BillingActions({
       {!isSubscription && (
         <div className="billing-action-group">
           <h3>Subscribe monthly</h3>
-          <p>Recurring card payment — renews automatically each month.</p>
+          <p>Recurring card payment. Renews each month.</p>
           <button
             className="btn btn-primary"
             type="button"
@@ -70,7 +70,7 @@ export function BillingActions({
           >
             {loading === "stripe_sub"
               ? "Redirecting…"
-              : "Subscribe with card — $9/mo"}
+              : "Subscribe with card ($9/mo)"}
           </button>
         </div>
       )}
@@ -90,7 +90,7 @@ export function BillingActions({
           >
             {loading === "stripe_prepaid"
               ? "Redirecting…"
-              : "Pay with card — $9"}
+              : "Pay with card ($9)"}
           </button>
           <button
             className="btn btn-ghost"
@@ -98,7 +98,7 @@ export function BillingActions({
             disabled={loading !== null}
             onClick={() => void startCheckout("helio")}
           >
-            {loading === "helio" ? "Redirecting…" : "Pay with crypto — $9"}
+            {loading === "helio" ? "Redirecting…" : "Pay with crypto ($9)"}
           </button>
         </div>
       </div>

@@ -163,7 +163,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
     }
     if (clarifyTurns >= MAX_CLARIFY_TURNS && !customClarification.trim()) {
       setError(
-        "Write a more specific custom sentence — topic keywords alone cannot become a watch.",
+        "Write a more specific sentence. A topic name alone is not enough for a watch.",
       );
       return;
     }

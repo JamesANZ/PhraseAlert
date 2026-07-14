@@ -8,7 +8,7 @@ const EXAMPLES = [
   "Tell me if this product goes on sale…",
   "Let me know when my favorite artist announces a tour…",
   "Tell me if Australian partner visa fees increase…",
-  "Notify me when a direct Sydney–Ulaanbaatar flight is announced…",
+  "Notify me when a direct Sydney to Ulaanbaatar flight is announced…",
   "Tell me when Raspberry Pi 6 is officially released…",
 ];
 
