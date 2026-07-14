@@ -7,11 +7,16 @@ import type { VaguenessResult } from "@/types";
 
 type Step = "input" | "clarify" | "compiling" | "done";
 
+const MAX_CLARIFY_TURNS = 5;
+
 export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
   const router = useRouter();
   const [rawInput, setRawInput] = useState(initialInput);
+  const [currentStatement, setCurrentStatement] = useState(initialInput);
   const [step, setStep] = useState<Step>(initialInput ? "compiling" : "input");
   const [vagueness, setVagueness] = useState<VaguenessResult | null>(null);
+  const [clarifyTrail, setClarifyTrail] = useState<string[]>([]);
+  const [clarifyTurns, setClarifyTurns] = useState(0);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
   const [customClarification, setCustomClarification] = useState("");
   const [error, setError] = useState("");
@@ -22,11 +27,31 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
   useEffect(() => {
     if (initialInput && !started) {
       setStarted(true);
-      void assessInput(initialInput);
+      void assessInput(initialInput, { isOriginal: true });
     }
   }, [initialInput, started]);
 
-  async function assessInput(input: string) {
+  function resetClarifyState() {
+    setVagueness(null);
+    setClarifyTrail([]);
+    setClarifyTurns(0);
+    setSelectedInterpretation("");
+    setCustomClarification("");
+  }
+
+  async function assessInput(
+    input: string,
+    options: {
+      isOriginal?: boolean;
+      trail?: string[];
+      turns?: number;
+      originalInput?: string;
+    } = {},
+  ) {
+    const { isOriginal = false, trail, turns, originalInput } = options;
+    const original = isOriginal
+      ? input
+      : (originalInput ?? (rawInput || input));
     setLoading(true);
     setError("");
     setUpgradeUrl(null);
@@ -46,22 +71,40 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         throw new Error(data.error ?? "Failed to assess watch");
       }
 
+      if (isOriginal) {
+        setRawInput(input);
+        setClarifyTrail([]);
+        setClarifyTurns(0);
+      }
+
+      setCurrentStatement(input);
+      setSelectedInterpretation("");
+      setCustomClarification("");
+
       if (data.classification === "VAGUE") {
+        const nextTurns = turns ?? (isOriginal ? 1 : clarifyTurns + 1);
+        setClarifyTurns(nextTurns);
+        if (trail) setClarifyTrail(trail);
         setVagueness(data);
         setStep("clarify");
+        if (nextTurns >= MAX_CLARIFY_TURNS) {
+          setError(
+            "Still too vague after several rounds. Write a more specific sentence with entity, outcome, and scope.",
+          );
+        }
         return;
       }
 
-      await confirmWatch(input, input);
+      await confirmWatch(original, input);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      setStep("input");
+      setStep(vagueness ? "clarify" : "input");
     } finally {
       setLoading(false);
     }
   }
 
-  async function confirmWatch(input: string, clarified: string) {
+  async function confirmWatch(originalInput: string, clarified: string) {
     setLoading(true);
     setError("");
     setUpgradeUrl(null);
@@ -71,7 +114,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          raw_input: input,
+          raw_input: originalInput,
           clarified_statement: clarified,
         }),
       });
@@ -82,6 +125,23 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           return;
         }
         if (data.upgradeUrl) setUpgradeUrl(data.upgradeUrl);
+
+        if (data.classification === "VAGUE") {
+          setCurrentStatement(clarified);
+          setVagueness({
+            classification: "VAGUE",
+            interpretations: data.interpretations,
+            reasoning: data.reasoning,
+          });
+          setClarifyTurns((t) => t + 1);
+          setError(
+            data.error ??
+              "That watch is still too vague. Pick a more specific option.",
+          );
+          setStep("clarify");
+          return;
+        }
+
         throw new Error(data.error ?? "Failed to create watch");
       }
       setStep("done");
@@ -95,10 +155,35 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
     }
   }
 
+  function continueWithClarification() {
+    const clarified = customClarification.trim() || selectedInterpretation;
+    if (!clarified) {
+      setError("Pick an option or write a clarification.");
+      return;
+    }
+    if (clarifyTurns >= MAX_CLARIFY_TURNS && !customClarification.trim()) {
+      setError(
+        "Write a more specific custom sentence — topic keywords alone cannot become a watch.",
+      );
+      return;
+    }
+    const nextTrail = [...clarifyTrail, currentStatement];
+    setClarifyTrail(nextTrail);
+    void assessInput(clarified, {
+      trail: nextTrail,
+      turns: clarifyTurns + 1,
+      originalInput: rawInput,
+    });
+  }
+
   if (step === "compiling" || (loading && step !== "clarify")) {
     return (
       <div className="clarify-panel">
-        <p className="loading mono">Compiling your watch…</p>
+        <p className="loading mono">
+          {step === "compiling"
+            ? "Compiling your watch…"
+            : "Checking specificity…"}
+        </p>
       </div>
     );
   }
@@ -108,10 +193,10 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
     return (
       <div className="clarify-panel">
         <div className="page-header">
-          <h1>Clarify your watch</h1>
+          <h1>Make it more specific</h1>
           <p>
-            Your sentence could mean a few different things. Pick the closest
-            match, or tweak it below.
+            Vague topic watches create too much noise. Narrow until there is one
+            unambiguous event to monitor.
           </p>
         </div>
         {error && (
@@ -125,11 +210,18 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             )}
           </div>
         )}
+        {clarifyTrail.length > 0 && (
+          <ol className="clarify-trail mono">
+            {clarifyTrail.map((item) => (
+              <li key={item}>&quot;{item}&quot;</li>
+            ))}
+          </ol>
+        )}
         <p
           className="mono"
           style={{ color: "var(--brass)", fontSize: "0.9rem" }}
         >
-          &quot;{rawInput}&quot;
+          Now: &quot;{currentStatement}&quot;
         </p>
         <div className="clarify-options">
           {options.map((option) => (
@@ -147,12 +239,12 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           ))}
         </div>
         <label className="visually-hidden" htmlFor="custom-clarify">
-          Or describe it differently
+          Or describe it more specifically
         </label>
         <textarea
           id="custom-clarify"
           className="clarify-custom"
-          placeholder="Or describe it differently…"
+          placeholder="Or write a more specific watch sentence…"
           value={customClarification}
           onChange={(e) => {
             setCustomClarification(e.target.value);
@@ -164,24 +256,16 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             className="btn btn-primary"
             type="button"
             disabled={loading}
-            onClick={() => {
-              const clarified =
-                customClarification.trim() || selectedInterpretation;
-              if (!clarified) {
-                setError("Pick an option or write a clarification.");
-                return;
-              }
-              void confirmWatch(rawInput, clarified);
-            }}
+            onClick={continueWithClarification}
           >
-            Confirm watch
+            Continue
           </button>
           <button
             className="btn btn-ghost"
             type="button"
             onClick={() => {
               setStep("input");
-              setVagueness(null);
+              resetClarifyState();
               setError("");
             }}
           >
@@ -197,8 +281,8 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
       <div className="page-header">
         <h1>Create a watch</h1>
         <p>
-          Describe a future event in one sentence. We&apos;ll compile it into a
-          watch.
+          Describe a specific future event in one sentence. Topic keywords alone
+          (like &quot;Bitcoin&quot;) are rejected until you add a clear outcome.
         </p>
       </div>
       {error && (
@@ -221,7 +305,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             placeholder="Notify me when mortgage rates drop below 5%"
             onKeyDown={(e) => {
               if (e.key === "Enter" && rawInput.trim()) {
-                void assessInput(rawInput.trim());
+                void assessInput(rawInput.trim(), { isOriginal: true });
               }
             }}
           />
@@ -229,7 +313,9 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             className="btn btn-primary"
             type="button"
             disabled={loading || !rawInput.trim()}
-            onClick={() => void assessInput(rawInput.trim())}
+            onClick={() =>
+              void assessInput(rawInput.trim(), { isOriginal: true })
+            }
           >
             Continue
           </button>

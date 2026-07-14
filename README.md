@@ -54,19 +54,20 @@ Three keyword alerts. One mattered. Bellwether sent that one.
 
 ## How it works
 
-1. **Describe it.** Write a sentence for what you want to know.
-2. **Compile.** A small model clarifies ambiguity and produces a structured watch spec: trigger conditions, non-triggers, search queries, authoritative domains.
-3. **Watch.** On a schedule, the system retrieves new web content, filters out pre-watch and irrelevant results, and evaluates each candidate.
-4. **Notify.** When credible evidence confirms the event occurred, you get an alert with the evidence trail.
+1. **Describe it.** Write a specific future event in one sentence. Topic keywords alone (e.g. "Bitcoin") are rejected.
+2. **Clarify until clear.** If the sentence is vague, Bellwether suggests more specific watch sentences and will not save the watch until it is unambiguous.
+3. **Compile.** A model produces a structured watch spec: trigger conditions, non-triggers, search queries, authoritative domains.
+4. **Watch.** On a schedule, the system retrieves new web content, filters out pre-watch and irrelevant results, and evaluates each candidate.
+5. **Notify.** When credible evidence confirms the event occurred, you get an alert with the evidence trail.
 
 ## This repository
 
 **Phase 1** (judgment layer):
 
-- Watch compiler (vagueness + structured watch spec generation)
+- Watch compiler (strict vagueness + structured watch spec generation)
 - Detection and decision pipeline
-- Backdated eval harness with historical fixtures
-- Hugging Face Inference integration for small-model testing
+- Backdated eval harness with historical fixtures + multi-turn dialogue smoke
+- Hugging Face Inference Providers (default `meta-llama/Llama-3.3-70B-Instruct`)
 
 **Phase 2** (product shell, in progress):
 
@@ -74,10 +75,10 @@ Three keyword alerts. One mattered. Bellwether sent that one.
 - Watch creation flow with clarification step
 - Dashboard at `/watches`
 - SQLite database (local dev) via Drizzle
-- API routes for create, confirm, pause, delete
-- Cron endpoint stub at `/api/checks/run`
+- API routes for create, confirm, pause, delete, check-now
+- Cron endpoint at `/api/checks/run` with Tavily live retrieval
 
-Not built yet: live retrieval, email notifications for watches.
+Not built yet: email notifications for watches.
 
 Auth uses NextAuth with Google sign-in only. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI for local development.
 
@@ -128,7 +129,8 @@ app/
   api/billing/portal/      Stripe Customer Portal
   api/billing/webhook/     Stripe + Helio webhooks
   api/billing/run/         Expiry reminders + downgrade
-  api/checks/run/          Scheduled checks (stub)
+  api/checks/run/          Scheduled Tavily checks
+  api/watch/[id]/check/    Manual check-now for a watch
 components/                UI components
 lib/                       Compiler, detector, db, watches, billing
 evals/                     Phase 1 eval harness
@@ -170,7 +172,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Optional:
 
 ```bash
-HF_MODEL=meta-llama/Meta-Llama-3.1-8B-Instruct
+HF_MODEL=meta-llama/Llama-3.3-70B-Instruct
 CRON_SECRET=your-secret
 ```
 
@@ -178,7 +180,13 @@ For Plus billing, copy Stripe / Helio / Resend keys from `.env.example`.
 
 ## Run evals
 
-Full evaluation:
+Golden smoke (compiler + detector + dialogues + live Tavily retrieval — recommended gate):
+
+```bash
+npm run eval:smoke
+```
+
+Full evaluation (same as smoke today):
 
 ```bash
 npm run eval
@@ -190,10 +198,22 @@ Compiler only:
 npm run eval:compiler
 ```
 
-Detector and decision pipeline:
+Detector and decision pipeline (fixture candidates):
 
 ```bash
 npm run eval:detector
+```
+
+Multi-turn vagueness dialogues only:
+
+```bash
+npm run eval:dialogues
+```
+
+Live Tavily retrieval only (requires `TAVILY_API_KEY`):
+
+```bash
+npm run eval:retrieval
 ```
 
 Type check:
@@ -202,17 +222,24 @@ Type check:
 npm run typecheck
 ```
 
+Vague topic watches (e.g. `"Bitcoin"`) must stay `VAGUE` until a concrete outcome is specified. Dialogue fixtures live in `evals/dialogues.json`. Past-event fixtures (including pre-watch distractors) live in `evals/events.json`. Live search cases live in `evals/live-retrieval.json`.
+
 ## Acceptance targets (v0)
 
 - Detection rate >= 90%
 - False positive rate <= 5%
 - Fixture-level verdict accuracy >= 85%
+- Pre-watch distractors dropped 100%
+- Dialogue smoke: keyword rejects + visa multi-turn + one-shot CLEAR
+- Live retrieval smoke: Tavily returns candidates for backdated watches; detector finds TRIGGERED evidence on known past events
 
 ## Retrieval
 
-Phase 1 evals use fixture candidates in `evals/events.json` to test the judgment layer. Live retrieval (Tavily, Brave, RSS) is not wired into the app yet.
+Set `TAVILY_API_KEY` for live checks. Scheduled `POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. Email notify is not wired yet.
+
+Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches. Brave and RSS providers are typed but not implemented.
 
 ## Roadmap
 
-- **Phase 2 (remaining):** live retrieval, email notifications for watches, Postgres for production
+- **Phase 2 (remaining):** email notifications for watches, Postgres for production
 - **Phase 3 (in progress):** Stripe + Helio billing (this repo), faster checks, SMS/push/webhooks, evidence trail UI

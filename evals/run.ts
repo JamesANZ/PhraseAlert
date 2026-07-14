@@ -2,32 +2,64 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { compileWatchSpec } from "../lib/compiler";
+import { assessVagueness, compileWatchSpec } from "../lib/compiler";
 import { decideFromEvidence } from "../lib/decide";
 import { detectEvent } from "../lib/detector";
 import { applyRetrievalFilters } from "../lib/filter";
 import { getModel } from "../lib/inference";
+import { retrieveCandidates } from "../lib/retrieval";
 import {
+  EvalDialoguesFileSchema,
   EvalEventsFileSchema,
+  LiveRetrievalFileSchema,
+  type EvalDialogue,
   type EvalEvent,
   type EvalScores,
+  type LiveRetrievalCase,
   type Verdict,
 } from "../types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-type Mode = "full" | "compiler-only" | "detector-only";
+type Mode =
+  | "full"
+  | "compiler-only"
+  | "detector-only"
+  | "dialogues-only"
+  | "retrieval-only"
+  | "smoke";
 
 function parseMode(): Mode {
   const args = process.argv.slice(2);
   if (args.includes("--compiler-only")) return "compiler-only";
   if (args.includes("--detector-only")) return "detector-only";
+  if (args.includes("--dialogues-only")) return "dialogues-only";
+  if (args.includes("--retrieval-only")) return "retrieval-only";
+  if (args.includes("--smoke")) return "smoke";
   return "full";
 }
 
 function loadEvents(): EvalEvent[] {
   const raw = readFileSync(join(__dirname, "events.json"), "utf-8");
   return EvalEventsFileSchema.parse(JSON.parse(raw)).events;
+}
+
+function loadDialogues(): EvalDialogue[] {
+  const raw = readFileSync(join(__dirname, "dialogues.json"), "utf-8");
+  return EvalDialoguesFileSchema.parse(JSON.parse(raw)).dialogues;
+}
+
+function loadLiveRetrievalCases(): LiveRetrievalCase[] {
+  const raw = readFileSync(join(__dirname, "live-retrieval.json"), "utf-8");
+  return LiveRetrievalFileSchema.parse(JSON.parse(raw)).cases;
+}
+
+function requireTavily(): void {
+  if (!process.env.TAVILY_API_KEY) {
+    throw new Error(
+      "TAVILY_API_KEY is required for live retrieval evals. Add it to .env.",
+    );
+  }
 }
 
 function verdictMatches(
@@ -38,7 +70,25 @@ function verdictMatches(
   return expected === actual;
 }
 
-async function runCompilerEval(events: EvalEvent[]): Promise<void> {
+function suggestionsMatchKeywords(
+  interpretations: string[] | undefined,
+  keywords: string[] | undefined,
+): boolean {
+  if (!keywords || keywords.length === 0) return true;
+  const haystack = (interpretations ?? []).join(" ").toLowerCase();
+  return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
+}
+
+function domainsMatchKeywords(
+  domains: string[],
+  keywords: string[] | undefined,
+): boolean {
+  if (!keywords || keywords.length === 0) return true;
+  const haystack = domains.join(" ").toLowerCase();
+  return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
+}
+
+async function runCompilerEval(events: EvalEvent[]): Promise<boolean> {
   console.log("\n=== Compiler eval ===\n");
   let ok = 0;
 
@@ -70,6 +120,7 @@ async function runCompilerEval(events: EvalEvent[]): Promise<void> {
   }
 
   console.log(`\nCompiler: ${ok}/${events.length} produced valid specs`);
+  return ok === events.length;
 }
 
 async function runDetectorEval(events: EvalEvent[]): Promise<EvalScores> {
@@ -82,6 +133,8 @@ async function runDetectorEval(events: EvalEvent[]): Promise<EvalScores> {
   let shouldTriggerDetected = 0;
   let shouldNotTriggerEvents = 0;
   let shouldNotTriggerFalsePositives = 0;
+  let distractorsTotal = 0;
+  let distractorsDropped = 0;
 
   for (const event of events) {
     console.log(`--- ${event.id}: ${event.description}`);
@@ -92,8 +145,25 @@ async function runDetectorEval(events: EvalEvent[]): Promise<EvalScores> {
       id: `w_eval_${event.id}`,
     });
 
+    const distractors = event.fixtures.filter((f) => f.label === "distractor");
     const candidates = event.fixtures.map((f) => f.candidate);
     const filtered = applyRetrievalFilters(candidates, event.created_at);
+    const filteredUrls = new Set(filtered.map((c) => c.url));
+
+    for (const d of distractors) {
+      distractorsTotal++;
+      if (!filteredUrls.has(d.candidate.url)) {
+        distractorsDropped++;
+        console.log(
+          `  ✓ [distractor] dropped pre-watch — ${d.candidate.title.slice(0, 60)}`,
+        );
+      } else {
+        console.log(
+          `  ✗ [distractor] NOT dropped — ${d.candidate.title.slice(0, 60)}`,
+        );
+      }
+    }
+
     const dropped = candidates.length - filtered.length;
     if (dropped > 0) {
       console.log(`  filter: dropped ${dropped} pre-watch fixture(s)`);
@@ -101,7 +171,8 @@ async function runDetectorEval(events: EvalEvent[]): Promise<EvalScores> {
 
     const evidence = [];
     for (const fixture of event.fixtures) {
-      if (!filtered.some((c) => c.url === fixture.candidate.url)) continue;
+      if (fixture.label === "distractor") continue;
+      if (!filteredUrls.has(fixture.candidate.url)) continue;
 
       const detection = await detectEvent(spec, fixture.candidate);
       const match = verdictMatches(fixture.expect_verdict, detection.verdict);
@@ -164,10 +235,215 @@ async function runDetectorEval(events: EvalEvent[]): Promise<EvalScores> {
     should_trigger_detected: shouldTriggerDetected,
     should_not_trigger_events: shouldNotTriggerEvents,
     should_not_trigger_false_positives: shouldNotTriggerFalsePositives,
+    distractors_dropped: distractorsDropped,
+    distractors_total: distractorsTotal,
   };
 }
 
-function printSummary(scores: EvalScores): void {
+async function runDialogueEval(dialogues: EvalDialogue[]): Promise<boolean> {
+  console.log("\n=== Dialogue / vagueness smoke ===\n");
+  console.log(`Model: ${getModel()}\n`);
+
+  let dialoguesPassed = 0;
+
+  for (const dialogue of dialogues) {
+    console.log(`--- ${dialogue.id}: ${dialogue.description}`);
+    let dialogueOk = true;
+
+    for (let i = 0; i < dialogue.steps.length; i++) {
+      const step = dialogue.steps[i]!;
+      process.stdout.write(`  step ${i + 1}: "${step.input.slice(0, 50)}" ... `);
+
+      try {
+        const vagueness = await assessVagueness(step.input);
+        if (vagueness.classification !== step.expect_classification) {
+          dialogueOk = false;
+          console.log(
+            `FAIL (expected ${step.expect_classification}, got ${vagueness.classification})`,
+          );
+          if (vagueness.reasoning) {
+            console.log(`      reasoning: ${vagueness.reasoning}`);
+          }
+          continue;
+        }
+
+        if (
+          step.expect_classification === "VAGUE" &&
+          !suggestionsMatchKeywords(
+            vagueness.interpretations,
+            step.expect_suggestion_keywords,
+          )
+        ) {
+          dialogueOk = false;
+          console.log("FAIL (suggestion keywords missing)");
+          console.log(
+            `      got: ${(vagueness.interpretations ?? []).join(" | ")}`,
+          );
+          continue;
+        }
+
+        if (step.expect_compile) {
+          const spec = await compileWatchSpec(step.input, {
+            createdAt: new Date().toISOString(),
+            clarifiedStatement: step.input,
+            id: `w_dialogue_${dialogue.id}_${i}`,
+          });
+          const complete =
+            spec.trigger_conditions.length > 0 &&
+            spec.non_triggers.length > 0 &&
+            spec.search_queries.length > 0;
+          if (!complete) {
+            dialogueOk = false;
+            console.log("FAIL (incomplete compile)");
+            continue;
+          }
+          if (
+            !domainsMatchKeywords(
+              spec.authoritative_domains,
+              step.expect_domain_keywords,
+            )
+          ) {
+            dialogueOk = false;
+            console.log("FAIL (authoritative domains miss expected keywords)");
+            console.log(
+              `      domains: ${spec.authoritative_domains.join(", ")}`,
+            );
+            continue;
+          }
+        }
+
+        console.log(`OK (${vagueness.classification})`);
+        if (vagueness.interpretations?.length) {
+          console.log(
+            `      suggestions: ${vagueness.interpretations.join(" | ")}`,
+          );
+        }
+      } catch (err) {
+        dialogueOk = false;
+        console.log(`FAIL (${err instanceof Error ? err.message : err})`);
+      }
+    }
+
+    if (dialogueOk) {
+      dialoguesPassed++;
+      console.log(`  → dialogue PASS\n`);
+    } else {
+      console.log(`  → dialogue FAIL\n`);
+    }
+  }
+
+  console.log(`Dialogues: ${dialoguesPassed}/${dialogues.length} passed`);
+  return dialoguesPassed === dialogues.length;
+}
+
+async function runLiveRetrievalEval(
+  cases: LiveRetrievalCase[],
+): Promise<boolean> {
+  console.log("\n=== Live Tavily retrieval smoke ===\n");
+  requireTavily();
+  console.log(`Model: ${getModel()}\n`);
+
+  let passed = 0;
+
+  for (const liveCase of cases) {
+    console.log(`--- ${liveCase.id}: ${liveCase.description}`);
+    let caseOk = true;
+
+    try {
+      const spec = await compileWatchSpec(liveCase.raw_input, {
+        createdAt: liveCase.created_at,
+        clarifiedStatement: liveCase.clarified_statement,
+        id: `w_live_${liveCase.id}`,
+      });
+
+      console.log(`  queries: ${spec.search_queries.join(" | ")}`);
+
+      const retrieved = await retrieveCandidates(spec);
+      const tavilyOk = retrieved.every((c) => c.retrieval_source === "tavily");
+      const shapedOk = retrieved.every(
+        (c) =>
+          Boolean(c.url) &&
+          Boolean(c.domain) &&
+          Boolean(c.title) &&
+          Boolean(c.snippet) &&
+          Boolean(c.published_at),
+      );
+
+      console.log(`  retrieved: ${retrieved.length} candidate(s)`);
+      if (retrieved.length < liveCase.require_min_retrieved) {
+        caseOk = false;
+        console.log(
+          `  ✗ need ≥${liveCase.require_min_retrieved} retrieved results`,
+        );
+      } else if (!tavilyOk || !shapedOk) {
+        caseOk = false;
+        console.log("  ✗ candidate shape or retrieval_source invalid");
+      } else {
+        console.log("  ✓ retrieval shape OK (tavily)");
+      }
+
+      for (const c of retrieved.slice(0, 3)) {
+        console.log(`    - ${c.domain}: ${c.title.slice(0, 70)}`);
+      }
+
+      const filtered = applyRetrievalFilters(retrieved, liveCase.created_at);
+      console.log(`  after filter: ${filtered.length} candidate(s)`);
+      if (filtered.length < liveCase.require_min_after_filter) {
+        caseOk = false;
+        console.log(
+          `  ✗ need ≥${liveCase.require_min_after_filter} post-filter candidates`,
+        );
+      } else {
+        console.log("  ✓ filter kept post-watch candidates");
+      }
+
+      if (liveCase.expect_any_triggered && filtered.length > 0) {
+        const toJudge = filtered.slice(0, liveCase.max_candidates_to_judge);
+        const evidence = [];
+        let anyTriggered = false;
+
+        for (const candidate of toJudge) {
+          const detection = await detectEvent(spec, candidate);
+          evidence.push({ candidate, detection });
+          const mark = detection.verdict === "TRIGGERED" ? "✓" : "·";
+          console.log(
+            `  ${mark} ${detection.verdict} (${detection.confidence.toFixed(2)}) — ${candidate.title.slice(0, 55)}`,
+          );
+          if (detection.verdict === "TRIGGERED") anyTriggered = true;
+        }
+
+        const decision = decideFromEvidence(spec, evidence);
+        console.log(
+          `  decision: notify=${decision.should_notify} top=${decision.top_verdict}`,
+        );
+
+        if (!anyTriggered) {
+          caseOk = false;
+          console.log(
+            "  ✗ expected at least one TRIGGERED verdict from live sources",
+          );
+        } else {
+          console.log("  ✓ live detection found TRIGGERED evidence");
+        }
+      }
+    } catch (err) {
+      caseOk = false;
+      console.log(`  FAIL (${err instanceof Error ? err.message : err})`);
+    }
+
+    if (caseOk) {
+      passed++;
+      console.log(`  → live case PASS\n`);
+    } else {
+      console.log(`  → live case FAIL\n`);
+    }
+  }
+
+  console.log(`Live retrieval: ${passed}/${cases.length} passed`);
+  return passed === cases.length;
+}
+
+function printSummary(scores: EvalScores): boolean {
   console.log("=== Summary ===\n");
   console.log(
     `Fixture verdict accuracy: ${(scores.filter_precision * 100).toFixed(1)}% (${scores.triggered_count}/${scores.total_fixtures})`,
@@ -178,11 +454,17 @@ function printSummary(scores: EvalScores): void {
   console.log(
     `False positive rate: ${(scores.false_positive_rate * 100).toFixed(1)}% (${scores.should_not_trigger_false_positives}/${scores.should_not_trigger_events} never-events)`,
   );
+  console.log(
+    `Distractors dropped: ${scores.distractors_dropped}/${scores.distractors_total}`,
+  );
 
   const targets = {
     detection: scores.detection_rate >= 0.9,
     falsePositive: scores.false_positive_rate <= 0.05,
     fixtureAccuracy: scores.filter_precision >= 0.85,
+    distractors:
+      scores.distractors_total === 0 ||
+      scores.distractors_dropped === scores.distractors_total,
   };
 
   console.log("\nAcceptance targets (v0):");
@@ -195,29 +477,61 @@ function printSummary(scores: EvalScores): void {
   console.log(
     `  Fixture accuracy ≥ 85%: ${targets.fixtureAccuracy ? "PASS" : "FAIL"}`,
   );
+  console.log(
+    `  Pre-watch distractors:  ${targets.distractors ? "PASS" : "FAIL"}`,
+  );
+
+  return (
+    targets.detection &&
+    targets.falsePositive &&
+    targets.fixtureAccuracy &&
+    targets.distractors
+  );
 }
 
 async function main(): Promise<void> {
   const mode = parseMode();
   const events = loadEvents();
+  const dialogues = loadDialogues();
+  const liveCases = loadLiveRetrievalCases();
 
-  console.log(`Bellweather eval harness — ${events.length} events`);
+  console.log(
+    `Bellweather eval harness — ${events.length} events, ${dialogues.length} dialogues, ${liveCases.length} live retrieval cases`,
+  );
   console.log(`Mode: ${mode}`);
+  console.log(`Model: ${getModel()}`);
+
+  let ok = true;
 
   if (mode === "compiler-only") {
-    await runCompilerEval(events);
-    return;
+    ok = (await runCompilerEval(events)) && ok;
+    process.exit(ok ? 0 : 1);
   }
 
   if (mode === "detector-only") {
     const scores = await runDetectorEval(events);
-    printSummary(scores);
-    return;
+    ok = printSummary(scores) && ok;
+    process.exit(ok ? 0 : 1);
   }
 
-  await runCompilerEval(events);
-  const scores = await runDetectorEval(events);
-  printSummary(scores);
+  if (mode === "dialogues-only") {
+    ok = (await runDialogueEval(dialogues)) && ok;
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (mode === "retrieval-only") {
+    ok = (await runLiveRetrievalEval(liveCases)) && ok;
+    process.exit(ok ? 0 : 1);
+  }
+
+  if (mode === "smoke" || mode === "full") {
+    ok = (await runCompilerEval(events)) && ok;
+    const scores = await runDetectorEval(events);
+    ok = printSummary(scores) && ok;
+    ok = (await runDialogueEval(dialogues)) && ok;
+    ok = (await runLiveRetrievalEval(liveCases)) && ok;
+    process.exit(ok ? 0 : 1);
+  }
 }
 
 main().catch((err) => {

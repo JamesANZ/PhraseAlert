@@ -7,15 +7,34 @@ import {
   type WatchSpec,
 } from "@/types";
 
-const VAGUENESS_SYSTEM = `You assess whether a user's event-watch sentence is clear enough to monitor.
+const VAGUENESS_SYSTEM = `You assess whether a user's event-watch sentence is specific enough to monitor.
 Return ONLY valid JSON with this shape:
 {
   "classification": "CLEAR" | "VAGUE",
-  "interpretations": ["Did you mean ...", "..."] (only when VAGUE, max 3),
+  "interpretations": ["concrete watch sentence 1", "..."] (only when VAGUE, max 3),
   "reasoning": "brief explanation"
 }
-CLEAR means a single unambiguous event with identifiable trigger conditions.
-VAGUE means multiple plausible interpretations, missing scope, or unclear trigger.`;
+
+STRICT rules — be conservative. Prefer VAGUE when unsure.
+
+VAGUE (reject for monitoring) when ANY of these apply:
+- Topic or keyword only (e.g. "Bitcoin", "visas", "interest rates", "Australian visa") with no concrete outcome
+- Missing threshold, direction, actor, jurisdiction, or scope needed for a yes/no event
+- Multiple plausible events could match the same sentence
+- Broader than a single monitorable outcome (would match endless related news)
+
+CLEAR only when ALL of these apply:
+- One unambiguous real-world event a human could mark yes/no after the fact
+- Specific entity/instrument AND specific change, threshold, or outcome
+- Scope included when multiple commonly monitored variants exist (e.g. onshore vs offshore partner visa, visa subclass, country/jurisdiction, which rate or fee)
+- Low interpretation branching — a searcher would know what counts as the event
+
+Partner visa, student visa, or similar government products without onshore/offshore (or equivalent path/subclass) scope are VAGUE even if fees/eligibility are mentioned.
+
+When VAGUE, interpretations must be concrete candidate watch sentences the user can pick
+(each more specific than the input). Do NOT return open questions alone.
+Examples of good interpretations: "Notify me when Bitcoin passes $100,000",
+"Tell me if Australian onshore partner visa application fees increase".`;
 
 const COMPILE_SYSTEM = `You compile event watches into structured JSON for a monitoring system.
 Return ONLY valid JSON matching this schema:

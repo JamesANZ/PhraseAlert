@@ -10,6 +10,17 @@
       "known_answer": "Donald Trump elected president",
       "fixtures": [
         {
+          "label": "distractor",
+          "candidate": {
+            "url": "https://www.nytimes.com/2020/11/07/us/politics/biden-wins.html",
+            "domain": "nytimes.com",
+            "title": "Joseph R. Biden Jr. Wins the 2020 Presidency",
+            "snippet": "Joseph R. Biden Jr. was elected the 46th president of the United States.",
+            "published_at": "2020-11-07T12:00:00-05:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
           "label": "negative",
           "expect_verdict": "NOT_TRIGGERED",
           "candidate": {
@@ -163,6 +174,17 @@
       "known_answer": "Kansas City Chiefs beat San Francisco 49ers",
       "fixtures": [
         {
+          "label": "distractor",
+          "candidate": {
+            "url": "https://www.espn.com/nfl/story/chiefs-win-super-bowl-2023",
+            "domain": "espn.com",
+            "title": "Chiefs beat Eagles to win Super Bowl LVII",
+            "snippet": "The Kansas City Chiefs defeated the Philadelphia Eagles 38-35 to win Super Bowl LVII in 2023.",
+            "published_at": "2023-02-12T22:00:00-08:00",
+            "retrieval_source": "fixture"
+          }
+        },
+        {
           "label": "negative",
           "expect_verdict": "NOT_TRIGGERED",
           "candidate": {
@@ -197,6 +219,17 @@
       "expected_outcome": "should_trigger",
       "known_answer": "BTC price exceeded $100,000",
       "fixtures": [
+        {
+          "label": "distractor",
+          "candidate": {
+            "url": "https://www.coindesk.com/markets/2021/04/bitcoin-60k",
+            "domain": "coindesk.com",
+            "title": "Bitcoin hits $60,000 for the first time",
+            "snippet": "Bitcoin crossed $60,000 in April 2021 amid institutional buying.",
+            "published_at": "2021-04-13T12:00:00+00:00",
+            "retrieval_source": "fixture"
+          }
+        },
         {
           "label": "negative",
           "expect_verdict": "NOT_TRIGGERED",

@@ -1,0 +1,77 @@
+{
+  "dialogues": [
+    {
+      "id": "australian-visa-multiturn",
+      "description": "Narrow Australian visa from topic keyword to onshore partner fee increase",
+      "steps": [
+        {
+          "input": "Australian visa",
+          "expect_classification": "VAGUE",
+          "expect_suggestion_keywords": [
+            "eligib",
+            "price",
+            "fee",
+            "wait",
+            "process"
+          ]
+        },
+        {
+          "input": "Tell me if Australian visa prices or fees change",
+          "expect_classification": "VAGUE",
+          "expect_suggestion_keywords": [
+            "partner",
+            "student",
+            "skilled",
+            "visitor",
+            "subclass"
+          ]
+        },
+        {
+          "input": "Tell me if Australian partner visa fees increase",
+          "expect_classification": "VAGUE",
+          "expect_suggestion_keywords": [
+            "onshore",
+            "offshore",
+            "820",
+            "801",
+            "309",
+            "100"
+          ]
+        },
+        {
+          "input": "Tell me if Australian onshore partner visa application fees increase",
+          "expect_classification": "CLEAR",
+          "expect_compile": true,
+          "expect_domain_keywords": ["homeaffairs", "immi"]
+        }
+      ]
+    },
+    {
+      "id": "bitcoin-keyword-reject",
+      "description": "Bare Bitcoin keyword must stay VAGUE; threshold sentence becomes CLEAR",
+      "steps": [
+        {
+          "input": "Bitcoin",
+          "expect_classification": "VAGUE",
+          "expect_suggestion_keywords": ["price", "pass", "$", "usd", "100"]
+        },
+        {
+          "input": "Notify me when Bitcoin passes $100,000",
+          "expect_classification": "CLEAR",
+          "expect_compile": true
+        }
+      ]
+    },
+    {
+      "id": "oneshot-clear",
+      "description": "Already-specific mortgage watch skips clarify",
+      "steps": [
+        {
+          "input": "Notify me when Australian mortgage rates drop below 5%",
+          "expect_classification": "CLEAR",
+          "expect_compile": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 import { InferenceClient } from "@huggingface/inference";
 
-export const DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct";
+export const DEFAULT_MODEL = "meta-llama/Llama-3.3-70B-Instruct";
 
 export const CANDIDATE_MODELS = [
+  "meta-llama/Llama-3.3-70B-Instruct",
   "meta-llama/Meta-Llama-3.1-8B-Instruct",
   "Qwen/Qwen2.5-7B-Instruct",
   "mistralai/Mistral-7B-Instruct-v0.3",
-  "meta-llama/Llama-3.2-3B-Instruct",
 ] as const;
 
 let client: InferenceClient | null = null;

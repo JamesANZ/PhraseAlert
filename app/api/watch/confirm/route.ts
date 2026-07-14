@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth/session";
-import { compileWatchSpec } from "@/lib/compiler";
+import { assessVagueness, compileWatchSpec } from "@/lib/compiler";
 import { createWatch } from "@/lib/watches";
 
 const BodySchema = z.object({
@@ -14,6 +14,20 @@ export async function POST(request: Request) {
     const userId = await requireUserId();
     const body = BodySchema.parse(await request.json());
     const clarified = body.clarified_statement ?? body.raw_input;
+
+    const vagueness = await assessVagueness(clarified);
+    if (vagueness.classification === "VAGUE") {
+      return NextResponse.json(
+        {
+          error:
+            "That watch is still too vague. Pick a more specific suggestion or rewrite it.",
+          classification: "VAGUE",
+          interpretations: vagueness.interpretations ?? [],
+          reasoning: vagueness.reasoning,
+        },
+        { status: 400 },
+      );
+    }
 
     const spec = await compileWatchSpec(body.raw_input, {
       clarifiedStatement: clarified,

@@ -845,6 +845,18 @@ textarea:focus-visible {
   margin: 0 auto;
 }
 
+.clarify-trail {
+  margin: 0 0 12px;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.clarify-trail li {
+  margin-bottom: 4px;
+}
+
 .clarify-options {
   display: flex;
   flex-direction: column;

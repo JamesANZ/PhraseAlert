@@ -91,4 +91,45 @@ export interface EvalScores {
   should_trigger_detected: number;
   should_not_trigger_events: number;
   should_not_trigger_false_positives: number;
+  distractors_dropped: number;
+  distractors_total: number;
 }
+
+export const DialogueStepSchema = z.object({
+  input: z.string(),
+  expect_classification: z.enum(["CLEAR", "VAGUE"]),
+  expect_suggestion_keywords: z.array(z.string()).optional(),
+  expect_compile: z.boolean().optional(),
+  expect_domain_keywords: z.array(z.string()).optional(),
+});
+export type DialogueStep = z.infer<typeof DialogueStepSchema>;
+
+export const EvalDialogueSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  steps: z.array(DialogueStepSchema).min(1),
+});
+export type EvalDialogue = z.infer<typeof EvalDialogueSchema>;
+
+export const EvalDialoguesFileSchema = z.object({
+  dialogues: z.array(EvalDialogueSchema),
+});
+export type EvalDialoguesFile = z.infer<typeof EvalDialoguesFileSchema>;
+
+export const LiveRetrievalCaseSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  raw_input: z.string(),
+  clarified_statement: z.string().optional(),
+  created_at: z.string().datetime({ offset: true }),
+  require_min_retrieved: z.number().int().min(1).default(1),
+  require_min_after_filter: z.number().int().min(0).default(1),
+  expect_any_triggered: z.boolean().default(false),
+  max_candidates_to_judge: z.number().int().min(1).max(8).default(5),
+});
+export type LiveRetrievalCase = z.infer<typeof LiveRetrievalCaseSchema>;
+
+export const LiveRetrievalFileSchema = z.object({
+  cases: z.array(LiveRetrievalCaseSchema),
+});
+export type LiveRetrievalFile = z.infer<typeof LiveRetrievalFileSchema>;
