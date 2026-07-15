@@ -2,9 +2,9 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="footer-inner">
-        <span className="mono">bellweather</span>
+        <span>bellweather</span>
         <span className="footer-muted">
-          Alerts when events happen, not when keywords match.
+          Natural language alerts — watch for anything, in plain English.
         </span>
       </div>
     </footer>

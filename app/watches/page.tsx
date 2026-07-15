@@ -22,7 +22,7 @@ export default async function WatchesPage() {
   const activeCount = countActiveWatches(userId);
   const billing = getBillingStatus(userId);
   const limit = billing?.watchLimit ?? 3;
-  const planLabel = billing?.effectivePlan === "plus" ? "Plus" : "free";
+  const planLabel = billing?.effectivePlan === "plus" ? "Plus" : "Free";
 
   const items = watches.map((w) => ({
     id: w.id,
@@ -33,34 +33,36 @@ export default async function WatchesPage() {
   }));
 
   return (
-    <main className="page-shell">
-      <div
-        className="page-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
+    <main className="page-shell page-shell-app">
+      <div className="app-page">
+        <header className="app-page-head">
           <h1>Your watches</h1>
-          <p>
-            Signed in as {session.user.email}. {activeCount} of {limit}{" "}
-            {planLabel} watches active.
+          <div className="app-page-stats">
+            <span className="app-page-stat">
+              {activeCount} of {limit} active
+            </span>
+            <span className="app-page-stat-sep" aria-hidden="true">
+              ·
+            </span>
+            <span className="app-page-stat">{planLabel} plan</span>
+            <span className="app-page-stat-sep" aria-hidden="true">
+              ·
+            </span>
+            <span className="app-page-stat">{session.user.email}</span>
+          </div>
+          <div className="app-page-actions">
+            <Link className="btn btn-primary btn-small" href="/watches/new">
+              New alert
+            </Link>
             {billing?.effectivePlan === "free" && (
-              <>
-                {" "}
-                <Link href="/billing">Upgrade to Plus</Link> for more.
-              </>
+              <Link className="btn btn-ghost btn-small" href="/billing">
+                Upgrade to Plus
+              </Link>
             )}
-          </p>
-        </div>
-        <Link className="btn btn-primary" href="/watches/new">
-          New watch
-        </Link>
+          </div>
+        </header>
+        <WatchList watches={items} />
       </div>
-      <WatchList watches={items} />
     </main>
   );
 }

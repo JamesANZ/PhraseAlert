@@ -18,7 +18,7 @@ export interface WatchListItem {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
-    day: "2-digit",
+    day: "numeric",
     month: "short",
     year: "numeric",
     hour: "2-digit",
@@ -60,32 +60,33 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
   if (watches.length === 0) {
     return (
       <div className="empty-state">
-        <p>No watches yet. Describe something you&apos;re waiting for.</p>
-        <Link className="btn btn-primary" href="/watches/new">
-          Create your first watch
+        <p>
+          No alerts yet. Describe something you&apos;re waiting for in plain
+          English.
+        </p>
+        <Link className="btn btn-primary btn-small" href="/watches/new">
+          Create your first alert
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="watch-list">
+    <div className="alert-panel watch-list">
       {watches.map((watch) => (
-        <article key={watch.id} className="watch-card">
-          <div className="watch-card-body">
-            <p className="watch-card-title mono">
-              &quot;{watch.rawInput}&quot;
-            </p>
-            <p className="watch-card-meta">{watch.clarifiedStatement}</p>
-            <p className="watch-card-meta" style={{ marginTop: 8 }}>
-              Watching from {formatDate(watch.createdAt)}
-            </p>
-          </div>
-          <div>
+        <article key={watch.id} className="alert-row">
+          <div className="alert-row-top">
+            <p className="alert-row-title">&quot;{watch.rawInput}&quot;</p>
             <span className={`watch-status ${watch.status}`}>
               {watch.status}
             </span>
-            <div className="watch-actions" style={{ marginTop: 12 }}>
+          </div>
+          <p className="alert-row-desc">{watch.clarifiedStatement}</p>
+          <div className="alert-row-foot">
+            <span className="alert-row-date">
+              Since {formatDate(watch.createdAt)}
+            </span>
+            <div className="alert-row-actions">
               {watch.status === "paused" ? (
                 <button
                   className="btn btn-ghost btn-small"
@@ -104,7 +105,7 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
                 </button>
               ) : null}
               <button
-                className="btn btn-ghost btn-small"
+                className="btn btn-danger btn-small"
                 type="button"
                 onClick={() => void updateStatus(watch.id, "delete")}
               >

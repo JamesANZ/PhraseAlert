@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Newsreader, Nunito } from "next/font/google";
+import { DM_Sans, IBM_Plex_Mono, Lora } from "next/font/google";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
 
-const nunito = Nunito({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-nunito",
+  weight: ["400", "500", "600"],
+  variable: "--font-dm-sans",
 });
 
-const newsreader = Newsreader({
+const lora = Lora({
   subsets: ["latin"],
   style: ["italic"],
   weight: ["400", "500"],
-  variable: "--font-newsreader",
+  variable: "--font-lora",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -26,7 +26,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "bellweather",
   description:
-    "Write one sentence about what you want to know. Get alerted when it happens, not when a page mentions the topic.",
+    "Natural language alerts for anything you're waiting on. Describe it in plain English — we watch the web and notify you when it happens.",
 };
 
 export default function RootLayout({
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${nunito.variable} ${newsreader.variable} ${ibmPlexMono.variable}`}
+        className={`${dmSans.variable} ${lora.variable} ${ibmPlexMono.variable}`}
       >
         <Nav />
         {children}

@@ -62,16 +62,18 @@ export function BillingActions({
         <div className="billing-action-group">
           <h3>Subscribe monthly</h3>
           <p>Recurring card payment. Renews each month.</p>
-          <button
-            className="btn btn-primary"
-            type="button"
-            disabled={loading !== null}
-            onClick={() => void startCheckout("stripe_sub")}
-          >
-            {loading === "stripe_sub"
-              ? "Redirecting…"
-              : "Subscribe with card ($9/mo)"}
-          </button>
+          <div className="billing-btn-row">
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={loading !== null}
+              onClick={() => void startCheckout("stripe_sub")}
+            >
+              {loading === "stripe_sub"
+                ? "Redirecting…"
+                : "Subscribe with card ($9/mo)"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -107,14 +109,16 @@ export function BillingActions({
         <div className="billing-action-group">
           <h3>Manage subscription</h3>
           <p>Update your card or cancel auto-renew in Stripe.</p>
-          <button
-            className="btn btn-ghost"
-            type="button"
-            disabled={loading !== null}
-            onClick={() => void openPortal()}
-          >
-            {loading === "portal" ? "Opening…" : "Open billing portal"}
-          </button>
+          <div className="billing-btn-row">
+            <button
+              className="btn btn-ghost"
+              type="button"
+              disabled={loading !== null}
+              onClick={() => void openPortal()}
+            >
+              {loading === "portal" ? "Opening…" : "Open billing portal"}
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -9,8 +9,10 @@ export default async function NewWatchPage({
   const initialInput = params.input?.trim() ?? "";
 
   return (
-    <main className="page-shell">
-      <WatchCreator initialInput={initialInput} />
+    <main className="page-shell page-shell-app">
+      <div className="app-page">
+        <WatchCreator initialInput={initialInput} />
+      </div>
     </main>
   );
 }

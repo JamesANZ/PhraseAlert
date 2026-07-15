@@ -200,8 +200,8 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         <div className="page-header">
           <h1>Make it more specific</h1>
           <p>
-            Vague topic watches create too much noise. Narrow until there is one
-            unambiguous event to monitor.
+            We need one clear event to watch for. Pick the closest option below,
+            or rewrite it in your own words.
           </p>
         </div>
         {error && (
@@ -222,18 +222,15 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             ))}
           </ol>
         )}
-        <p
-          className="mono"
-          style={{ color: "var(--brass)", fontSize: "0.9rem" }}
-        >
-          Now: &quot;{currentStatement}&quot;
+        <p className="clarify-current">
+          You said: &quot;{currentStatement}&quot;
         </p>
         <div className="clarify-options">
           {options.map((option) => (
             <button
               key={option}
               type="button"
-              className={`clarify-option mono${selectedInterpretation === option ? " selected" : ""}`}
+              className={`clarify-option${selectedInterpretation === option ? " selected" : ""}`}
               onClick={() => {
                 setSelectedInterpretation(option);
                 setCustomClarification("");
@@ -256,26 +253,28 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             setSelectedInterpretation("");
           }}
         />
-        <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-          <button
-            className="btn btn-primary"
-            type="button"
-            disabled={loading}
-            onClick={continueWithClarification}
-          >
-            Continue
-          </button>
-          <button
-            className="btn btn-ghost"
-            type="button"
-            onClick={() => {
-              setStep("input");
-              resetClarifyState();
-              setError("");
-            }}
-          >
-            Start over
-          </button>
+        <div className="form-actions">
+          <div className="btn-group">
+            <button
+              className="btn btn-primary"
+              type="button"
+              disabled={loading}
+              onClick={continueWithClarification}
+            >
+              Continue
+            </button>
+            <button
+              className="btn btn-ghost"
+              type="button"
+              onClick={() => {
+                setStep("input");
+                resetClarifyState();
+                setError("");
+              }}
+            >
+              Start over
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -284,10 +283,10 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
   return (
     <div className="clarify-panel">
       <div className="page-header">
-        <h1>Create a watch</h1>
+        <h1>Create an alert</h1>
         <p>
-          Describe a specific future event in one sentence. Topic keywords alone
-          (like &quot;Bitcoin&quot;) are rejected until you add a clear outcome.
+          Say what you&apos;re waiting for in plain English — one sentence is
+          enough. We&apos;ll ask you to clarify if it&apos;s too vague.
         </p>
       </div>
       {error && (
@@ -304,10 +303,10 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
       <div className={`watch-box${rawInput ? " is-focused" : ""}`}>
         <div className="watch-input-row">
           <input
-            className="watch-input mono"
+            className="watch-input"
             value={rawInput}
             onChange={(e) => setRawInput(e.target.value)}
-            placeholder="Notify me when mortgage rates drop below 5%"
+            placeholder="Tell me when mortgage rates drop below 5%"
             onKeyDown={(e) => {
               if (e.key === "Enter" && rawInput.trim()) {
                 void assessInput(rawInput.trim(), { isOriginal: true });

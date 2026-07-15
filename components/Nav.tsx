@@ -11,34 +11,37 @@ export async function Nav() {
           <span className="brand-mark" aria-hidden="true" />
           bellweather
         </Link>
-        <nav className="nav-links" aria-label="Main">
-          <a href="/#difference">Why it&apos;s different</a>
-          <a href="/#how">How it works</a>
-          <a href="/#pricing">Pricing</a>
-          {session?.user && <Link href="/watches">Your watches</Link>}
-          {session?.user && <Link href="/billing">Billing</Link>}
-        </nav>
-        {session?.user ? (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Link className="btn btn-small btn-primary" href="/watches/new">
-              Create a watch
+        <div className="nav-end">
+          <nav className="nav-links" aria-label="Main">
+            <a href="/#difference">Natural language</a>
+            <a href="/#how">How it works</a>
+            <a href="/#pricing">Pricing</a>
+            {session?.user && <Link href="/watches">Your watches</Link>}
+            {session?.user && <Link href="/billing">Billing</Link>}
+          </nav>
+          {session?.user ? (
+            <div className="nav-actions">
+              <Link className="btn btn-small btn-ghost" href="/watches/new">
+                New alert
+              </Link>
+              <form
+                className="nav-signout-form"
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/" });
+                }}
+              >
+                <button className="btn btn-small btn-ghost" type="submit">
+                  Sign out
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link className="btn btn-small btn-primary" href="/login">
+              Sign in
             </Link>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
-            >
-              <button className="btn btn-small btn-ghost" type="submit">
-                Sign out
-              </button>
-            </form>
-          </div>
-        ) : (
-          <Link className="btn btn-small btn-primary" href="/login">
-            Sign in
-          </Link>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );

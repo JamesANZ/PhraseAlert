@@ -116,17 +116,17 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
     <div className={`watch-box${focused ? " is-focused" : ""}`}>
       <div className="watch-box-top">
         <span className="status-dot" aria-hidden="true" />
-        <span className="watch-box-label">New watch</span>
-        <span className="watch-box-stamp mono">{stamp}</span>
+        <span className="watch-box-label">Say it in plain English</span>
+        <span className="watch-box-stamp">{stamp}</span>
       </div>
       <div className="watch-input-row">
         <label className="visually-hidden" htmlFor="watch-input">
-          Describe what you want to know about
+          Describe what you&apos;re waiting for
         </label>
         <div className="watch-input-wrap">
           <input
             id="watch-input"
-            className="watch-input mono"
+            className="watch-input"
             autoComplete="off"
             spellCheck={false}
             value={value}
@@ -142,10 +142,10 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            aria-label="Describe what you want to know about"
+            aria-label="Describe what you're waiting for"
           />
           <span
-            className={`type-ghost mono${ghostHidden || value ? " hidden" : ""}`}
+            className={`type-ghost${ghostHidden || value ? " hidden" : ""}`}
             aria-hidden="true"
           >
             <span>{typeText}</span>
@@ -158,7 +158,7 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
           disabled={submitting}
           onClick={handleSubmit}
         >
-          {submitting ? "Starting…" : "Create watch"}
+          {submitting ? "Starting…" : "Create an alert"}
         </button>
       </div>
     </div>

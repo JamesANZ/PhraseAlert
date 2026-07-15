@@ -39,29 +39,31 @@ export default async function LoginPage({
   const errorMessage = params.error ? errorMessages[params.error] : undefined;
 
   return (
-    <main className="page-shell">
-      <div className="clarify-panel">
-        <div className="page-header">
-          <h1>Sign in</h1>
-          <p>
-            Sign in or create an account with Google. We use Google to verify
-            your identity and prevent duplicate accounts.
+    <main className="page-shell page-shell-app">
+      <div className="app-page">
+        <div className="clarify-panel">
+          <div className="page-header">
+            <h1>Sign in</h1>
+            <p>
+              Sign in with Google to save your watches. One account,
+              plain-language alerts for anything you&apos;re waiting on.
+            </p>
+          </div>
+
+          {errorMessage && <div className="error-banner">{errorMessage}</div>}
+
+          <form action={googleSignInAction} className="watch-box">
+            <input type="hidden" name="callbackUrl" value={callbackUrl} />
+            <button className="btn btn-google" type="submit">
+              <GoogleIcon />
+              Continue with Google
+            </button>
+          </form>
+
+          <p className="hero-note" style={{ marginTop: 16 }}>
+            <Link href="/">Back to home</Link>
           </p>
         </div>
-
-        {errorMessage && <div className="error-banner">{errorMessage}</div>}
-
-        <form action={googleSignInAction} className="watch-box">
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          <button className="btn btn-google" type="submit">
-            <GoogleIcon />
-            Continue with Google
-          </button>
-        </form>
-
-        <p className="hero-note" style={{ marginTop: 16 }}>
-          <Link href="/">Back to home</Link>
-        </p>
       </div>
     </main>
   );
