@@ -34,6 +34,53 @@ function ensureColumn(table: string, column: string, ddl: string): void {
   }
 }
 
+function tableExists(table: string): boolean {
+  const row = sqlite
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
+    .get(table) as { name: string } | undefined;
+  return Boolean(row);
+}
+
+/** @dev Legacy dev DBs created watches.user_id -> users(id) before NextAuth used user. */
+function watchesReferencesLegacyUsersTable(): boolean {
+  if (!tableExists("watches")) return false;
+  const rows = sqlite
+    .prepare("PRAGMA foreign_key_list(watches)")
+    .all() as Array<{
+    table: string;
+    from: string;
+  }>;
+  return rows.some((r) => r.from === "user_id" && r.table === "users");
+}
+
+function migrateLegacyWatchesUserFk(): void {
+  if (!watchesReferencesLegacyUsersTable()) return;
+
+  sqlite.exec(`
+    PRAGMA foreign_keys = OFF;
+    BEGIN;
+    CREATE TABLE watches_new (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES user(id),
+      raw_input TEXT NOT NULL,
+      spec TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'watching',
+      created_at TEXT NOT NULL,
+      triggered_at TEXT
+    );
+    INSERT INTO watches_new (id, user_id, raw_input, spec, status, created_at, triggered_at)
+      SELECT id, user_id, raw_input, spec, status, created_at, triggered_at FROM watches;
+    DROP TABLE watches;
+    ALTER TABLE watches_new RENAME TO watches;
+    COMMIT;
+    PRAGMA foreign_keys = ON;
+  `);
+
+  if (tableExists("users")) {
+    sqlite.exec("DROP TABLE users");
+  }
+}
+
 /**
  * @notice Create tables if missing and add billing columns to legacy user rows.
  * @dev Safe to call on every cron/API cold start.
@@ -144,4 +191,6 @@ export function initDb(): void {
     "billing_mode",
     "billing_mode TEXT NOT NULL DEFAULT 'none'",
   );
+
+  migrateLegacyWatchesUserFk();
 }

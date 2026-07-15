@@ -6,7 +6,8 @@ export const edgeAuthConfig = {
   },
   providers: [],
   session: {
-    strategy: "database",
+    // JWT so Edge middleware can read sessions without the SQLite adapter.
+    strategy: "jwt",
   },
   trustHost: true,
 } satisfies NextAuthConfig;
