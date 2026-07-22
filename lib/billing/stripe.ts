@@ -26,7 +26,7 @@ export function getAppUrl(): string {
 export async function getOrCreateStripeCustomer(
   userId: string,
 ): Promise<string> {
-  const user = getUser(userId);
+  const user = await getUser(userId);
   if (!user) throw new Error("User not found");
   if (user.stripeCustomerId) return user.stripeCustomerId;
 
@@ -36,7 +36,7 @@ export async function getOrCreateStripeCustomer(
     name: user.name ?? undefined,
     metadata: { userId },
   });
-  setStripeCustomerId(userId, customer.id);
+  await setStripeCustomerId(userId, customer.id);
   return customer.id;
 }
 
@@ -105,7 +105,7 @@ export async function createPrepaidCheckout(userId: string): Promise<string> {
 
 export async function createCustomerPortal(userId: string): Promise<string> {
   const stripe = getStripe();
-  const user = getUser(userId);
+  const user = await getUser(userId);
   if (!user?.stripeCustomerId) {
     throw new Error("No Stripe customer on file");
   }

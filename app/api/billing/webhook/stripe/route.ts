@@ -4,7 +4,7 @@ import { initDb } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    initDb();
+    await initDb();
     const signature = request.headers.get("stripe-signature");
     if (!signature) {
       return NextResponse.json(

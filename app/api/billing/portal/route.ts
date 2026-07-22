@@ -5,7 +5,7 @@ import { initDb } from "@/lib/db";
 
 export async function POST() {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const url = await createCustomerPortal(userId);
     return NextResponse.json({ url });

@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     });
 
-    const watch = createWatch(spec, userId);
+    const watch = await createWatch(spec, userId);
     return NextResponse.json({ watch });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid request";

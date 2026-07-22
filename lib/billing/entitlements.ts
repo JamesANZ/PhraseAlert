@@ -40,10 +40,13 @@ function isPlusActive(user: DbUser, now = Date.now()): boolean {
   return Boolean(user.planPeriodEnd && user.planPeriodEnd.getTime() > now);
 }
 
-export function getUser(userId: string): DbUser | null {
-  return (
-    db.select().from(authUsers).where(eq(authUsers.id, userId)).get() ?? null
-  );
+export async function getUser(userId: string): Promise<DbUser | null> {
+  const rows = await db
+    .select()
+    .from(authUsers)
+    .where(eq(authUsers.id, userId))
+    .limit(1);
+  return rows[0] ?? null;
 }
 
 export function getWatchLimitForUser(user: DbUser, now = Date.now()): number {
@@ -53,17 +56,20 @@ export function getWatchLimitForUser(user: DbUser, now = Date.now()): number {
 }
 
 /** @notice Active watch cap for a user id (free default if user missing). */
-export function getWatchLimit(userId: string, now = Date.now()): number {
-  const user = getUser(userId);
+export async function getWatchLimit(
+  userId: string,
+  now = Date.now(),
+): Promise<number> {
+  const user = await getUser(userId);
   if (!user) return FREE_TIER_MAX_WATCHES;
   return getWatchLimitForUser(user, now);
 }
 
-export function getBillingStatus(
+export async function getBillingStatus(
   userId: string,
   now = Date.now(),
-): BillingStatus | null {
-  const user = getUser(userId);
+): Promise<BillingStatus | null> {
+  const user = await getUser(userId);
   if (!user) return null;
 
   const active = isPlusActive(user, now);
@@ -78,50 +84,53 @@ export function getBillingStatus(
   };
 }
 
-export function setStripeCustomerId(userId: string, customerId: string): void {
-  db.update(authUsers)
+export async function setStripeCustomerId(
+  userId: string,
+  customerId: string,
+): Promise<void> {
+  await db
+    .update(authUsers)
     .set({ stripeCustomerId: customerId })
-    .where(eq(authUsers.id, userId))
-    .run();
+    .where(eq(authUsers.id, userId));
 }
 
-export function grantPlus(params: {
+export async function grantPlus(params: {
   userId: string;
   mode: BillingMode;
   periodEnd: Date | null;
-}): void {
-  db.update(authUsers)
+}): Promise<void> {
+  await db
+    .update(authUsers)
     .set({
       plan: "plus",
       billingMode: params.mode,
       planPeriodEnd: params.periodEnd,
     })
-    .where(eq(authUsers.id, params.userId))
-    .run();
+    .where(eq(authUsers.id, params.userId));
 }
 
-export function revokePlus(userId: string): void {
-  db.update(authUsers)
+export async function revokePlus(userId: string): Promise<void> {
+  await db
+    .update(authUsers)
     .set({
       plan: "free",
       billingMode: "none",
       planPeriodEnd: null,
     })
-    .where(eq(authUsers.id, userId))
-    .run();
+    .where(eq(authUsers.id, userId));
 }
 
-export function listUsersNeedingExpiryReminders(
+export async function listUsersNeedingExpiryReminders(
   dayOffsets: readonly number[],
   now = Date.now(),
-): Array<DbUser & { daysLeft: number }> {
+): Promise<Array<DbUser & { daysLeft: number }>> {
   const dayMs = 24 * 60 * 60 * 1000;
-  const users = db
-    .select()
-    .from(authUsers)
-    .where(eq(authUsers.billingMode, "prepaid"))
-    .all()
-    .filter((u) => u.plan === "plus" && u.planPeriodEnd);
+  const users = (
+    await db
+      .select()
+      .from(authUsers)
+      .where(eq(authUsers.billingMode, "prepaid"))
+  ).filter((u) => u.plan === "plus" && u.planPeriodEnd);
 
   const matches: Array<DbUser & { daysLeft: number }> = [];
   for (const user of users) {
@@ -134,17 +143,14 @@ export function listUsersNeedingExpiryReminders(
   return matches;
 }
 
-export function listExpiredPlusUsers(now = Date.now()): DbUser[] {
-  return db
-    .select()
-    .from(authUsers)
-    .where(eq(authUsers.plan, "plus"))
-    .all()
-    .filter((u) => {
-      if (!u.planPeriodEnd) {
-        // Subscription without period end still considered active until webhook says otherwise
-        return u.billingMode !== "subscription";
-      }
-      return u.planPeriodEnd.getTime() <= now;
-    });
+export async function listExpiredPlusUsers(now = Date.now()): Promise<DbUser[]> {
+  return (
+    await db.select().from(authUsers).where(eq(authUsers.plan, "plus"))
+  ).filter((u) => {
+    if (!u.planPeriodEnd) {
+      // Subscription without period end still considered active until webhook says otherwise
+      return u.billingMode !== "subscription";
+    }
+    return u.planPeriodEnd.getTime() <= now;
+  });
 }

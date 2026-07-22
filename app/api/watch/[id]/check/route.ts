@@ -30,8 +30,8 @@ export async function POST(
       );
     }
 
-    initDb();
-    const watch = getWatch(id, userId);
+    await initDb();
+    const watch = await getWatch(id, userId);
     if (!watch) {
       return NextResponse.json({ error: "Watch not found" }, { status: 404 });
     }

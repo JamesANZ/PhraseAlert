@@ -20,7 +20,7 @@ export async function runBillingMaintenance(now = Date.now()): Promise<{
   let reminders = 0;
   let downgraded = 0;
 
-  const needingReminders = listUsersNeedingExpiryReminders(
+  const needingReminders = await listUsersNeedingExpiryReminders(
     EXPIRY_REMINDER_DAYS,
     now,
   );
@@ -28,25 +28,33 @@ export async function runBillingMaintenance(now = Date.now()): Promise<{
   for (const user of needingReminders) {
     if (!user.email || !user.planPeriodEnd) continue;
     const eventId = `reminder_${user.id}_${user.daysLeft}_${user.planPeriodEnd.getTime()}`;
-    if (hasProcessedEvent(eventId)) continue;
+    if (await hasProcessedEvent(eventId)) continue;
 
     await sendExpiryReminderEmail(
       user.email,
       user.daysLeft,
       user.planPeriodEnd,
     );
-    recordBillingEvent(eventId, "stripe", `expiry_reminder_${user.daysLeft}d`);
+    await recordBillingEvent(
+      eventId,
+      "stripe",
+      `expiry_reminder_${user.daysLeft}d`,
+    );
     reminders += 1;
   }
 
-  const expired = listExpiredPlusUsers(now);
+  const expired = await listExpiredPlusUsers(now);
   for (const user of expired) {
     // Active Stripe subscriptions without a past period end are filtered out in listExpiredPlusUsers
-    const { paused } = downgradeUser(user.id);
+    const { paused } = await downgradeUser(user.id);
     if (user.email) {
       await sendDowngradeEmail(user.email, paused);
     }
-    recordBillingEvent(`downgrade_${user.id}_${now}`, "stripe", "plan_expired");
+    await recordBillingEvent(
+      `downgrade_${user.id}_${now}`,
+      "stripe",
+      "plan_expired",
+    );
     downgraded += 1;
   }
 

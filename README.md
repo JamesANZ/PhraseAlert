@@ -74,7 +74,7 @@ Three keyword alerts. One mattered. Bellwether sent that one.
 - Next.js App Router app with landing page
 - Watch creation flow with clarification step
 - Dashboard at `/watches`
-- SQLite database (local dev) via Drizzle
+- Neon Postgres via Drizzle (works on Vercel)
 - API routes for create, confirm, pause, delete, check-now
 - Cron endpoint at `/api/checks/run` with Tavily live retrieval
 
@@ -149,7 +149,7 @@ Create a `.env` file:
 ```bash
 HUGGINGFACE_API_KEY=hf_...
 AUTH_SECRET=generate-with-openssl-rand-base64-32
-DATABASE_URL=./data/bellwether.db
+DATABASE_URL=postgresql://...  # Neon connection string from Vercel/Neon dashboard
 ```
 
 For Google sign-in:

@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     );
   }
 
-  initDb();
-  const watches = listWatchingWatches();
+  await initDb();
+  const watches = await listWatchingWatches();
 
   let triggered = 0;
   const errors: Array<{ watch_id: string; error: string }> = [];

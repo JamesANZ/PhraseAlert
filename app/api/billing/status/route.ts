@@ -11,9 +11,9 @@ import { initDb } from "@/lib/db";
 
 export async function GET() {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
-    const status = getBillingStatus(userId);
+    const status = await getBillingStatus(userId);
     if (!status) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -21,7 +21,7 @@ export async function GET() {
     return NextResponse.json({
       ...status,
       planPeriodEnd: status.planPeriodEnd?.toISOString() ?? null,
-      activeWatches: countActiveWatches(userId),
+      activeWatches: await countActiveWatches(userId),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Status failed";

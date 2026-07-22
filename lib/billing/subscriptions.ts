@@ -5,31 +5,29 @@ import { billingEvents, subscriptions } from "@/lib/db/schema";
 import { getUser, grantPlus, revokePlus } from "@/lib/billing/entitlements";
 import { pauseExcessWatches } from "@/lib/billing/enforce-limits";
 
-export function hasProcessedEvent(eventId: string): boolean {
-  const row = db
+export async function hasProcessedEvent(eventId: string): Promise<boolean> {
+  const rows = await db
     .select()
     .from(billingEvents)
     .where(eq(billingEvents.id, eventId))
-    .get();
-  return Boolean(row);
+    .limit(1);
+  return Boolean(rows[0]);
 }
 
-export function recordBillingEvent(
+export async function recordBillingEvent(
   eventId: string,
   provider: "stripe" | "helio",
   eventType: string,
-): void {
-  db.insert(billingEvents)
-    .values({
-      id: eventId,
-      provider,
-      eventType,
-      processedAt: new Date(),
-    })
-    .run();
+): Promise<void> {
+  await db.insert(billingEvents).values({
+    id: eventId,
+    provider,
+    eventType,
+    processedAt: new Date(),
+  });
 }
 
-export function upsertSubscription(params: {
+export async function upsertSubscription(params: {
   userId: string;
   provider: "stripe" | "helio";
   providerRef: string;
@@ -38,8 +36,8 @@ export function upsertSubscription(params: {
   currentPeriodEnd: Date | null;
   amountCents?: number;
   currency?: string;
-}): void {
-  const existing = db
+}): Promise<void> {
+  const existingRows = await db
     .select()
     .from(subscriptions)
     .where(
@@ -48,11 +46,13 @@ export function upsertSubscription(params: {
         eq(subscriptions.providerRef, params.providerRef),
       ),
     )
-    .get();
+    .limit(1);
+  const existing = existingRows[0];
 
   const now = new Date();
   if (existing) {
-    db.update(subscriptions)
+    await db
+      .update(subscriptions)
       .set({
         status: params.status,
         currentPeriodEnd: params.currentPeriodEnd,
@@ -60,33 +60,30 @@ export function upsertSubscription(params: {
         currency: params.currency ?? existing.currency,
         updatedAt: now,
       })
-      .where(eq(subscriptions.id, existing.id))
-      .run();
+      .where(eq(subscriptions.id, existing.id));
     return;
   }
 
-  db.insert(subscriptions)
-    .values({
-      id: crypto.randomUUID(),
-      userId: params.userId,
-      provider: params.provider,
-      providerRef: params.providerRef,
-      mode: params.mode,
-      status: params.status,
-      currentPeriodEnd: params.currentPeriodEnd,
-      amountCents: params.amountCents ?? PLUS_MONTHLY_PRICE_CENTS,
-      currency: params.currency ?? "usd",
-      createdAt: now,
-      updatedAt: now,
-    })
-    .run();
+  await db.insert(subscriptions).values({
+    id: crypto.randomUUID(),
+    userId: params.userId,
+    provider: params.provider,
+    providerRef: params.providerRef,
+    mode: params.mode,
+    status: params.status,
+    currentPeriodEnd: params.currentPeriodEnd,
+    amountCents: params.amountCents ?? PLUS_MONTHLY_PRICE_CENTS,
+    currency: params.currency ?? "usd",
+    createdAt: now,
+    updatedAt: now,
+  });
 }
 
-export function computeExtendedPeriodEnd(
+export async function computeExtendedPeriodEnd(
   userId: string,
   now = Date.now(),
-): Date {
-  const user = getUser(userId);
+): Promise<Date> {
+  const user = await getUser(userId);
   const base =
     user?.planPeriodEnd && user.planPeriodEnd.getTime() > now
       ? user.planPeriodEnd.getTime()
@@ -94,14 +91,14 @@ export function computeExtendedPeriodEnd(
   return new Date(base + PREPAID_PERIOD_MS);
 }
 
-export function activatePrepaid(
+export async function activatePrepaid(
   userId: string,
   provider: "stripe" | "helio",
   providerRef: string,
   periodEnd?: Date,
-): Date {
-  const end = periodEnd ?? computeExtendedPeriodEnd(userId);
-  upsertSubscription({
+): Promise<Date> {
+  const end = periodEnd ?? (await computeExtendedPeriodEnd(userId));
+  await upsertSubscription({
     userId,
     provider,
     providerRef,
@@ -109,22 +106,22 @@ export function activatePrepaid(
     status: "active",
     currentPeriodEnd: end,
   });
-  grantPlus({ userId, mode: "prepaid", periodEnd: end });
+  await grantPlus({ userId, mode: "prepaid", periodEnd: end });
   return end;
 }
 
-export function activateSubscription(params: {
+export async function activateSubscription(params: {
   userId: string;
   providerRef: string;
   status: string;
   periodEnd: Date | null;
-}): void {
+}): Promise<void> {
   const active =
     params.status === "active" ||
     params.status === "trialing" ||
     params.status === "past_due";
 
-  upsertSubscription({
+  await upsertSubscription({
     userId: params.userId,
     provider: "stripe",
     providerRef: params.providerRef,
@@ -134,26 +131,28 @@ export function activateSubscription(params: {
   });
 
   if (active) {
-    grantPlus({
+    await grantPlus({
       userId: params.userId,
       mode: "subscription",
       periodEnd: params.periodEnd,
     });
   } else {
-    downgradeUser(params.userId);
+    await downgradeUser(params.userId);
   }
 }
 
-export function downgradeUser(userId: string): {
-  paused: ReturnType<typeof pauseExcessWatches>;
-} {
-  revokePlus(userId);
-  const paused = pauseExcessWatches(userId);
+export async function downgradeUser(userId: string): Promise<{
+  paused: Awaited<ReturnType<typeof pauseExcessWatches>>;
+}> {
+  await revokePlus(userId);
+  const paused = await pauseExcessWatches(userId);
   return { paused };
 }
 
-export function markSubscriptionCanceled(providerRef: string): string | null {
-  const existing = db
+export async function markSubscriptionCanceled(
+  providerRef: string,
+): Promise<string | null> {
+  const existingRows = await db
     .select()
     .from(subscriptions)
     .where(
@@ -162,14 +161,15 @@ export function markSubscriptionCanceled(providerRef: string): string | null {
         eq(subscriptions.providerRef, providerRef),
       ),
     )
-    .get();
+    .limit(1);
+  const existing = existingRows[0];
 
   if (!existing) return null;
 
-  db.update(subscriptions)
+  await db
+    .update(subscriptions)
     .set({ status: "canceled", updatedAt: new Date() })
-    .where(eq(subscriptions.id, existing.id))
-    .run();
+    .where(eq(subscriptions.id, existing.id));
 
   return existing.userId;
 }

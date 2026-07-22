@@ -1,196 +1,159 @@
 /**
- * @title SQLite database bootstrap
- * @notice Drizzle client, WAL pragmas, and idempotent schema migration for local dev.
- * @dev DATABASE_URL defaults to ./data/bellwether.db. Call initDb() before first API use.
+ * @title Neon Postgres database bootstrap
+ * @notice Drizzle client over Neon's serverless HTTP driver, plus idempotent schema ensure.
+ * @dev Requires DATABASE_URL (Neon). Call await initDb() before first API use.
  */
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { mkdirSync } from "fs";
-import { dirname } from "path";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { sql } from "drizzle-orm";
 import * as schema from "./schema";
 
-const dbPath = process.env.DATABASE_URL ?? "./data/bellwether.db";
-
-mkdirSync(dirname(dbPath), { recursive: true });
-
-const sqlite = new Database(dbPath);
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-
-export const db = drizzle(sqlite, { schema });
-
-/** @dev Read column names from PRAGMA table_info for lightweight migrations. */
-function tableColumns(table: string): Set<string> {
-  const rows = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{
-    name: string;
-  }>;
-  return new Set(rows.map((r) => r.name));
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required (Neon Postgres connection string)");
+}
+if (
+  databaseUrl.startsWith("./") ||
+  databaseUrl.endsWith(".db") ||
+  databaseUrl.startsWith("file:")
+) {
+  throw new Error(
+    "DATABASE_URL must be a Neon Postgres URL, not a local SQLite path",
+  );
 }
 
-function ensureColumn(table: string, column: string, ddl: string): void {
-  const cols = tableColumns(table);
-  if (!cols.has(column)) {
-    sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
-  }
-}
+const sqlClient = neon(databaseUrl);
+export const db = drizzle(sqlClient, { schema });
 
-function tableExists(table: string): boolean {
-  const row = sqlite
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
-    .get(table) as { name: string } | undefined;
-  return Boolean(row);
-}
-
-/** @dev Legacy dev DBs created watches.user_id -> users(id) before NextAuth used user. */
-function watchesReferencesLegacyUsersTable(): boolean {
-  if (!tableExists("watches")) return false;
-  const rows = sqlite
-    .prepare("PRAGMA foreign_key_list(watches)")
-    .all() as Array<{
-    table: string;
-    from: string;
-  }>;
-  return rows.some((r) => r.from === "user_id" && r.table === "users");
-}
-
-function migrateLegacyWatchesUserFk(): void {
-  if (!watchesReferencesLegacyUsersTable()) return;
-
-  sqlite.exec(`
-    PRAGMA foreign_keys = OFF;
-    BEGIN;
-    CREATE TABLE watches_new (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL REFERENCES user(id),
-      raw_input TEXT NOT NULL,
-      spec TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'watching',
-      created_at TEXT NOT NULL,
-      triggered_at TEXT
-    );
-    INSERT INTO watches_new (id, user_id, raw_input, spec, status, created_at, triggered_at)
-      SELECT id, user_id, raw_input, spec, status, created_at, triggered_at FROM watches;
-    DROP TABLE watches;
-    ALTER TABLE watches_new RENAME TO watches;
-    COMMIT;
-    PRAGMA foreign_keys = ON;
-  `);
-
-  if (tableExists("users")) {
-    sqlite.exec("DROP TABLE users");
-  }
-}
+let initPromise: Promise<void> | null = null;
 
 /**
- * @notice Create tables if missing and add billing columns to legacy user rows.
- * @dev Safe to call on every cron/API cold start.
+ * @notice Create tables if missing (safe on every cron/API cold start).
+ * @dev Idempotent; concurrent callers share one in-flight init.
  */
-export function initDb(): void {
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS user (
-      id TEXT PRIMARY KEY,
-      name TEXT,
-      email TEXT NOT NULL UNIQUE,
-      emailVerified INTEGER,
-      image TEXT,
-      plan TEXT NOT NULL DEFAULT 'free',
-      stripe_customer_id TEXT,
-      plan_period_end INTEGER,
-      billing_mode TEXT NOT NULL DEFAULT 'none'
-    );
+export function initDb(): Promise<void> {
+  if (!initPromise) {
+    initPromise = ensureSchema().catch((err) => {
+      initPromise = null;
+      throw err;
+    });
+  }
+  return initPromise;
+}
 
-    CREATE TABLE IF NOT EXISTS account (
-      userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
-      type TEXT NOT NULL,
-      provider TEXT NOT NULL,
-      providerAccountId TEXT NOT NULL,
-      refresh_token TEXT,
-      access_token TEXT,
-      expires_at INTEGER,
-      token_type TEXT,
-      scope TEXT,
-      id_token TEXT,
-      session_state TEXT,
-      PRIMARY KEY (provider, providerAccountId)
-    );
+async function ensureSchema(): Promise<void> {
+  const statements = [
+    sql`
+      CREATE TABLE IF NOT EXISTS "user" (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        email TEXT NOT NULL UNIQUE,
+        "emailVerified" TIMESTAMP,
+        image TEXT,
+        plan TEXT NOT NULL DEFAULT 'free',
+        stripe_customer_id TEXT,
+        plan_period_end TIMESTAMP,
+        billing_mode TEXT NOT NULL DEFAULT 'none'
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS account (
+        "userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        "providerAccountId" TEXT NOT NULL,
+        refresh_token TEXT,
+        access_token TEXT,
+        expires_at INTEGER,
+        token_type TEXT,
+        scope TEXT,
+        id_token TEXT,
+        session_state TEXT,
+        PRIMARY KEY (provider, "providerAccountId")
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS session (
+        "sessionToken" TEXT PRIMARY KEY,
+        "userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+        expires TIMESTAMP NOT NULL
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS "verificationToken" (
+        identifier TEXT NOT NULL,
+        token TEXT NOT NULL,
+        expires TIMESTAMP NOT NULL,
+        PRIMARY KEY (identifier, token)
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS watches (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES "user"(id),
+        raw_input TEXT NOT NULL,
+        spec JSONB NOT NULL,
+        status TEXT NOT NULL DEFAULT 'watching',
+        created_at TEXT NOT NULL,
+        triggered_at TEXT
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS checks (
+        id TEXT PRIMARY KEY,
+        watch_id TEXT NOT NULL REFERENCES watches(id),
+        ran_at TEXT NOT NULL,
+        sources_retrieved INTEGER NOT NULL DEFAULT 0,
+        sources_evaluated INTEGER NOT NULL DEFAULT 0,
+        verdict TEXT,
+        confidence INTEGER,
+        model_used TEXT,
+        escalated BOOLEAN NOT NULL DEFAULT FALSE,
+        cost_cents INTEGER NOT NULL DEFAULT 0
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS evidence (
+        id TEXT PRIMARY KEY,
+        check_id TEXT NOT NULL REFERENCES checks(id),
+        url TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        published_at TEXT,
+        snippet TEXT,
+        verdict TEXT,
+        reasoning TEXT
+      )
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL,
+        provider_ref TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        status TEXT NOT NULL,
+        current_period_end TIMESTAMP,
+        amount_cents INTEGER NOT NULL DEFAULT 900,
+        currency TEXT NOT NULL DEFAULT 'usd',
+        created_at TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP NOT NULL
+      )
+    `,
+    sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS subscriptions_provider_ref_unique
+        ON subscriptions (provider, provider_ref)
+    `,
+    sql`
+      CREATE TABLE IF NOT EXISTS billing_events (
+        id TEXT PRIMARY KEY,
+        provider TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        processed_at TIMESTAMP NOT NULL
+      )
+    `,
+  ];
 
-    CREATE TABLE IF NOT EXISTS session (
-      sessionToken TEXT PRIMARY KEY,
-      userId TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
-      expires INTEGER NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS verificationToken (
-      identifier TEXT NOT NULL,
-      token TEXT NOT NULL,
-      expires INTEGER NOT NULL,
-      PRIMARY KEY (identifier, token)
-    );
-
-    CREATE TABLE IF NOT EXISTS watches (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL REFERENCES user(id),
-      raw_input TEXT NOT NULL,
-      spec TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'watching',
-      created_at TEXT NOT NULL,
-      triggered_at TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS checks (
-      id TEXT PRIMARY KEY,
-      watch_id TEXT NOT NULL REFERENCES watches(id),
-      ran_at TEXT NOT NULL,
-      sources_retrieved INTEGER NOT NULL DEFAULT 0,
-      sources_evaluated INTEGER NOT NULL DEFAULT 0,
-      verdict TEXT,
-      confidence INTEGER,
-      model_used TEXT,
-      escalated INTEGER NOT NULL DEFAULT 0,
-      cost_cents INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS evidence (
-      id TEXT PRIMARY KEY,
-      check_id TEXT NOT NULL REFERENCES checks(id),
-      url TEXT NOT NULL,
-      domain TEXT NOT NULL,
-      published_at TEXT,
-      snippet TEXT,
-      verdict TEXT,
-      reasoning TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS subscriptions (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
-      provider TEXT NOT NULL,
-      provider_ref TEXT NOT NULL,
-      mode TEXT NOT NULL,
-      status TEXT NOT NULL,
-      current_period_end INTEGER,
-      amount_cents INTEGER NOT NULL DEFAULT 900,
-      currency TEXT NOT NULL DEFAULT 'usd',
-      created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL,
-      UNIQUE (provider, provider_ref)
-    );
-
-    CREATE TABLE IF NOT EXISTS billing_events (
-      id TEXT PRIMARY KEY,
-      provider TEXT NOT NULL,
-      event_type TEXT NOT NULL,
-      processed_at INTEGER NOT NULL
-    );
-  `);
-
-  ensureColumn("user", "stripe_customer_id", "stripe_customer_id TEXT");
-  ensureColumn("user", "plan_period_end", "plan_period_end INTEGER");
-  ensureColumn(
-    "user",
-    "billing_mode",
-    "billing_mode TEXT NOT NULL DEFAULT 'none'",
-  );
-
-  migrateLegacyWatchesUserFk();
+  for (const statement of statements) {
+    await db.execute(statement);
+  }
 }

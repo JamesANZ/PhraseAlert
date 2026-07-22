@@ -9,12 +9,12 @@ import {
   verifyHelioSignature,
 } from "@/lib/billing/helio";
 
-export function handleHelioWebhook(
+export async function handleHelioWebhook(
   rawBody: string,
   request: Request,
-): {
+): Promise<{
   ok: true;
-} {
+}> {
   const sharedToken = process.env.HELIO_WEBHOOK_SECRET;
   if (!sharedToken) {
     throw new Error("HELIO_WEBHOOK_SECRET is not configured");
@@ -34,7 +34,7 @@ export function handleHelioWebhook(
   const payload = JSON.parse(rawBody) as unknown;
   const eventId = extractHelioEventId(payload);
 
-  if (hasProcessedEvent(eventId)) {
+  if (await hasProcessedEvent(eventId)) {
     return { ok: true };
   }
 
@@ -43,7 +43,7 @@ export function handleHelioWebhook(
     throw new Error("Helio webhook missing userId metadata");
   }
 
-  activatePrepaid(userId, "helio", eventId);
-  recordBillingEvent(eventId, "helio", "payment_completed");
+  await activatePrepaid(userId, "helio", eventId);
+  await recordBillingEvent(eventId, "helio", "payment_completed");
   return { ok: true };
 }

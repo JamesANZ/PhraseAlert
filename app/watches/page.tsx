@@ -16,11 +16,11 @@ export default async function WatchesPage() {
     redirect("/login?callbackUrl=/watches");
   }
 
-  initDb();
+  await initDb();
   const userId = session.user.id;
-  const watches = listWatches(userId);
-  const activeCount = countActiveWatches(userId);
-  const billing = getBillingStatus(userId);
+  const watches = await listWatches(userId);
+  const activeCount = await countActiveWatches(userId);
+  const billing = await getBillingStatus(userId);
   const limit = billing?.watchLimit ?? 3;
   const planLabel = billing?.effectivePlan === "plus" ? "Plus" : "Free";
 

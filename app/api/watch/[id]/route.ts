@@ -20,7 +20,7 @@ export async function GET(
   try {
     const userId = await requireUserId();
     const { id } = await params;
-    const watch = getWatch(id, userId);
+    const watch = await getWatch(id, userId);
     if (!watch) {
       return NextResponse.json({ error: "Watch not found" }, { status: 404 });
     }
@@ -45,7 +45,7 @@ export async function PATCH(
     const body = PatchSchema.parse(await request.json());
 
     const status = body.action === "pause" ? "paused" : "watching";
-    const watch = updateWatchStatus(id, userId, status);
+    const watch = await updateWatchStatus(id, userId, status);
     if (!watch) {
       return NextResponse.json({ error: "Watch not found" }, { status: 404 });
     }
@@ -74,7 +74,7 @@ export async function DELETE(
   try {
     const userId = await requireUserId();
     const { id } = await params;
-    const deleted = deleteWatch(id, userId);
+    const deleted = await deleteWatch(id, userId);
     if (!deleted) {
       return NextResponse.json({ error: "Watch not found" }, { status: 404 });
     }

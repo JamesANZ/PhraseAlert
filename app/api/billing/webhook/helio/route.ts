@@ -4,9 +4,9 @@ import { initDb } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
-    initDb();
+    await initDb();
     const rawBody = await request.text();
-    handleHelioWebhook(rawBody, request);
+    await handleHelioWebhook(rawBody, request);
     return NextResponse.json({ received: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Webhook failed";

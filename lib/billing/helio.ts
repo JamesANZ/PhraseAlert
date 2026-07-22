@@ -36,7 +36,7 @@ export async function createHelioCheckout(userId: string): Promise<string> {
     );
   }
 
-  const user = getUser(userId);
+  const user = await getUser(userId);
   if (!user) throw new Error("User not found");
 
   const amount = (PLUS_MONTHLY_PRICE_CENTS / 100).toFixed(2);

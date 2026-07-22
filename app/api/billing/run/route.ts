@@ -10,7 +10,7 @@ async function handle(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  initDb();
+  await initDb();
   const result = await runBillingMaintenance();
 
   return NextResponse.json({

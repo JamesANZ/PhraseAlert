@@ -19,7 +19,7 @@ const BodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const body = BodySchema.parse(await request.json());
 

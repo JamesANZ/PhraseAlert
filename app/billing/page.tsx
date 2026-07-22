@@ -17,14 +17,14 @@ export default async function BillingPage({
     redirect("/login?callbackUrl=/billing");
   }
 
-  initDb();
+  await initDb();
   const params = await searchParams;
-  const status = getBillingStatus(session.user.id);
+  const status = await getBillingStatus(session.user.id);
   if (!status) {
     redirect("/login?callbackUrl=/billing");
   }
 
-  const activeWatches = countActiveWatches(session.user.id);
+  const activeWatches = await countActiveWatches(session.user.id);
   const periodLabel = status.planPeriodEnd
     ? status.planPeriodEnd.toLocaleDateString("en-US", {
         year: "numeric",

@@ -43,7 +43,7 @@ export async function runCheckForWatch(
   watch: WatchRow,
 ): Promise<CheckRunResult> {
   const retrievedAt = new Date().toISOString();
-  const seenUrls = listEvidenceUrlsForWatch(watch.id);
+  const seenUrls = await listEvidenceUrlsForWatch(watch.id);
 
   const retrieved = await retrieveCandidates(watch.spec, { retrievedAt });
   const filtered = applyRetrievalFilters(
@@ -71,7 +71,7 @@ export async function runCheckForWatch(
 
   const decision = decideFromEvidence(watch.spec, evidenceRecords);
 
-  const checkId = createCheck({
+  const checkId = await createCheck({
     watchId: watch.id,
     sourcesRetrieved: retrieved.length,
     sourcesEvaluated: evidenceRecords.length,
@@ -81,7 +81,7 @@ export async function runCheckForWatch(
     escalated: decision.needs_corroboration,
   });
 
-  createEvidence(
+  await createEvidence(
     checkId,
     evidenceRecords.map((e) => ({
       url: e.candidate.url,
@@ -95,7 +95,7 @@ export async function runCheckForWatch(
 
   let triggered = false;
   if (decision.should_notify && watch.status === "watching") {
-    updateWatchStatus(watch.id, watch.userId, "triggered");
+    await updateWatchStatus(watch.id, watch.userId, "triggered");
     triggered = true;
   }
 

@@ -1,32 +1,35 @@
 /**
- * @title Database schema (Drizzle SQLite)
+ * @title Database schema (Drizzle Postgres / Neon)
  * @notice Table definitions for auth, billing, watches, checks, and evidence.
- * @dev WatchSpec stored as JSON on watches.spec. NextAuth adapter tables follow Auth.js conventions.
+ * @dev WatchSpec stored as JSONB on watches.spec. NextAuth adapter tables follow Auth.js conventions.
  */
 import {
+  boolean,
   integer,
+  jsonb,
+  pgTable,
   primaryKey,
-  sqliteTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 import type { WatchSpec } from "@/types";
 
 /** @notice NextAuth user row extended with plan and Stripe/Helio billing fields. */
-export const authUsers = sqliteTable("user", {
+export const authUsers = pgTable("user", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
   email: text("email").notNull().unique(),
-  emailVerified: integer("emailVerified", { mode: "timestamp_ms" }),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   plan: text("plan", { enum: ["free", "plus"] })
     .notNull()
     .default("free"),
   stripeCustomerId: text("stripe_customer_id"),
-  planPeriodEnd: integer("plan_period_end", { mode: "timestamp_ms" }),
+  planPeriodEnd: timestamp("plan_period_end", { mode: "date" }),
   billingMode: text("billing_mode", {
     enum: ["none", "subscription", "prepaid"],
   })
@@ -35,7 +38,7 @@ export const authUsers = sqliteTable("user", {
 });
 
 /** @dev Stripe or Helio subscription/prepaid records linked to user. */
-export const subscriptions = sqliteTable(
+export const subscriptions = pgTable(
   "subscriptions",
   {
     id: text("id")
@@ -48,13 +51,13 @@ export const subscriptions = sqliteTable(
     providerRef: text("provider_ref").notNull(),
     mode: text("mode", { enum: ["subscription", "prepaid"] }).notNull(),
     status: text("status").notNull(),
-    currentPeriodEnd: integer("current_period_end", { mode: "timestamp_ms" }),
+    currentPeriodEnd: timestamp("current_period_end", { mode: "date" }),
     amountCents: integer("amount_cents").notNull().default(900),
     currency: text("currency").notNull().default("usd"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
+    createdAt: timestamp("created_at", { mode: "date" })
       .notNull()
       .$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    updatedAt: timestamp("updated_at", { mode: "date" })
       .notNull()
       .$defaultFn(() => new Date()),
   },
@@ -67,17 +70,17 @@ export const subscriptions = sqliteTable(
 );
 
 /** @dev Idempotent webhook event log (provider + event id) for Stripe and Helio. */
-export const billingEvents = sqliteTable("billing_events", {
+export const billingEvents = pgTable("billing_events", {
   id: text("id").primaryKey(),
   provider: text("provider", { enum: ["stripe", "helio"] }).notNull(),
   eventType: text("event_type").notNull(),
-  processedAt: integer("processed_at", { mode: "timestamp_ms" })
+  processedAt: timestamp("processed_at", { mode: "date" })
     .notNull()
     .$defaultFn(() => new Date()),
 });
 
 /** @dev OAuth provider accounts (NextAuth adapter). */
-export const accounts = sqliteTable(
+export const accounts = pgTable(
   "account",
   {
     userId: text("userId")
@@ -102,21 +105,21 @@ export const accounts = sqliteTable(
 );
 
 /** @dev Active login sessions (NextAuth adapter). */
-export const sessions = sqliteTable("session", {
+export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => authUsers.id, { onDelete: "cascade" }),
-  expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
 /** @dev Email magic-link tokens (NextAuth adapter). */
-export const verificationTokens = sqliteTable(
+export const verificationTokens = pgTable(
   "verificationToken",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
-    expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
@@ -127,13 +130,13 @@ export const verificationTokens = sqliteTable(
  * @title watches
  * @notice User-created event watches with embedded compiled WatchSpec JSON.
  */
-export const watches = sqliteTable("watches", {
+export const watches = pgTable("watches", {
   id: text("id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => authUsers.id),
   rawInput: text("raw_input").notNull(),
-  spec: text("spec", { mode: "json" }).$type<WatchSpec>().notNull(),
+  spec: jsonb("spec").$type<WatchSpec>().notNull(),
   status: text("status", { enum: ["watching", "triggered", "paused"] })
     .notNull()
     .default("watching"),
@@ -142,7 +145,7 @@ export const watches = sqliteTable("watches", {
 });
 
 /** @dev One scheduled or manual check run against a watch. */
-export const checks = sqliteTable("checks", {
+export const checks = pgTable("checks", {
   id: text("id").primaryKey(),
   watchId: text("watch_id")
     .notNull()
@@ -153,12 +156,12 @@ export const checks = sqliteTable("checks", {
   verdict: text("verdict"),
   confidence: integer("confidence"),
   modelUsed: text("model_used"),
-  escalated: integer("escalated", { mode: "boolean" }).notNull().default(false),
+  escalated: boolean("escalated").notNull().default(false),
   costCents: integer("cost_cents").notNull().default(0),
 });
 
 /** @dev Per-URL judgment stored for a check (audit trail for notifications). */
-export const evidence = sqliteTable("evidence", {
+export const evidence = pgTable("evidence", {
   id: text("id").primaryKey(),
   checkId: text("check_id")
     .notNull()

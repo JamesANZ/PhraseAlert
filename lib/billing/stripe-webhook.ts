@@ -33,7 +33,7 @@ export async function handleStripeWebhook(
   const stripe = getStripe();
   const event = stripe.webhooks.constructEvent(rawBody, signature, secret);
 
-  if (hasProcessedEvent(event.id)) {
+  if (await hasProcessedEvent(event.id)) {
     return { ok: true };
   }
 
@@ -45,14 +45,14 @@ export async function handleStripeWebhook(
       if (!userId) break;
 
       if (kind === "prepaid_month" && session.payment_status === "paid") {
-        activatePrepaid(userId, "stripe", session.id);
+        await activatePrepaid(userId, "stripe", session.id);
       } else if (kind === "subscription" && session.subscription) {
         const subId =
           typeof session.subscription === "string"
             ? session.subscription
             : session.subscription.id;
         const sub = await stripe.subscriptions.retrieve(subId);
-        activateSubscription({
+        await activateSubscription({
           userId,
           providerRef: sub.id,
           status: sub.status,
@@ -65,7 +65,7 @@ export async function handleStripeWebhook(
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.userId;
       if (!userId) break;
-      activateSubscription({
+      await activateSubscription({
         userId,
         providerRef: sub.id,
         status: sub.status,
@@ -75,10 +75,11 @@ export async function handleStripeWebhook(
     }
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
-      const userId = sub.metadata?.userId ?? markSubscriptionCanceled(sub.id);
+      const userId =
+        sub.metadata?.userId ?? (await markSubscriptionCanceled(sub.id));
       if (userId) {
-        const { paused } = downgradeUser(userId);
-        const user = getUser(userId);
+        const { paused } = await downgradeUser(userId);
+        const user = await getUser(userId);
         if (user?.email) {
           await sendDowngradeEmail(user.email, paused);
         }
@@ -92,7 +93,7 @@ export async function handleStripeWebhook(
       const sub = await stripe.subscriptions.retrieve(subId);
       const userId = sub.metadata?.userId;
       if (!userId) break;
-      activateSubscription({
+      await activateSubscription({
         userId,
         providerRef: sub.id,
         status: sub.status,
@@ -107,6 +108,6 @@ export async function handleStripeWebhook(
       break;
   }
 
-  recordBillingEvent(event.id, "stripe", event.type);
+  await recordBillingEvent(event.id, "stripe", event.type);
   return { ok: true };
 }

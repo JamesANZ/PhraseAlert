@@ -1,6 +1,6 @@
 /**
  * @title Watch persistence
- * @notice CRUD and quota enforcement for user watches stored in SQLite via Drizzle.
+ * @notice CRUD and quota enforcement for user watches stored in Postgres via Drizzle.
  * @dev Phase 2 product layer. Active watch count excludes paused; limits come from billing entitlements.
  */
 import { db } from "@/lib/db";
@@ -37,49 +37,51 @@ function mapWatch(row: typeof watches.$inferSelect): WatchRow {
  * @notice Count non-paused watches for quota checks.
  * @param userId Authenticated user id.
  */
-export function countActiveWatches(userId: string): number {
-  const rows = db
+export async function countActiveWatches(userId: string): Promise<number> {
+  const rows = await db
     .select()
     .from(watches)
-    .where(and(eq(watches.userId, userId), ne(watches.status, "paused")))
-    .all();
+    .where(and(eq(watches.userId, userId), ne(watches.status, "paused")));
   return rows.length;
 }
 
 /** @notice True when user is under their plan's active watch limit. */
-export function canCreateWatch(userId: string): boolean {
-  return countActiveWatches(userId) < getWatchLimit(userId);
+export async function canCreateWatch(userId: string): Promise<boolean> {
+  return (await countActiveWatches(userId)) < (await getWatchLimit(userId));
 }
 
 /** @notice True when resuming a paused watch would not exceed the limit. */
-export function canResumeWatch(userId: string): boolean {
-  return countActiveWatches(userId) < getWatchLimit(userId);
+export async function canResumeWatch(userId: string): Promise<boolean> {
+  return (await countActiveWatches(userId)) < (await getWatchLimit(userId));
 }
 
 /**
  * @notice List all watches for a user, newest first.
  * @param userId Owner id.
  */
-export function listWatches(userId: string): WatchRow[] {
-  return db
+export async function listWatches(userId: string): Promise<WatchRow[]> {
+  const rows = await db
     .select()
     .from(watches)
     .where(eq(watches.userId, userId))
-    .orderBy(desc(watches.createdAt))
-    .all()
-    .map(mapWatch);
+    .orderBy(desc(watches.createdAt));
+  return rows.map(mapWatch);
 }
 
 /**
  * @notice Fetch one watch scoped to owner.
  * @return WatchRow or null if not found / wrong user.
  */
-export function getWatch(id: string, userId: string): WatchRow | null {
-  const row = db
+export async function getWatch(
+  id: string,
+  userId: string,
+): Promise<WatchRow | null> {
+  const rows = await db
     .select()
     .from(watches)
     .where(and(eq(watches.id, id), eq(watches.userId, userId)))
-    .get();
+    .limit(1);
+  const row = rows[0];
   return row ? mapWatch(row) : null;
 }
 
@@ -90,33 +92,34 @@ export function getWatch(id: string, userId: string): WatchRow | null {
  * @param userId Owner id.
  * @return Created WatchRow.
  */
-export function createWatch(spec: WatchSpec, userId: string): WatchRow {
+export async function createWatch(
+  spec: WatchSpec,
+  userId: string,
+): Promise<WatchRow> {
   if (!spec.user_id && !userId) {
     throw new Error("User ID is required");
   }
 
   const ownerId = userId;
-  const limit = getWatchLimit(ownerId);
+  const limit = await getWatchLimit(ownerId);
 
-  if (!canCreateWatch(ownerId)) {
+  if (!(await canCreateWatch(ownerId))) {
     throw new Error(
       `Watch limit reached (${limit} active watches). Upgrade to Plus for more.`,
     );
   }
 
-  db.insert(watches)
-    .values({
-      id: spec.id,
-      userId: ownerId,
-      rawInput: spec.raw_input,
-      spec: { ...spec, user_id: ownerId },
-      status: spec.status,
-      createdAt: spec.created_at,
-      triggeredAt: null,
-    })
-    .run();
+  await db.insert(watches).values({
+    id: spec.id,
+    userId: ownerId,
+    rawInput: spec.raw_input,
+    spec: { ...spec, user_id: ownerId },
+    status: spec.status,
+    createdAt: spec.created_at,
+    triggeredAt: null,
+  });
 
-  const created = getWatch(spec.id, ownerId);
+  const created = await getWatch(spec.id, ownerId);
   if (!created) throw new Error("Failed to create watch");
   return created;
 }
@@ -126,26 +129,27 @@ export function createWatch(spec: WatchSpec, userId: string): WatchRow {
  * @dev Resume enforces active watch limit. Setting triggered records triggeredAt timestamp.
  * @return Updated WatchRow or null if not found.
  */
-export function updateWatchStatus(
+export async function updateWatchStatus(
   id: string,
   userId: string,
   status: "watching" | "triggered" | "paused",
-): WatchRow | null {
-  const existing = getWatch(id, userId);
+): Promise<WatchRow | null> {
+  const existing = await getWatch(id, userId);
   if (!existing) return null;
 
   if (
     status === "watching" &&
     existing.status === "paused" &&
-    !canResumeWatch(userId)
+    !(await canResumeWatch(userId))
   ) {
-    const limit = getWatchLimit(userId);
+    const limit = await getWatchLimit(userId);
     throw new Error(
       `Watch limit reached (${limit} active watches). Upgrade to Plus or pause another watch.`,
     );
   }
 
-  db.update(watches)
+  await db
+    .update(watches)
     .set({
       status,
       triggeredAt:
@@ -153,8 +157,7 @@ export function updateWatchStatus(
           ? new Date().toISOString()
           : existing.triggeredAt,
     })
-    .where(and(eq(watches.id, id), eq(watches.userId, userId)))
-    .run();
+    .where(and(eq(watches.id, id), eq(watches.userId, userId)));
 
   return getWatch(id, userId);
 }
@@ -163,23 +166,25 @@ export function updateWatchStatus(
  * @notice Permanently delete a watch for the owning user.
  * @return True if a row was deleted.
  */
-export function deleteWatch(id: string, userId: string): boolean {
-  const result = db
+export async function deleteWatch(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const deleted = await db
     .delete(watches)
     .where(and(eq(watches.id, id), eq(watches.userId, userId)))
-    .run();
-  return result.changes > 0;
+    .returning({ id: watches.id });
+  return deleted.length > 0;
 }
 
 /**
  * @notice All watches in `watching` status — used by the cron check runner.
  * @dev Not scoped to user; internal scheduler only.
  */
-export function listWatchingWatches(): WatchRow[] {
-  return db
+export async function listWatchingWatches(): Promise<WatchRow[]> {
+  const rows = await db
     .select()
     .from(watches)
-    .where(eq(watches.status, "watching"))
-    .all()
-    .map(mapWatch);
+    .where(eq(watches.status, "watching"));
+  return rows.map(mapWatch);
 }
