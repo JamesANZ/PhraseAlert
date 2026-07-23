@@ -159,11 +159,11 @@ writeFileSync(
 );
 writeFileSync(
   join(outDir, "natspec-userdoc.md"),
-  toMarkdown(userdoc, "Bellwether User Documentation"),
+  toMarkdown(userdoc, "PhraseAlert User Documentation"),
 );
 writeFileSync(
   join(outDir, "natspec-devdoc.md"),
-  toMarkdown(devdoc, "Bellwether Developer Documentation"),
+  toMarkdown(devdoc, "PhraseAlert Developer Documentation"),
 );
 
 console.log(

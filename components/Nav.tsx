@@ -9,7 +9,7 @@ export async function Nav() {
       <div className="nav-inner">
         <Link className="brand" href="/">
           <span className="brand-mark" aria-hidden="true" />
-          bellweather
+          PhraseAlert
         </Link>
         <div className="nav-end">
           <nav className="nav-links" aria-label="Main">

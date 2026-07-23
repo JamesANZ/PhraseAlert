@@ -168,7 +168,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
     }
     if (clarifyTurns >= MAX_CLARIFY_TURNS && !customClarification.trim()) {
       setError(
-        "Write a more specific sentence. A topic name alone is not enough for an alert.",
+        "Write a more specific phrase. A topic name alone is not enough for an alert.",
       );
       return;
     }
@@ -198,10 +198,10 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
     return (
       <div className="clarify-panel">
         <div className="page-header">
-          <h1>Make it more specific</h1>
+          <h1>Make the phrase more specific</h1>
           <p>
-            We need one clear event to alert on. Pick the closest match, or
-            rewrite it in your own words.
+            We need one clear outcome to watch for. Pick the closest match, or
+            rewrite the phrase in your own words.
           </p>
         </div>
         {error && (
@@ -246,7 +246,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         <textarea
           id="custom-clarify"
           className="clarify-custom"
-          placeholder="Or write a more specific alert sentence…"
+          placeholder="Or write a more specific phrase…"
           value={customClarification}
           onChange={(e) => {
             setCustomClarification(e.target.value);
@@ -285,7 +285,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
       <div className="page-header">
         <h1>Create an alert</h1>
         <p>
-          Say what you&apos;re waiting for in plain English. One sentence is
+          Write the phrase you want PhraseAlert to watch. One clear phrase is
           enough. We&apos;ll ask you to clarify if it&apos;s too vague.
         </p>
       </div>

@@ -24,9 +24,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "bellweather",
+  title: "PhraseAlert",
   description:
-    "Natural language alerts for anything you're waiting on. Describe it in plain English. We check the web and notify you when it happens.",
+    "Write a phrase. Get alerted when it's true. PhraseAlert watches the web and notifies you only when it actually happens.",
 };
 
 export default function RootLayout({

@@ -1,5 +1,5 @@
 /**
- * @title Bellwether core types
+ * @title PhraseAlert core types
  * @notice Shared Zod schemas and TypeScript types for watches, detection, retrieval, and eval fixtures.
  * @dev All runtime validation flows through these schemas. API routes and the judgment pipeline import from here.
  * @custom:phase 1

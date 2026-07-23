@@ -5,11 +5,15 @@
       "file": "app/api/billing/checkout/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["POST /api/billing/checkout"],
+        "@title": [
+          "POST /api/billing/checkout"
+        ],
         "@notice": [
           "Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect URL."
         ],
-        "@custom:auth": ["Required session"]
+        "@custom:auth": [
+          "Required session"
+        ]
       },
       "untagged": []
     },
@@ -17,11 +21,15 @@
       "file": "app/api/billing/status/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["GET /api/billing/status"],
+        "@title": [
+          "GET /api/billing/status"
+        ],
         "@notice": [
           "Returns plan, watch limit, active watch count, and billing period for the session user."
         ],
-        "@custom:auth": ["Required session"]
+        "@custom:auth": [
+          "Required session"
+        ]
       },
       "untagged": []
     },
@@ -29,14 +37,19 @@
       "file": "app/api/checks/run/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["POST /api/checks/run"],
+        "@title": [
+          "GET|POST /api/checks/run"
+        ],
         "@notice": [
           "Cron endpoint: run checks for all watches in `watching` status."
         ],
         "@dev": [
-          "Protected by Authorization: Bearer CRON_SECRET when CRON_SECRET is set."
+          "Vercel Cron invokes GET; POST kept for manual runs. Protected by",
+          "Authorization: Bearer CRON_SECRET when CRON_SECRET is set."
         ],
-        "@custom:env": ["TAVILY_API_KEY, CRON_SECRET (optional)"]
+        "@custom:env": [
+          "TAVILY_API_KEY, CRON_SECRET (optional)"
+        ]
       },
       "untagged": []
     },
@@ -44,7 +57,9 @@
       "file": "app/api/checks/run/route.ts",
       "line": 7,
       "tags": {
-        "@notice": ["Batch check all active watches."],
+        "@notice": [
+          "Batch check all active watches."
+        ],
         "@return": [
           "200 { ok, checked, triggered, errors, results } | 401 bad cron secret | 503 no Tavily"
         ]
@@ -55,15 +70,21 @@
       "file": "app/api/watch/[id]/check/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["POST /api/watch/[id]/check"],
+        "@title": [
+          "POST /api/watch/[id]/check"
+        ],
         "@notice": [
           "Manually run one check now for a watching watch (dev / dashboard \"Check now\")."
         ],
         "@dev": [
           "Full pipeline: Tavily retrieve → filter → detect → decide → persist."
         ],
-        "@custom:auth": ["Required session"],
-        "@custom:env": ["TAVILY_API_KEY"]
+        "@custom:auth": [
+          "Required session"
+        ],
+        "@custom:env": [
+          "TAVILY_API_KEY"
+        ]
       },
       "untagged": []
     },
@@ -71,7 +92,9 @@
       "file": "app/api/watch/[id]/check/route.ts",
       "line": 8,
       "tags": {
-        "@notice": ["Run check for one watch owned by the user."],
+        "@notice": [
+          "Run check for one watch owned by the user."
+        ],
         "@return": [
           "200 check summary with evidence | 404 | 409 non-watching | 503 no Tavily key"
         ]
@@ -82,11 +105,15 @@
       "file": "app/api/watch/[id]/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["/api/watch/[id]"],
+        "@title": [
+          "/api/watch/[id]"
+        ],
         "@notice": [
           "Get, pause/resume, or delete a single watch owned by the session user."
         ],
-        "@custom:auth": ["Required session"]
+        "@custom:auth": [
+          "Required session"
+        ]
       },
       "untagged": []
     },
@@ -94,14 +121,18 @@
       "file": "app/api/watch/confirm/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["POST /api/watch/confirm"],
+        "@title": [
+          "POST /api/watch/confirm"
+        ],
         "@notice": [
           "Finalize and persist a watch after the user has clarified a CLEAR sentence."
         ],
         "@dev": [
           "Re-runs vagueness on clarified text, compiles WatchSpec, inserts watch row."
         ],
-        "@custom:auth": ["Required session"]
+        "@custom:auth": [
+          "Required session"
+        ]
       },
       "untagged": []
     },
@@ -109,7 +140,9 @@
       "file": "app/api/watch/confirm/route.ts",
       "line": 13,
       "tags": {
-        "@notice": ["Compile and save watch."],
+        "@notice": [
+          "Compile and save watch."
+        ],
         "@return": [
           "200 { watch } | 400 still VAGUE | 403 watch limit | 401 unauthorized"
         ]
@@ -120,14 +153,18 @@
       "file": "app/api/watch/create/route.ts",
       "line": 1,
       "tags": {
-        "@title": ["POST /api/watch/create"],
+        "@title": [
+          "POST /api/watch/create"
+        ],
         "@notice": [
           "Assess vagueness of a watch sentence before saving (clarification step)."
         ],
         "@dev": [
           "Does not persist a watch. Returns VaguenessResult for the WatchCreator UI."
         ],
-        "@custom:auth": ["Required session"]
+        "@custom:auth": [
+          "Required session"
+        ]
       },
       "untagged": []
     },
@@ -135,7 +172,9 @@
       "file": "app/api/watch/create/route.ts",
       "line": 7,
       "tags": {
-        "@dev": ["Request body: raw_input 3–500 chars."]
+        "@dev": [
+          "Request body: raw_input 3–500 chars."
+        ]
       },
       "untagged": []
     },
@@ -143,7 +182,9 @@
       "file": "app/api/watch/create/route.ts",
       "line": 12,
       "tags": {
-        "@notice": ["Run vagueness classification on raw_input."],
+        "@notice": [
+          "Run vagueness classification on raw_input."
+        ],
         "@return": [
           "200 VaguenessResult | 401 unauthorized | 400 validation error"
         ]
@@ -154,7 +195,9 @@
       "file": "components/WatchCreator.tsx",
       "line": 3,
       "tags": {
-        "@title": ["WatchCreator"],
+        "@title": [
+          "WatchCreator"
+        ],
         "@notice": [
           "Multi-step UI: enter sentence → clarify if vague → confirm and save watch."
         ],
@@ -168,7 +211,9 @@
       "file": "components/WatchList.tsx",
       "line": 3,
       "tags": {
-        "@title": ["WatchList"],
+        "@title": [
+          "WatchList"
+        ],
         "@notice": [
           "Dashboard list of saved watches with pause, resume, delete, and check-now actions."
         ],
@@ -182,14 +227,18 @@
       "file": "evals/run.ts",
       "line": 1,
       "tags": {
-        "@title": ["Eval harness CLI"],
+        "@title": [
+          "Eval harness CLI"
+        ],
         "@notice": [
           "Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval against fixtures."
         ],
         "@dev": [
           "Run via `npm run eval` with flags: --compiler-only, --detector-only, --dialogues-only, --retrieval-only, --smoke."
         ],
-        "@custom:phase": ["1"]
+        "@custom:phase": [
+          "1"
+        ]
       },
       "untagged": []
     },
@@ -197,11 +246,15 @@
       "file": "lib/auth/session.ts",
       "line": 4,
       "tags": {
-        "@notice": ["Require an authenticated session and return the user id."],
+        "@notice": [
+          "Require an authenticated session and return the user id."
+        ],
         "@dev": [
           "Throws \"Unauthorized\" — map to HTTP 401 in route catch blocks."
         ],
-        "@return": ["Session user id string."]
+        "@return": [
+          "Session user id string."
+        ]
       },
       "untagged": []
     },
@@ -209,12 +262,14 @@
       "file": "lib/auth.ts",
       "line": 1,
       "tags": {
-        "@title": ["NextAuth server configuration"],
+        "@title": [
+          "NextAuth server configuration"
+        ],
         "@notice": [
-          "Auth.js setup with Drizzle adapter and SQLite user/session tables."
+          "Auth.js setup with Drizzle adapter and Postgres user/session tables."
         ],
         "@dev": [
-          "Exports handlers, auth, signIn, signOut. initDb() runs at module load."
+          "Exports handlers, auth, signIn, signOut. Schema ensure starts at module load."
         ]
       },
       "untagged": []
@@ -226,8 +281,12 @@
         "@notice": [
           "Called when Plus expires so free users retain their 3 most recently created active watches."
         ],
-        "@param": ["userId User whose excess watches should be paused."],
-        "@return": ["Summary of watches that were paused."]
+        "@param": [
+          "userId User whose excess watches should be paused."
+        ],
+        "@return": [
+          "Summary of watches that were paused."
+        ]
       },
       "untagged": [
         "Pause newest active watches until the user is at or under the free-tier cap."
@@ -237,7 +296,9 @@
       "file": "lib/billing/entitlements.ts",
       "line": 1,
       "tags": {
-        "@title": ["Billing entitlements"],
+        "@title": [
+          "Billing entitlements"
+        ],
         "@notice": [
           "Resolves effective plan, watch limits, and Plus grant/revoke for a user."
         ],
@@ -261,7 +322,9 @@
       "file": "lib/check.ts",
       "line": 1,
       "tags": {
-        "@title": ["Check orchestrator"],
+        "@title": [
+          "Check orchestrator"
+        ],
         "@notice": [
           "Runs one full retrieval → filter → detect → decide cycle for a single watch."
         ],
@@ -298,11 +361,15 @@
       "file": "lib/check.ts",
       "line": 31,
       "tags": {
-        "@notice": ["Execute a scheduled or manual check for one watch."],
+        "@notice": [
+          "Execute a scheduled or manual check for one watch."
+        ],
         "@dev": [
           "Skips already-seen URLs, evaluates up to MAX_CANDIDATES_TO_EVALUATE survivors, marks watch triggered when decision says notify."
         ],
-        "@param": ["watch WatchRow with embedded WatchSpec."],
+        "@param": [
+          "watch WatchRow with embedded WatchSpec."
+        ],
         "@return": [
           "CheckRunResult with persisted check id and decision summary."
         ]
@@ -313,12 +380,14 @@
       "file": "lib/checks.ts",
       "line": 1,
       "tags": {
-        "@title": ["Check and evidence persistence"],
+        "@title": [
+          "Check and evidence persistence"
+        ],
         "@notice": [
           "Records each check run and per-source evidence for audit trails and URL deduplication."
         ],
         "@dev": [
-          "Phase 2. Confidence stored as 0–100 integer in SQLite; evidence snippets truncated at insert."
+          "Phase 2. Confidence stored as 0–100 integer; evidence snippets truncated at insert."
         ]
       },
       "untagged": []
@@ -327,7 +396,9 @@
       "file": "lib/checks.ts",
       "line": 7,
       "tags": {
-        "@dev": ["Input for inserting one check row after decide completes."]
+        "@dev": [
+          "Input for inserting one check row after decide completes."
+        ]
       },
       "untagged": []
     },
@@ -335,7 +406,9 @@
       "file": "lib/checks.ts",
       "line": 18,
       "tags": {
-        "@dev": ["One evidence row linked to a check (one evaluated URL)."]
+        "@dev": [
+          "One evidence row linked to a check (one evaluated URL)."
+        ]
       },
       "untagged": []
     },
@@ -343,20 +416,28 @@
       "file": "lib/checks.ts",
       "line": 28,
       "tags": {
-        "@notice": ["Insert a check record and return its id."],
+        "@notice": [
+          "Insert a check record and return its id."
+        ],
         "@dev": [
           "Id format: `chk_<uuid12>`. Confidence clamped to [0,1] then stored as percent."
         ],
-        "@param": ["input Aggregated check metadata."],
-        "@return": ["New check id."]
+        "@param": [
+          "input Aggregated check metadata."
+        ],
+        "@return": [
+          "New check id."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/checks.ts",
-      "line": 54,
+      "line": 52,
       "tags": {
-        "@notice": ["Bulk-insert evidence rows for a check."],
+        "@notice": [
+          "Bulk-insert evidence rows for a check."
+        ],
         "@param": [
           "checkId Parent check id from createCheck.",
           "rows Per-candidate detection outcomes."
@@ -366,7 +447,7 @@
     },
     {
       "file": "lib/checks.ts",
-      "line": 77,
+      "line": 73,
       "tags": {
         "@notice": [
           "Normalized URLs previously stored as evidence for any check on this watch."
@@ -374,8 +455,12 @@
         "@dev": [
           "Used by applyRetrievalFilters to skip re-judging the same article."
         ],
-        "@param": ["watchId Watch id."],
-        "@return": ["Set of normalized URLs."]
+        "@param": [
+          "watchId Watch id."
+        ],
+        "@return": [
+          "Set of normalized URLs."
+        ]
       },
       "untagged": []
     },
@@ -383,14 +468,18 @@
       "file": "lib/compiler.ts",
       "line": 1,
       "tags": {
-        "@title": ["Watch compiler"],
+        "@title": [
+          "Watch compiler"
+        ],
         "@notice": [
           "Turns a plain-language watch sentence into a structured WatchSpec, with a vagueness gate first."
         ],
         "@dev": [
           "Phase 1 judgment layer. Uses Hugging Face chat completion via `completeJson` with strict system prompts."
         ],
-        "@custom:pipeline": ["step 1 — compile"]
+        "@custom:pipeline": [
+          "step 1 — compile"
+        ]
       },
       "untagged": []
     },
@@ -437,7 +526,9 @@
         "@param": [
           "rawInput User's watch sentence (3–500 chars at API layer)."
         ],
-        "@return": ["VaguenessResult with CLEAR or VAGUE classification."]
+        "@return": [
+          "VaguenessResult with CLEAR or VAGUE classification."
+        ]
       },
       "untagged": []
     },
@@ -458,7 +549,9 @@
           "options.id Optional watch id (defaults to `w_<uuid8>`).",
           "options.userId Owner user id."
         ],
-        "@return": ["Validated WatchSpec."]
+        "@return": [
+          "Validated WatchSpec."
+        ]
       },
       "untagged": []
     },
@@ -469,12 +562,16 @@
         "@notice": [
           "Combined vagueness check and compile for eval harness and smoke tests."
         ],
-        "@dev": ["Skips compilation when classification is VAGUE."],
+        "@dev": [
+          "Skips compilation when classification is VAGUE."
+        ],
         "@param": [
           "rawInput Watch sentence.",
           "createdAt Fixed timestamp for reproducible eval runs."
         ],
-        "@return": ["Vagueness result and optional compiled spec."]
+        "@return": [
+          "Vagueness result and optional compiled spec."
+        ]
       },
       "untagged": []
     },
@@ -482,7 +579,9 @@
       "file": "lib/constants.ts",
       "line": 1,
       "tags": {
-        "@title": ["Product constants"],
+        "@title": [
+          "Product constants"
+        ],
         "@notice": [
           "Tier limits and billing amounts shared across entitlements and UI."
         ],
@@ -496,7 +595,9 @@
       "file": "lib/constants.ts",
       "line": 12,
       "tags": {
-        "@dev": ["Prepaid Helio period duration in milliseconds (30 days)."]
+        "@dev": [
+          "Prepaid Helio period duration in milliseconds (30 days)."
+        ]
       },
       "untagged": []
     },
@@ -514,34 +615,28 @@
       "file": "lib/db/index.ts",
       "line": 1,
       "tags": {
-        "@title": ["SQLite database bootstrap"],
+        "@title": [
+          "Neon Postgres database bootstrap"
+        ],
         "@notice": [
-          "Drizzle client, WAL pragmas, and idempotent schema migration for local dev."
+          "Drizzle client over Neon's serverless HTTP driver, plus idempotent schema ensure."
         ],
         "@dev": [
-          "DATABASE_URL defaults to ./data/bellwether.db. Call initDb() before first API use."
+          "Requires DATABASE_URL (Neon). Call await initDb() before first API use."
         ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/index.ts",
-      "line": 18,
-      "tags": {
-        "@dev": [
-          "Read column names from PRAGMA table_info for lightweight migrations."
-        ]
-      },
-      "untagged": []
-    },
-    {
-      "file": "lib/db/index.ts",
-      "line": 33,
+      "line": 26,
       "tags": {
         "@notice": [
-          "Create tables if missing and add billing columns to legacy user rows."
+          "Create tables if missing (safe on every cron/API cold start)."
         ],
-        "@dev": ["Safe to call on every cron/API cold start."]
+        "@dev": [
+          "Idempotent; concurrent callers share one in-flight init."
+        ]
       },
       "untagged": []
     },
@@ -549,27 +644,31 @@
       "file": "lib/db/schema.ts",
       "line": 1,
       "tags": {
-        "@title": ["Database schema (Drizzle SQLite)"],
+        "@title": [
+          "Database schema (Drizzle Postgres / Neon)"
+        ],
         "@notice": [
           "Table definitions for auth, billing, watches, checks, and evidence."
         ],
         "@dev": [
-          "WatchSpec stored as JSON on watches.spec. NextAuth adapter tables follow Auth.js conventions."
+          "WatchSpec stored as JSONB on watches.spec. NextAuth adapter tables follow Auth.js conventions."
         ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 33,
+      "line": 36,
       "tags": {
-        "@dev": ["Stripe or Helio subscription/prepaid records linked to user."]
+        "@dev": [
+          "Stripe or Helio subscription/prepaid records linked to user."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 65,
+      "line": 68,
       "tags": {
         "@dev": [
           "Idempotent webhook event log (provider + event id) for Stripe and Helio."
@@ -579,39 +678,47 @@
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 75,
+      "line": 78,
       "tags": {
-        "@dev": ["OAuth provider accounts (NextAuth adapter)."]
+        "@dev": [
+          "OAuth provider accounts (NextAuth adapter)."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 100,
+      "line": 103,
       "tags": {
-        "@dev": ["Active login sessions (NextAuth adapter)."]
+        "@dev": [
+          "Active login sessions (NextAuth adapter)."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 109,
+      "line": 112,
       "tags": {
-        "@dev": ["Email magic-link tokens (NextAuth adapter)."]
+        "@dev": [
+          "Email magic-link tokens (NextAuth adapter)."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 137,
+      "line": 140,
       "tags": {
-        "@dev": ["One scheduled or manual check run against a watch."]
+        "@dev": [
+          "One scheduled or manual check run against a watch."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/db/schema.ts",
-      "line": 153,
+      "line": 156,
       "tags": {
         "@dev": [
           "Per-URL judgment stored for a check (audit trail for notifications)."
@@ -623,14 +730,18 @@
       "file": "lib/decide.ts",
       "line": 1,
       "tags": {
-        "@title": ["Notification decision layer"],
+        "@title": [
+          "Notification decision layer"
+        ],
         "@notice": [
           "Aggregates per-source detection verdicts and decides whether to notify the user."
         ],
         "@dev": [
           "Phase 1 judgment layer. Implements corroboration: authoritative high-confidence OR two independent triggers."
         ],
-        "@custom:pipeline": ["step 4 — decide"]
+        "@custom:pipeline": [
+          "step 4 — decide"
+        ]
       },
       "untagged": []
     },
@@ -648,7 +759,9 @@
       "file": "lib/decide.ts",
       "line": 12,
       "tags": {
-        "@dev": ["One retrieval candidate paired with its detection result."]
+        "@dev": [
+          "One retrieval candidate paired with its detection result."
+        ]
       },
       "untagged": []
     },
@@ -656,7 +769,9 @@
       "file": "lib/decide.ts",
       "line": 18,
       "tags": {
-        "@dev": ["Final outcome of the decide step for a single check run."]
+        "@dev": [
+          "Final outcome of the decide step for a single check run."
+        ]
       },
       "untagged": []
     },
@@ -699,14 +814,18 @@
       "file": "lib/detector.ts",
       "line": 1,
       "tags": {
-        "@title": ["Event detector"],
+        "@title": [
+          "Event detector"
+        ],
         "@notice": [
           "Judges whether a single web source shows the watched event actually occurred."
         ],
         "@dev": [
           "Phase 1 judgment layer. Not keyword matching — requires credible evidence of the event post-watch."
         ],
-        "@custom:pipeline": ["step 3 — detect"]
+        "@custom:pipeline": [
+          "step 3 — detect"
+        ]
       },
       "untagged": []
     },
@@ -734,7 +853,9 @@
           "spec Compiled watch specification.",
           "candidate Filtered web source to evaluate."
         ],
-        "@return": ["DetectionResult plus the HF model id used for this call."]
+        "@return": [
+          "DetectionResult plus the HF model id used for this call."
+        ]
       },
       "untagged": []
     },
@@ -742,14 +863,18 @@
       "file": "lib/filter.ts",
       "line": 1,
       "tags": {
-        "@title": ["Retrieval filters"],
+        "@title": [
+          "Retrieval filters"
+        ],
         "@notice": [
           "Drops candidates that are too old, already evaluated, or on a denylist before detection."
         ],
         "@dev": [
-          "Phase 1 judgment layer. Enforces the post-watch-only rule central to Bellwether's value prop."
+          "Phase 1 judgment layer. Enforces the post-watch-only rule central to PhraseAlert's value prop."
         ],
-        "@custom:pipeline": ["step 2 — filter"]
+        "@custom:pipeline": [
+          "step 2 — filter"
+        ]
       },
       "untagged": []
     },
@@ -757,12 +882,18 @@
       "file": "lib/filter.ts",
       "line": 4,
       "tags": {
-        "@notice": ["Canonicalize a URL for deduplication across check runs."],
+        "@notice": [
+          "Canonicalize a URL for deduplication across check runs."
+        ],
         "@dev": [
           "Strips hash fragments and trailing slashes. Invalid URLs pass through unchanged."
         ],
-        "@param": ["url Raw candidate URL."],
-        "@return": ["Normalized URL string."]
+        "@param": [
+          "url Raw candidate URL."
+        ],
+        "@return": [
+          "Normalized URL string."
+        ]
       },
       "untagged": []
     },
@@ -799,7 +930,9 @@
           "seenUrls Normalized URLs from prior checks on this watch (default empty).",
           "denylistDomains Hostnames to exclude (default empty)."
         ],
-        "@return": ["Filtered candidates eligible for detection."]
+        "@return": [
+          "Filtered candidates eligible for detection."
+        ]
       },
       "untagged": []
     },
@@ -807,7 +940,9 @@
       "file": "lib/inference.ts",
       "line": 1,
       "tags": {
-        "@title": ["Hugging Face inference client"],
+        "@title": [
+          "Hugging Face inference client"
+        ],
         "@notice": [
           "Shared LLM completion layer for compiler, detector, and eval harness."
         ],
@@ -824,7 +959,9 @@
       "file": "lib/inference.ts",
       "line": 4,
       "tags": {
-        "@dev": ["Default instruct model when HF_MODEL is unset."]
+        "@dev": [
+          "Default instruct model when HF_MODEL is unset."
+        ]
       },
       "untagged": []
     },
@@ -832,7 +969,9 @@
       "file": "lib/inference.ts",
       "line": 7,
       "tags": {
-        "@dev": ["Models supported for eval comparison runs."]
+        "@dev": [
+          "Models supported for eval comparison runs."
+        ]
       },
       "untagged": []
     },
@@ -850,8 +989,12 @@
       "file": "lib/inference.ts",
       "line": 29,
       "tags": {
-        "@notice": ["Resolve the active model id from env or default."],
-        "@return": ["Model string passed to chatCompletion."]
+        "@notice": [
+          "Resolve the active model id from env or default."
+        ],
+        "@return": [
+          "Model string passed to chatCompletion."
+        ]
       },
       "untagged": []
     },
@@ -870,7 +1013,9 @@
           "userPrompt User role content (watch text, candidate source, etc.).",
           "model Optional model override."
         ],
-        "@return": ["Raw text, parsed JSON, and model id."]
+        "@return": [
+          "Raw text, parsed JSON, and model id."
+        ]
       },
       "untagged": []
     },
@@ -884,8 +1029,12 @@
         "@dev": [
           "Falls back to first `{...}` substring if direct parse fails."
         ],
-        "@param": ["text Raw assistant message."],
-        "@return": ["Parsed value cast to T (caller should validate with Zod)."]
+        "@param": [
+          "text Raw assistant message."
+        ],
+        "@return": [
+          "Parsed value cast to T (caller should validate with Zod)."
+        ]
       },
       "untagged": []
     },
@@ -893,15 +1042,21 @@
       "file": "lib/retrieval/index.ts",
       "line": 1,
       "tags": {
-        "@title": ["Live retrieval orchestrator"],
+        "@title": [
+          "Live retrieval orchestrator"
+        ],
         "@notice": [
           "Runs Tavily search and extract for a WatchSpec's search_queries and builds RetrievalCandidates."
         ],
         "@dev": [
           "Phase 2. Constrains results to post-watch window via Tavily start_date; dedupes by normalized URL."
         ],
-        "@custom:pipeline": ["step 2 — retrieve"],
-        "@custom:env": ["TAVILY_API_KEY"]
+        "@custom:pipeline": [
+          "step 2 — retrieve"
+        ],
+        "@custom:env": [
+          "TAVILY_API_KEY"
+        ]
       },
       "untagged": []
     },
@@ -909,7 +1064,9 @@
       "file": "lib/retrieval/index.ts",
       "line": 6,
       "tags": {
-        "@dev": ["Max Tavily search hits per query before merge."]
+        "@dev": [
+          "Max Tavily search hits per query before merge."
+        ]
       },
       "untagged": []
     },
@@ -917,7 +1074,9 @@
       "file": "lib/retrieval/index.ts",
       "line": 8,
       "tags": {
-        "@dev": ["Top unique URLs sent to Tavily extract for richer snippets."]
+        "@dev": [
+          "Top unique URLs sent to Tavily extract for richer snippets."
+        ]
       },
       "untagged": []
     },
@@ -925,7 +1084,9 @@
       "file": "lib/retrieval/index.ts",
       "line": 10,
       "tags": {
-        "@dev": ["Parallel Tavily search calls (one per search_query)."]
+        "@dev": [
+          "Parallel Tavily search calls (one per search_query)."
+        ]
       },
       "untagged": []
     },
@@ -933,7 +1094,9 @@
       "file": "lib/retrieval/index.ts",
       "line": 13,
       "tags": {
-        "@dev": ["Hostname without www prefix; \"unknown\" on parse failure."]
+        "@dev": [
+          "Hostname without www prefix; \"unknown\" on parse failure."
+        ]
       },
       "untagged": []
     },
@@ -961,7 +1124,9 @@
       "file": "lib/retrieval/index.ts",
       "line": 47,
       "tags": {
-        "@dev": ["Bounded-concurrency map for parallel Tavily searches."]
+        "@dev": [
+          "Bounded-concurrency map for parallel Tavily searches."
+        ]
       },
       "untagged": []
     },
@@ -989,7 +1154,9 @@
           "spec WatchSpec with search_queries and created_at.",
           "options.retrievedAt Fallback published_at when Tavily omits dates."
         ],
-        "@return": ["Deduplicated candidates ready for applyRetrievalFilters."]
+        "@return": [
+          "Deduplicated candidates ready for applyRetrievalFilters."
+        ]
       },
       "untagged": []
     },
@@ -997,14 +1164,18 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 1,
       "tags": {
-        "@title": ["Tavily API client"],
+        "@title": [
+          "Tavily API client"
+        ],
         "@notice": [
           "Thin fetch wrapper for Tavily /search and /extract endpoints."
         ],
         "@dev": [
           "Used by lib/retrieval/index.ts. Requires TAVILY_API_KEY in environment."
         ],
-        "@custom:env": ["TAVILY_API_KEY"]
+        "@custom:env": [
+          "TAVILY_API_KEY"
+        ]
       },
       "untagged": []
     },
@@ -1012,7 +1183,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 4,
       "tags": {
-        "@dev": ["Single result from Tavily search API."]
+        "@dev": [
+          "Single result from Tavily search API."
+        ]
       },
       "untagged": []
     },
@@ -1020,7 +1193,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 14,
       "tags": {
-        "@dev": ["Response envelope from POST /search."]
+        "@dev": [
+          "Response envelope from POST /search."
+        ]
       },
       "untagged": []
     },
@@ -1028,7 +1203,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 20,
       "tags": {
-        "@dev": ["Extracted page content for one URL."]
+        "@dev": [
+          "Extracted page content for one URL."
+        ]
       },
       "untagged": []
     },
@@ -1036,7 +1213,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 26,
       "tags": {
-        "@dev": ["Response envelope from POST /extract."]
+        "@dev": [
+          "Response envelope from POST /extract."
+        ]
       },
       "untagged": []
     },
@@ -1064,7 +1243,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 47,
       "tags": {
-        "@dev": ["Reads TAVILY_API_KEY; throws if missing."]
+        "@dev": [
+          "Reads TAVILY_API_KEY; throws if missing."
+        ]
       },
       "untagged": []
     },
@@ -1072,7 +1253,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 56,
       "tags": {
-        "@dev": ["Shared POST helper with Bearer auth and error surfacing."]
+        "@dev": [
+          "Shared POST helper with Bearer auth and error surfacing."
+        ]
       },
       "untagged": []
     },
@@ -1080,7 +1263,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 80,
       "tags": {
-        "@notice": ["Run a Tavily web search for one query string."],
+        "@notice": [
+          "Run a Tavily web search for one query string."
+        ],
         "@param": [
           "query Search phrase from WatchSpec.search_queries.",
           "opts maxResults, searchDepth, startDate (YYYY-MM-DD), topic."
@@ -1092,7 +1277,9 @@
       "file": "lib/retrieval/tavily.ts",
       "line": 100,
       "tags": {
-        "@notice": ["Fetch full or chunked page content for a list of URLs."],
+        "@notice": [
+          "Fetch full or chunked page content for a list of URLs."
+        ],
         "@param": [
           "urls Up to MAX_EXTRACT_URLS in practice from retrieval layer.",
           "opts query + chunksPerSource for relevance-focused excerpts."
@@ -1104,9 +1291,11 @@
       "file": "lib/watches.ts",
       "line": 1,
       "tags": {
-        "@title": ["Watch persistence"],
+        "@title": [
+          "Watch persistence"
+        ],
         "@notice": [
-          "CRUD and quota enforcement for user watches stored in SQLite via Drizzle."
+          "CRUD and quota enforcement for user watches stored in Postgres via Drizzle."
         ],
         "@dev": [
           "Phase 2 product layer. Active watch count excludes paused; limits come from billing entitlements."
@@ -1128,7 +1317,9 @@
       "file": "lib/watches.ts",
       "line": 19,
       "tags": {
-        "@dev": ["Maps Drizzle row to WatchRow."]
+        "@dev": [
+          "Maps Drizzle row to WatchRow."
+        ]
       },
       "untagged": []
     },
@@ -1136,34 +1327,48 @@
       "file": "lib/watches.ts",
       "line": 32,
       "tags": {
-        "@notice": ["Count non-paused watches for quota checks."],
-        "@param": ["userId Authenticated user id."]
+        "@notice": [
+          "Count non-paused watches for quota checks."
+        ],
+        "@param": [
+          "userId Authenticated user id."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/watches.ts",
-      "line": 52,
+      "line": 51,
       "tags": {
-        "@notice": ["List all watches for a user, newest first."],
-        "@param": ["userId Owner id."]
+        "@notice": [
+          "List all watches for a user, newest first."
+        ],
+        "@param": [
+          "userId Owner id."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/watches.ts",
-      "line": 63,
+      "line": 61,
       "tags": {
-        "@notice": ["Fetch one watch scoped to owner."],
-        "@return": ["WatchRow or null if not found / wrong user."]
+        "@notice": [
+          "Fetch one watch scoped to owner."
+        ],
+        "@return": [
+          "WatchRow or null if not found / wrong user."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/watches.ts",
-      "line": 73,
+      "line": 75,
       "tags": {
-        "@notice": ["Persist a compiled WatchSpec as a new watch."],
+        "@notice": [
+          "Persist a compiled WatchSpec as a new watch."
+        ],
         "@dev": [
           "Throws if watch limit exceeded. Embeds user_id on the stored spec JSON."
         ],
@@ -1171,13 +1376,15 @@
           "spec Compiled WatchSpec from compiler.",
           "userId Owner id."
         ],
-        "@return": ["Created WatchRow."]
+        "@return": [
+          "Created WatchRow."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/watches.ts",
-      "line": 105,
+      "line": 108,
       "tags": {
         "@notice": [
           "Update watch lifecycle status (pause, resume, or mark triggered)."
@@ -1185,27 +1392,35 @@
         "@dev": [
           "Resume enforces active watch limit. Setting triggered records triggeredAt timestamp."
         ],
-        "@return": ["Updated WatchRow or null if not found."]
+        "@return": [
+          "Updated WatchRow or null if not found."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/watches.ts",
-      "line": 139,
+      "line": 142,
       "tags": {
-        "@notice": ["Permanently delete a watch for the owning user."],
-        "@return": ["True if a row was deleted."]
+        "@notice": [
+          "Permanently delete a watch for the owning user."
+        ],
+        "@return": [
+          "True if a row was deleted."
+        ]
       },
       "untagged": []
     },
     {
       "file": "lib/watches.ts",
-      "line": 148,
+      "line": 154,
       "tags": {
         "@notice": [
           "All watches in `watching` status — used by the cron check runner."
         ],
-        "@dev": ["Not scoped to user; internal scheduler only."]
+        "@dev": [
+          "Not scoped to user; internal scheduler only."
+        ]
       },
       "untagged": []
     },
@@ -1213,7 +1428,9 @@
       "file": "middleware.ts",
       "line": 1,
       "tags": {
-        "@title": ["Auth middleware"],
+        "@title": [
+          "Auth middleware"
+        ],
         "@notice": [
           "Redirects unauthenticated users to /login for protected app routes."
         ],
@@ -1227,7 +1444,9 @@
       "file": "scripts/extract-natspec.ts",
       "line": 1,
       "tags": {
-        "@title": ["NatSpec comment extractor"],
+        "@title": [
+          "NatSpec comment extractor"
+        ],
         "@notice": [
           "Walks TypeScript sources and emits userdoc + devdoc JSON from /** ... *\\/ blocks."
         ],
@@ -1241,14 +1460,18 @@
       "file": "types/index.ts",
       "line": 1,
       "tags": {
-        "@title": ["Bellwether core types"],
+        "@title": [
+          "PhraseAlert core types"
+        ],
         "@notice": [
           "Shared Zod schemas and TypeScript types for watches, detection, retrieval, and eval fixtures."
         ],
         "@dev": [
           "All runtime validation flows through these schemas. API routes and the judgment pipeline import from here."
         ],
-        "@custom:phase": ["1"]
+        "@custom:phase": [
+          "1"
+        ]
       },
       "untagged": []
     },
@@ -1256,14 +1479,18 @@
       "file": "types/index.ts",
       "line": 12,
       "tags": {
-        "@title": ["WatchSpec"],
+        "@title": [
+          "WatchSpec"
+        ],
         "@notice": [
           "Structured specification produced when a user's sentence is compiled into a monitorable watch."
         ],
         "@dev": [
           "Persisted as JSON on the `watches` row. Drives search queries, detection prompts, and notification rules."
         ],
-        "@custom:pipeline": ["compile → retrieve → filter → detect → decide"]
+        "@custom:pipeline": [
+          "compile → retrieve → filter → detect → decide"
+        ]
       },
       "untagged": []
     },
@@ -1271,7 +1498,9 @@
       "file": "types/index.ts",
       "line": 29,
       "tags": {
-        "@title": ["VaguenessResult"],
+        "@title": [
+          "VaguenessResult"
+        ],
         "@notice": [
           "Outcome of the vagueness gate before a watch can be saved."
         ],
@@ -1298,7 +1527,9 @@
       "file": "types/index.ts",
       "line": 54,
       "tags": {
-        "@title": ["RetrievalCandidate"],
+        "@title": [
+          "RetrievalCandidate"
+        ],
         "@notice": [
           "A web page (or fixture) candidate passed to the detector after retrieval and filtering."
         ],

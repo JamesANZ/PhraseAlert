@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bellwether — Tell us what you're waiting for</title>
+    <title>PhraseAlert: Write a phrase. Get alerted when it's true.</title>
     <meta
       name="description"
-      content="Describe any future event in a plain sentence. Bellwether watches the web and tells you when it actually happens."
+      content="Write a phrase. Get alerted when it's true. PhraseAlert watches the web and notifies you only when it actually happens."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +16,7 @@
     />
     <style>
       /* ============================================================
-   Bellwether — landing page
+   PhraseAlert landing page
    Palette
    ink        #0C0F12   page background
    surface    #14181D   cards, input
@@ -748,35 +748,36 @@
       <div class="nav-inner">
         <a class="brand" href="#top">
           <span class="brand-mark" aria-hidden="true"></span>
-          Bellwether
+          PhraseAlert
         </a>
         <nav class="nav-links" aria-label="Main">
           <a href="#difference">Why it's different</a>
           <a href="#how">How it works</a>
           <a href="#pricing">Pricing</a>
         </nav>
-        <a class="btn btn-small btn-primary" href="#top">Create a watch</a>
+        <a class="btn btn-small btn-primary" href="#top">Create an alert</a>
       </div>
     </header>
 
     <main id="top">
       <!-- ============ HERO ============ -->
       <section class="hero">
-        <h1>Tell us what you're<br /><em>waiting for.</em></h1>
+        <h1>Write a phrase.<br /><em>Get alerted when it's true.</em></h1>
         <p class="hero-sub">
-          Describe any future event in an ordinary sentence. Bellwether watches
-          the web, and tells you if and when it actually happens.
+          Turn any outcome into one clear phrase. PhraseAlert watches the web
+          and notifies you only when it actually happens, not every time the
+          topic gets mentioned.
         </p>
 
         <div class="watch-box" id="watch-box">
           <div class="watch-box-top">
             <span class="status-dot" aria-hidden="true"></span>
-            <span class="watch-box-label">New watch</span>
+            <span class="watch-box-label">Your phrase</span>
             <span class="watch-box-stamp mono" id="watch-stamp"></span>
           </div>
           <div class="watch-input-row">
             <label class="visually-hidden" for="watch-input"
-              >Describe what you want to know about</label
+              >Write the phrase you want to watch</label
             >
             <div class="watch-input-wrap">
               <input
@@ -786,28 +787,28 @@
                 autocomplete="off"
                 spellcheck="false"
                 placeholder=""
-                aria-label="Describe what you want to know about"
+                aria-label="Write the phrase you want to watch"
               />
               <span class="type-ghost mono" id="type-ghost" aria-hidden="true"
                 ><span id="type-text"></span><span class="cursor"></span
               ></span>
             </div>
             <button class="btn btn-primary" id="create-watch-btn" type="button">
-              Create watch
+              Create an alert
             </button>
           </div>
         </div>
 
-        <p class="hero-note">3 watches free · No credit card required</p>
+        <p class="hero-note">3 free alerts · No credit card required</p>
       </section>
 
       <!-- ============ EXAMPLES ============ -->
       <section class="section" id="examples">
-        <p class="eyebrow mono">Watch almost anything</p>
-        <h2>One sentence is the whole setup.</h2>
+        <p class="eyebrow mono">Example phrases</p>
+        <h2>If you can say it, you can watch it.</h2>
         <p class="section-sub">
-          No categories to pick, no rules to configure, no specialised site to
-          hunt down. If you can describe it, you can watch for it.
+          One phrase is the whole setup. No categories, no rules, no specialised
+          site to hunt down.
         </p>
 
         <div class="example-grid">
@@ -865,17 +866,17 @@
 
       <!-- ============ DIFFERENCE ============ -->
       <section class="section" id="difference">
-        <p class="eyebrow mono">Not a keyword alert</p>
-        <h2>We watch for the event,<br />not the words.</h2>
+        <p class="eyebrow mono">Not a keyword matcher</p>
+        <h2>We watch for your phrase coming true,<br />not every mention of the topic.</h2>
         <p class="section-sub">
-          Keyword alerts fire on any page that contains the right words. A watch
-          fires when credible new information shows the thing has actually
-          happened.
+          Keyword alerts fire on any page that contains the right words.
+          PhraseAlert waits for credible evidence that your phrase has become
+          true.
         </p>
 
         <div class="compare">
           <p class="compare-watch mono">
-            Watch: "Tell me if Australian partner visa fees increase."
+            Your phrase: "Tell me if Australian partner visa fees increase."
           </p>
 
           <div class="compare-cols">
@@ -887,7 +888,7 @@
                     >Complete guide to partner visa fees in 2026</span
                   >
                   <span class="feed-verdict mono"
-                    >Alert sent — it's just a guide</span
+                    >Alert sent: it's just a guide</span
                   >
                 </li>
                 <li class="feed-item fired-noise">
@@ -895,7 +896,7 @@
                     >Forum thread: how much did your partner visa cost?</span
                   >
                   <span class="feed-verdict mono"
-                    >Alert sent — it's a forum post</span
+                    >Alert sent: it's a forum post</span
                   >
                 </li>
                 <li class="feed-item fired-noise">
@@ -904,7 +905,7 @@
                     July</span
                   >
                   <span class="feed-verdict mono"
-                    >Alert sent — buried in the noise</span
+                    >Alert sent: buried in the noise</span
                   >
                 </li>
               </ul>
@@ -912,14 +913,14 @@
             </div>
 
             <div class="compare-col compare-col-watch">
-              <h3 class="compare-title">Bellwether watch</h3>
+              <h3 class="compare-title">PhraseAlert</h3>
               <ul class="feed">
                 <li class="feed-item skipped">
                   <span class="feed-headline"
                     >Complete guide to partner visa fees in 2026</span
                   >
                   <span class="feed-verdict mono"
-                    >Checked — nothing new happened</span
+                    >Checked: nothing new happened</span
                   >
                 </li>
                 <li class="feed-item skipped">
@@ -927,7 +928,7 @@
                     >Forum thread: how much did your partner visa cost?</span
                   >
                   <span class="feed-verdict mono"
-                    >Checked — nothing new happened</span
+                    >Checked: nothing new happened</span
                   >
                 </li>
                 <li class="feed-item fired-signal">
@@ -936,7 +937,7 @@
                     July</span
                   >
                   <span class="feed-verdict mono"
-                    >Notified — the fee actually changed</span
+                    >Notified: the fee actually changed</span
                   >
                 </li>
               </ul>
@@ -947,9 +948,8 @@
           </div>
 
           <p class="compare-footnote">
-            Watches are also forward-looking. Each one is timestamped when you
-            create it, so you hear about new developments, not old articles that
-            happen to match.
+            Each phrase starts when you create it. Only new developments after
+            that can trigger a notification.
           </p>
         </div>
       </section>
@@ -957,27 +957,27 @@
       <!-- ============ HOW IT WORKS ============ -->
       <section class="section" id="how">
         <p class="eyebrow mono">How it works</p>
-        <h2>Three steps. Two of them are ours.</h2>
+        <h2>Write a phrase. We check. You get alerted.</h2>
 
         <div class="steps">
           <div class="step">
-            <p class="step-label mono">Describe it</p>
+            <p class="step-label mono">Write your phrase</p>
             <p class="step-body">
-              Write a sentence describing exactly what you want to know.
+              Say the outcome the way you'd tell a friend. One clear phrase is
+              enough.
             </p>
           </div>
           <div class="step">
-            <p class="step-label mono">We watch</p>
+            <p class="step-label mono">We keep checking</p>
             <p class="step-body">
-              Bellwether continuously checks for new developments relevant to
-              your watch.
+              PhraseAlert looks across the web for credible evidence that your
+              phrase has come true.
             </p>
           </div>
           <div class="step">
-            <p class="step-label mono">You know</p>
+            <p class="step-label mono">You get one clear alert</p>
             <p class="step-body">
-              When the event actually happens, you get notified. Until then,
-              silence.
+              When it happens, we let you know. Until then, silence.
             </p>
           </div>
         </div>
@@ -986,18 +986,18 @@
       <!-- ============ PRICING ============ -->
       <section class="section" id="pricing">
         <p class="eyebrow mono">Pricing</p>
-        <h2>Start free. Stay free if you like.</h2>
+        <h2>Start free. Watch more phrases when you need to.</h2>
 
         <div class="pricing-grid">
           <div class="plan">
             <h3 class="plan-name">Free</h3>
             <p class="plan-price"><span class="plan-amount">$0</span></p>
             <ul class="plan-features">
-              <li>3 active watches</li>
+              <li>3 active phrase alerts</li>
               <li>Email notifications</li>
               <li>No credit card required</li>
             </ul>
-            <a class="btn btn-ghost" href="#top">Create a watch</a>
+            <a class="btn btn-ghost" href="#top">Create an alert</a>
           </div>
 
           <div class="plan plan-featured">
@@ -1008,10 +1008,10 @@
               ><span class="plan-period">/month</span>
             </p>
             <ul class="plan-features">
-              <li>25 active watches</li>
+              <li>25 active phrase alerts</li>
               <li>More frequent checks</li>
               <li>Push, SMS and webhook notifications</li>
-              <li>Watch history and evidence trail</li>
+              <li>Alert history and evidence trail</li>
             </ul>
             <a class="btn btn-primary" href="#top">Start with Plus</a>
           </div>
@@ -1020,27 +1020,26 @@
 
       <!-- ============ FINAL CTA ============ -->
       <section class="section final-cta">
-        <h2>Stop checking.<br /><em>Start knowing.</em></h2>
+        <h2>Waiting on something?<br /><em>Put it in a phrase.</em></h2>
         <a class="btn btn-primary btn-large" href="#top"
-          >Create your first watch</a
+          >Create your first alert</a
         >
-        <p class="hero-note">3 watches free · No credit card required</p>
+        <p class="hero-note">3 free alerts · No credit card required</p>
       </section>
     </main>
 
     <footer class="footer">
       <div class="footer-inner">
-        <span class="mono">Bellwether</span>
+        <span class="mono">PhraseAlert</span>
         <span class="footer-muted"
-          >Tell us what you're waiting for. We'll tell you when it
-          happens.</span
+          >Write a phrase. Get alerted when it's true.</span
         >
       </div>
     </footer>
 
     <script>
       /* ============================================================
-   Bellwether — landing page interactions
+   PhraseAlert landing page interactions
    ============================================================ */
 
       (function () {

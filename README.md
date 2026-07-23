@@ -1,8 +1,8 @@
-# Bellwether Alerts
+# PhraseAlert
 
-**Tell us what you're waiting for. We'll tell you when it happens.**
+**Write a phrase. Get alerted when it's true.**
 
-Bellwether monitors the web for specific future events. You write a plain sentence like "Tell me if Australian partner visa fees increase" or "Notify me when Bitcoin passes $100,000". Bellwether checks for credible evidence that the event actually happened. If it did, you get notified. If not, you hear nothing.
+PhraseAlert monitors the web for specific future events. You write a phrase like "Tell me if Australian partner visa fees increase" or "Notify me when Bitcoin passes $100,000". PhraseAlert checks for credible evidence that the phrase has become true. If it has, you get notified. If not, you hear nothing.
 
 ## The problem
 
@@ -14,11 +14,11 @@ Most alert tools are keyword matchers. Google Alerts, RSS filters, and social li
 
 You end up checking manually anyway, or turning alerts off.
 
-## What Bellwether does differently
+## What PhraseAlert does differently
 
-Bellwether watches for the event, not the words.
+PhraseAlert watches for your phrase coming true, not every mention of the topic.
 
-| Keyword alert                                   | Bellwether watch                                                 |
+| Keyword alert                                   | PhraseAlert                                                       |
 | ----------------------------------------------- | ---------------------------------------------------------------- |
 | Fires on any page containing related terms      | Fires only when credible evidence shows the event happened       |
 | Cannot distinguish a guide from an announcement | Compiles explicit trigger and non-trigger conditions at creation |
@@ -44,18 +44,18 @@ If you can describe the event in a sentence, you can watch for it.
 
 **Watch:** "Tell me if Australian partner visa fees increase."
 
-| Source                                                        | Keyword alert                | Bellwether            |
+| Source                                                        | Keyword alert                | PhraseAlert            |
 | ------------------------------------------------------------- | ---------------------------- | --------------------- |
 | "Complete guide to partner visa fees in 2026"                 | Alert sent                   | Checked, no change    |
 | "Forum: how much did your partner visa cost?"                 | Alert sent                   | Checked, no change    |
 | "Home Affairs confirms partner visa fee increase from 1 July" | Alert sent (buried in noise) | Notified: fee changed |
 
-Three keyword alerts. One mattered. Bellwether sent that one.
+Three keyword alerts. One mattered. PhraseAlert sent that one.
 
 ## How it works
 
 1. **Describe it.** Write a specific future event in one sentence. Topic keywords alone (e.g. "Bitcoin") are rejected.
-2. **Clarify until clear.** If the sentence is vague, Bellwether suggests more specific watch sentences and will not save the watch until it is unambiguous.
+2. **Clarify until clear.** If the sentence is vague, PhraseAlert suggests more specific watch sentences and will not save the watch until it is unambiguous.
 3. **Compile.** A model produces a structured watch spec: trigger conditions, non-triggers, search queries, authoritative domains.
 4. **Watch.** On a schedule, the system retrieves new web content, filters out pre-watch and irrelevant results, and evaluates each candidate.
 5. **Notify.** When credible evidence confirms the event occurred, you get an alert with the evidence trail.
@@ -94,7 +94,7 @@ When prepaid Plus expires unpaid (or a Stripe subscription is canceled), the acc
 
 ### Stripe setup
 
-1. Create a Product “Bellwether Plus” with a recurring monthly price ($9) → set `STRIPE_PRICE_ID_PLUS_MONTHLY`
+1. Create a Product “PhraseAlert Plus” with a recurring monthly price ($9) → set `STRIPE_PRICE_ID_PLUS_MONTHLY`
 2. Optional one-time $9 price → `STRIPE_PRICE_ID_PLUS_PREPAID` (otherwise Checkout uses inline `price_data`)
 3. Add webhook endpoint `POST /api/billing/webhook/stripe` for:
    - `checkout.session.completed`
@@ -180,7 +180,7 @@ For Plus billing, copy Stripe / Helio / Resend keys from `.env.example`.
 
 ## Run evals
 
-Golden smoke (compiler + detector + dialogues + live Tavily retrieval — recommended gate):
+Golden smoke (compiler + detector + dialogues + live Tavily retrieval; recommended gate):
 
 ```bash
 npm run eval:smoke

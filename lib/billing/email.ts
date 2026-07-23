@@ -9,7 +9,7 @@ function getResend(): Resend | null {
 }
 
 function fromAddress(): string {
-  return process.env.EMAIL_FROM ?? "Bellwether <onboarding@resend.dev>";
+  return process.env.EMAIL_FROM ?? "PhraseAlert <onboarding@resend.dev>";
 }
 
 export async function sendExpiryReminderEmail(
@@ -35,10 +35,10 @@ export async function sendExpiryReminderEmail(
     to: email,
     subject:
       daysLeft === 1
-        ? "Your Bellwether Plus expires tomorrow"
-        : `Your Bellwether Plus expires in ${daysLeft} days`,
+        ? "Your PhraseAlert Plus expires tomorrow"
+        : `Your PhraseAlert Plus expires in ${daysLeft} days`,
     text: [
-      `Your prepaid Bellwether Plus access ends on ${when}.`,
+      `Your prepaid PhraseAlert Plus access ends on ${when}.`,
       "",
       "Top up before then to keep up to 25 active alerts. If it expires, we'll pause your newest alerts down to the free limit of 3.",
       "",
@@ -73,7 +73,7 @@ export async function sendDowngradeEmail(
   await resend.emails.send({
     from: fromAddress(),
     to: email,
-    subject: "Bellwether Plus ended, moved to Free",
+    subject: "PhraseAlert Plus ended, moved to Free",
     text: [...lines, "", `Renew Plus: ${billingUrl}`].join("\n"),
   });
 }

@@ -504,7 +504,7 @@ async function main(): Promise<void> {
   const liveCases = loadLiveRetrievalCases();
 
   console.log(
-    `Bellweather eval harness — ${events.length} events, ${dialogues.length} dialogues, ${liveCases.length} live retrieval cases`,
+    `PhraseAlert eval harness — ${events.length} events, ${dialogues.length} dialogues, ${liveCases.length} live retrieval cases`,
   );
   console.log(`Mode: ${mode}`);
   console.log(`Model: ${getModel()}`);

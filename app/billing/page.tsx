@@ -47,11 +47,11 @@ export default async function BillingPage({
       <div className="app-page">
         <div className="page-header">
           <p className="eyebrow">Billing</p>
-          <h1>More alerts at once</h1>
+          <h1>Watch more phrases at once</h1>
           <p>
-            Free includes {FREE_TIER_MAX_WATCHES} plain-English alerts. Plus
-            unlocks {PLUS_TIER_MAX_WATCHES} for $9/month. Pay by card
-            subscription, one month by card, or crypto.
+            Free includes {FREE_TIER_MAX_WATCHES} phrase alerts. Plus unlocks{" "}
+            {PLUS_TIER_MAX_WATCHES} for $9/month. Pay by card subscription, one
+            month by card, or crypto.
           </p>
         </div>
 

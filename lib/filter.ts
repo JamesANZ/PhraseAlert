@@ -1,7 +1,7 @@
 /**
  * @title Retrieval filters
  * @notice Drops candidates that are too old, already evaluated, or on a denylist before detection.
- * @dev Phase 1 judgment layer. Enforces the post-watch-only rule central to Bellwether's value prop.
+ * @dev Phase 1 judgment layer. Enforces the post-watch-only rule central to PhraseAlert's value prop.
  * @custom:pipeline step 2 — filter
  */
 import type { RetrievalCandidate } from "@/types";

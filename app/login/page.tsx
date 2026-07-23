@@ -43,10 +43,10 @@ export default async function LoginPage({
       <div className="app-page">
         <div className="clarify-panel">
           <div className="page-header">
-            <h1>Sign in to bellweather</h1>
+            <h1>Sign in to PhraseAlert</h1>
             <p>
-              Use Google to save your alerts and get notified when the thing
-              you&apos;re waiting for happens.
+              Use Google to save your phrases and get notified when they come
+              true.
             </p>
           </div>
 

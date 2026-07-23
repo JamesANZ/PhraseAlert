@@ -38,7 +38,7 @@ export default async function WatchesPage() {
         <header className="app-page-head">
           <h1>My alerts</h1>
           <p className="app-page-lede">
-            Alerts we&apos;re checking across the web.
+            Phrases we&apos;re watching across the web.
           </p>
           <div className="app-page-stats">
             <span className="app-page-stat">

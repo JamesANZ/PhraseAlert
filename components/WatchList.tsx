@@ -68,8 +68,8 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
       <div className="empty-state">
         <p className="empty-state-title">No alerts yet</p>
         <p>
-          Describe something you&apos;re waiting for in plain English. One
-          sentence is enough to start.
+          Write a phrase you want PhraseAlert to watch. One clear phrase is
+          enough to start.
         </p>
         <Link className="btn btn-primary btn-small" href="/watches/new">
           Create your first alert
