@@ -2,9 +2,9 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="footer-inner">
-        <span>bellweather</span>
+        <span className="footer-brand">bellweather</span>
         <span className="footer-muted">
-          Natural language alerts — watch for anything, in plain English.
+          Natural language alerts for anything you&apos;re waiting on.
         </span>
       </div>
     </footer>

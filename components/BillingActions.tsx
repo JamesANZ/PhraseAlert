@@ -61,7 +61,7 @@ export function BillingActions({
       {!isSubscription && (
         <div className="billing-action-group">
           <h3>Subscribe monthly</h3>
-          <p>Recurring card payment. Renews each month.</p>
+          <p>Pay by card. Renews automatically each month.</p>
           <div className="billing-btn-row">
             <button
               className="btn btn-primary"
@@ -81,7 +81,7 @@ export function BillingActions({
         <h3>{isPrepaid ? "Extend another month" : "Pay one month"}</h3>
         <p>
           One-time payment by card or crypto. Top up before it expires to keep
-          Plus; we email reminders at 7, 3, and 1 days out.
+          Plus. We email reminders at 7, 3, and 1 days out.
         </p>
         <div className="billing-btn-row">
           <button

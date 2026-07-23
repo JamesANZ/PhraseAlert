@@ -83,7 +83,7 @@ export async function createPrepaidCheckout(userId: string): Promise<string> {
             currency: "usd",
             unit_amount: PLUS_MONTHLY_PRICE_CENTS,
             product_data: {
-              name: "Bellwether Plus — 1 month",
+              name: "Bellwether Plus, 1 month",
               description: "One month of Plus (25 active watches)",
             },
           },

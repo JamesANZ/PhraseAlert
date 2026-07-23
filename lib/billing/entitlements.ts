@@ -143,7 +143,9 @@ export async function listUsersNeedingExpiryReminders(
   return matches;
 }
 
-export async function listExpiredPlusUsers(now = Date.now()): Promise<DbUser[]> {
+export async function listExpiredPlusUsers(
+  now = Date.now(),
+): Promise<DbUser[]> {
   return (
     await db.select().from(authUsers).where(eq(authUsers.plan, "plus"))
   ).filter((u) => {

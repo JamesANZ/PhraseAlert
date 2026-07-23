@@ -73,7 +73,7 @@ export async function sendDowngradeEmail(
   await resend.emails.send({
     from: fromAddress(),
     to: email,
-    subject: "Bellwether Plus ended — moved to Free",
+    subject: "Bellwether Plus ended, moved to Free",
     text: [...lines, "", `Renew Plus: ${billingUrl}`].join("\n"),
   });
 }

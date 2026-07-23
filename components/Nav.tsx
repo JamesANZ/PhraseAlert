@@ -13,7 +13,7 @@ export async function Nav() {
         </Link>
         <div className="nav-end">
           <nav className="nav-links" aria-label="Main">
-            <a href="/#difference">Natural language</a>
+            <a href="/#examples">Examples</a>
             <a href="/#how">How it works</a>
             <a href="/#pricing">Pricing</a>
             {session?.user && <Link href="/watches">Your watches</Link>}
@@ -21,7 +21,7 @@ export async function Nav() {
           </nav>
           {session?.user ? (
             <div className="nav-actions">
-              <Link className="btn btn-small btn-ghost" href="/watches/new">
+              <Link className="btn btn-small btn-primary" href="/watches/new">
                 New alert
               </Link>
               <form

@@ -60,9 +60,10 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
   if (watches.length === 0) {
     return (
       <div className="empty-state">
+        <p className="empty-state-title">No watches yet</p>
         <p>
-          No alerts yet. Describe something you&apos;re waiting for in plain
-          English.
+          Describe something you&apos;re waiting for in plain English. One
+          sentence is enough to start watching.
         </p>
         <Link className="btn btn-primary btn-small" href="/watches/new">
           Create your first alert

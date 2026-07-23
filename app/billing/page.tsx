@@ -49,8 +49,8 @@ export default async function BillingPage({
           <p className="eyebrow">Billing</p>
           <h1>Watch more at once</h1>
           <p>
-            Free includes {FREE_TIER_MAX_WATCHES} natural-language watches. Plus
-            unlocks {PLUS_TIER_MAX_WATCHES} for $9/month — pay by card
+            Free includes {FREE_TIER_MAX_WATCHES} plain-English watches. Plus
+            unlocks {PLUS_TIER_MAX_WATCHES} for $9/month. Pay by card
             subscription, one month by card, or crypto.
           </p>
         </div>

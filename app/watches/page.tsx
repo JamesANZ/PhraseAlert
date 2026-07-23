@@ -37,6 +37,9 @@ export default async function WatchesPage() {
       <div className="app-page">
         <header className="app-page-head">
           <h1>Your watches</h1>
+          <p className="app-page-lede">
+            Active alerts we&apos;re checking across the web.
+          </p>
           <div className="app-page-stats">
             <span className="app-page-stat">
               {activeCount} of {limit} active

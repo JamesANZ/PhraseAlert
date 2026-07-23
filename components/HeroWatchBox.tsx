@@ -116,7 +116,7 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
     <div className={`watch-box${focused ? " is-focused" : ""}`}>
       <div className="watch-box-top">
         <span className="status-dot" aria-hidden="true" />
-        <span className="watch-box-label">Say it in plain English</span>
+        <span className="watch-box-label">Your watch</span>
         <span className="watch-box-stamp">{stamp}</span>
       </div>
       <div className="watch-input-row">

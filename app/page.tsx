@@ -8,9 +8,9 @@ import { RevealOnScroll } from "@/components/RevealOnScroll";
 
 const EXAMPLE_GROUPS = [
   {
-    label: "Everyday things",
+    label: "Everyday watches",
     description:
-      "Rates, sales, tours, company news — anything you'd ask a friend to keep an eye on.",
+      "Rates, sales, tours, company news. Anything you'd ask a friend to keep an eye on.",
     tone: "generic" as const,
     examples: [
       {
@@ -32,9 +32,9 @@ const EXAMPLE_GROUPS = [
     ],
   },
   {
-    label: "Specific outcomes",
+    label: "Narrow outcomes",
     description:
-      "Visa fees, drug approvals, product launches — narrow, real-world events.",
+      "Visa fees, drug approvals, product launches. Precise events with a clear yes or no.",
     tone: "specific" as const,
     examples: [
       {
@@ -65,50 +65,42 @@ export default function HomePage() {
   return (
     <main id="top">
       <section className="hero">
+        <p className="hero-brand">bellweather</p>
         <h1>
           Watch for anything.
           <br />
-          <em>Just say it in plain English.</em>
+          <em>Say it in plain English.</em>
         </h1>
         <p className="hero-sub">
-          Natural language alerts — no keywords, no rules, no categories.
-          Describe what you&apos;re waiting on in a sentence, like you&apos;d
-          ask a friend. We watch the web and notify you when it actually
-          happens.
+          Describe what you&apos;re waiting for in one sentence. We watch the
+          web and notify you when it actually happens. No keywords, rules, or
+          category menus.
         </p>
         <HeroWatchBox />
-        <p className="hero-note">3 watches free · No credit card required</p>
+        <p className="hero-note">3 free watches · No credit card</p>
       </section>
 
       <RevealOnScroll>
         <section className="section" id="examples">
           <p className="eyebrow">Examples</p>
-          <h2>One sentence is the whole setup.</h2>
+          <h2>Type what you want to know.</h2>
           <p className="section-sub">
-            If you can say it out loud, you can watch for it. Type what you want
-            to know — we figure out the rest.
+            A single sentence is enough. Here are watches people actually set.
           </p>
           <div className="example-groups">
             {EXAMPLE_GROUPS.map((group) => (
               <div key={group.label} className="example-group reveal">
                 <div className="example-group-header">
-                  <div>
-                    <h3 className="example-group-title">{group.label}</h3>
-                    <p className="example-group-desc">{group.description}</p>
-                  </div>
-                  <span className={`example-tone example-tone-${group.tone}`}>
-                    {group.tone === "generic" ? "Broad" : "Specific"}
-                  </span>
+                  <h3 className="example-group-title">{group.label}</h3>
+                  <p className="example-group-desc">{group.description}</p>
                 </div>
                 <div className="example-grid">
                   {group.examples.map((item) => (
                     <article
                       key={item.sentence}
-                      className={`example-card example-card-${group.tone}`}
+                      className={`example-item example-item-${group.tone}`}
                     >
-                      <p className="example-sentence">
-                        &quot;{item.sentence}&quot;
-                      </p>
+                      <p className="example-sentence">{item.sentence}</p>
                       <p className="example-tag">{item.tag}</p>
                     </article>
                   ))}
@@ -121,14 +113,14 @@ export default function HomePage() {
         <section className="section" id="difference">
           <p className="eyebrow">Not a keyword alert</p>
           <h2>
-            We understand what you mean,
+            We look for the event,
             <br />
-            not just the words you used.
+            not every mention of the topic.
           </h2>
           <p className="section-sub">
-            Keyword alerts ping you whenever a page mentions the topic — guides,
-            forum threads, old news. Bellwether reads for evidence that the
-            thing you described has actually happened.
+            Keyword tools fire on guides, forum threads, and old news.
+            Bellwether waits for credible evidence that the thing you described
+            has happened.
           </p>
           <div className="compare reveal">
             <p className="compare-watch">
@@ -187,8 +179,8 @@ export default function HomePage() {
               </div>
             </div>
             <p className="compare-footnote">
-              Each watch starts the moment you create it — only new developments
-              after that can trigger an alert.
+              Each watch starts when you create it. Only new developments after
+              that can trigger an alert.
             </p>
           </div>
         </section>
@@ -198,24 +190,33 @@ export default function HomePage() {
           <h2>Describe it. We watch. You hear when it happens.</h2>
           <div className="steps">
             <div className="step reveal">
-              <p className="step-label">1. Say what you&apos;re waiting for</p>
+              <p className="step-num" aria-hidden="true">
+                01
+              </p>
+              <p className="step-label">Say what you&apos;re waiting for</p>
               <p className="step-body">
-                Write it in natural language — the way you&apos;d explain it to
-                someone over coffee.
+                Write it the way you&apos;d explain it to a friend over coffee.
+                One clear outcome is enough.
               </p>
             </div>
             <div className="step reveal">
-              <p className="step-label">2. We keep watching</p>
+              <p className="step-num" aria-hidden="true">
+                02
+              </p>
+              <p className="step-label">We keep watching</p>
               <p className="step-body">
                 Bellwether checks the web for credible evidence that matches
                 what you described.
               </p>
             </div>
             <div className="step reveal">
-              <p className="step-label">3. You get one clear alert</p>
+              <p className="step-num" aria-hidden="true">
+                03
+              </p>
+              <p className="step-label">You get one clear alert</p>
               <p className="step-body">
-                When the event happens, we let you know. Until then, silence —
-                no noise, no false alarms.
+                When the event happens, we let you know. Until then, silence. No
+                noise, no false alarms.
               </p>
             </div>
           </div>
@@ -223,7 +224,7 @@ export default function HomePage() {
 
         <section className="section" id="pricing">
           <p className="eyebrow">Pricing</p>
-          <h2>Start free. Watch more when you need to.</h2>
+          <h2>Start free. Add more watches when you need them.</h2>
           <div className="pricing-grid">
             <div className="plan reveal">
               <h3 className="plan-name">Free</h3>
@@ -248,7 +249,7 @@ export default function HomePage() {
               <ul className="plan-features">
                 <li>25 active watches</li>
                 <li>More frequent checks</li>
-                <li>Push, SMS and webhook notifications</li>
+                <li>Push, SMS, and webhook notifications</li>
                 <li>Watch history and evidence trail</li>
               </ul>
               <Link className="btn btn-primary" href="/billing">
@@ -259,6 +260,7 @@ export default function HomePage() {
         </section>
 
         <section className="section final-cta">
+          <p className="hero-brand reveal">bellweather</p>
           <h2 className="reveal">
             Waiting on something?
             <br />
@@ -270,7 +272,7 @@ export default function HomePage() {
           >
             Create your first alert
           </Link>
-          <p className="hero-note">3 watches free · No credit card required</p>
+          <p className="hero-note">3 free watches · No credit card</p>
         </section>
       </RevealOnScroll>
     </main>

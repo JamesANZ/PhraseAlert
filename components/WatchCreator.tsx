@@ -200,8 +200,8 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         <div className="page-header">
           <h1>Make it more specific</h1>
           <p>
-            We need one clear event to watch for. Pick the closest option below,
-            or rewrite it in your own words.
+            We need one clear event to watch for. Pick the closest match, or
+            rewrite it in your own words.
           </p>
         </div>
         {error && (
@@ -285,7 +285,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
       <div className="page-header">
         <h1>Create an alert</h1>
         <p>
-          Say what you&apos;re waiting for in plain English — one sentence is
+          Say what you&apos;re waiting for in plain English. One sentence is
           enough. We&apos;ll ask you to clarify if it&apos;s too vague.
         </p>
       </div>
