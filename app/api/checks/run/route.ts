@@ -1,7 +1,8 @@
 /**
- * @title POST /api/checks/run
+ * @title GET|POST /api/checks/run
  * @notice Cron endpoint: run checks for all watches in `watching` status.
- * @dev Protected by Authorization: Bearer CRON_SECRET when CRON_SECRET is set.
+ * @dev Vercel Cron invokes GET; POST kept for manual runs. Protected by
+ *      Authorization: Bearer CRON_SECRET when CRON_SECRET is set.
  * @custom:env TAVILY_API_KEY, CRON_SECRET (optional)
  */
 import { NextResponse } from "next/server";
@@ -13,7 +14,7 @@ import { listWatchingWatches } from "@/lib/watches";
  * @notice Batch check all active watches.
  * @return 200 { ok, checked, triggered, errors, results } | 401 bad cron secret | 503 no Tavily
  */
-export async function POST(request: Request) {
+async function handle(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
 
@@ -69,4 +70,12 @@ export async function POST(request: Request) {
     errors,
     results,
   });
+}
+
+export async function GET(request: Request) {
+  return handle(request);
+}
+
+export async function POST(request: Request) {
+  return handle(request);
 }
