@@ -26,7 +26,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "bellweather",
   description:
-    "Natural language alerts for anything you're waiting on. Describe it in plain English. We watch the web and notify you when it happens.",
+    "Natural language alerts for anything you're waiting on. Describe it in plain English. We check the web and notify you when it happens.",
 };
 
 export default function RootLayout({
@@ -35,10 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${dmSans.variable} ${lora.variable} ${ibmPlexMono.variable}`}
-      >
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${lora.variable} ${ibmPlexMono.variable}`}
+    >
+      <body className={dmSans.className}>
         <Nav />
         {children}
         <Footer />

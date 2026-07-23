@@ -14,10 +14,6 @@
   --signal-dim: rgba(107, 196, 154, 0.12);
   --noise: #c97866;
   --noise-dim: rgba(201, 120, 102, 0.1);
-  --font-body:
-    var(--font-dm-sans), "DM Sans", "Avenir Next", "Segoe UI", sans-serif;
-  --font-display: var(--font-lora), "Lora", Georgia, "Times New Roman", serif;
-  --font-mono: var(--font-ibm-plex-mono), "SF Mono", Consolas, monospace;
   --radius: 14px;
   --radius-lg: 20px;
   --content: 1080px;
@@ -54,7 +50,8 @@ body {
     linear-gradient(180deg, var(--ink) 0%, var(--ink-deep) 100%);
   background-attachment: fixed;
   color: var(--text);
-  font-family: var(--font-body);
+  font-family:
+    var(--font-dm-sans), "DM Sans", "Avenir Next", "Segoe UI", sans-serif;
   font-size: 17px;
   font-weight: 400;
   line-height: 1.7;
@@ -91,7 +88,8 @@ a:hover {
 }
 
 .mono {
-  font-family: var(--font-mono);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
   letter-spacing: 0;
 }
 
@@ -106,7 +104,8 @@ a:hover {
 
 h1,
 h2 {
-  font-family: var(--font-body);
+  font-family:
+    var(--font-dm-sans), "DM Sans", "Avenir Next", "Segoe UI", sans-serif;
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.15;
@@ -122,8 +121,9 @@ h2 {
 
 h1 em,
 h2 em,
-.final-cta em {
-  font-family: var(--font-display);
+.final-cta em,
+.hero-brand {
+  font-family: var(--font-lora), "Lora", Georgia, "Times New Roman", serif;
   font-style: italic;
   font-weight: 400;
   color: var(--brass);
@@ -247,7 +247,7 @@ h2 em,
   gap: 8px;
   min-height: 42px;
   padding: 0 20px;
-  font-family: var(--font-body);
+  font-family: inherit;
   font-size: 0.92rem;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -407,12 +407,7 @@ textarea:focus-visible {
 }
 
 .hero-brand {
-  font-family: var(--font-display);
-  font-style: italic;
   font-size: clamp(1.35rem, 2.8vw, 1.75rem);
-  font-weight: 400;
-  color: var(--brass);
-  letter-spacing: 0.01em;
   margin-bottom: 18px;
 }
 
@@ -494,7 +489,8 @@ textarea:focus-visible {
   margin-left: auto;
   font-size: 0.72rem;
   color: var(--muted);
-  font-family: var(--font-mono);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
   letter-spacing: 0;
 }
 
@@ -521,7 +517,7 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--text);
-  font-family: var(--font-body);
+  font-family: inherit;
   font-size: 0.98rem;
   font-weight: 400;
   padding: 14px 16px;
@@ -540,7 +536,7 @@ textarea:focus-visible {
   align-items: center;
   padding: 0 16px;
   color: var(--muted);
-  font-family: var(--font-body);
+  font-family: inherit;
   font-size: 0.98rem;
   font-weight: 400;
   pointer-events: none;
@@ -810,7 +806,8 @@ textarea:focus-visible {
 }
 
 .step-num {
-  font-family: var(--font-mono);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -1129,7 +1126,8 @@ textarea:focus-visible {
   font-size: 0.78rem;
   color: rgba(168, 162, 154, 0.85);
   white-space: nowrap;
-  font-family: var(--font-mono);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
 }
 
 .alert-row-actions {
@@ -1273,7 +1271,7 @@ textarea:focus-visible {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--text);
-  font-family: var(--font-body);
+  font-family: inherit;
   font-size: 0.94rem;
   font-weight: 400;
   padding: 12px 14px;
@@ -1407,7 +1405,8 @@ textarea:focus-visible {
 }
 
 .billing-label {
-  font-family: var(--font-mono);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
   font-size: 0.72rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;

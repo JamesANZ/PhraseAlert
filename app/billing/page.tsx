@@ -47,9 +47,9 @@ export default async function BillingPage({
       <div className="app-page">
         <div className="page-header">
           <p className="eyebrow">Billing</p>
-          <h1>Watch more at once</h1>
+          <h1>More alerts at once</h1>
           <p>
-            Free includes {FREE_TIER_MAX_WATCHES} plain-English watches. Plus
+            Free includes {FREE_TIER_MAX_WATCHES} plain-English alerts. Plus
             unlocks {PLUS_TIER_MAX_WATCHES} for $9/month. Pay by card
             subscription, one month by card, or crypto.
           </p>
@@ -76,7 +76,7 @@ export default async function BillingPage({
             </p>
           </div>
           <div>
-            <p className="billing-label">Active watches</p>
+            <p className="billing-label">Active alerts</p>
             <p className="billing-value">
               {activeWatches} / {status.watchLimit}
             </p>
@@ -95,8 +95,8 @@ export default async function BillingPage({
           status.billingMode === "prepaid" && (
             <p className="billing-note">
               Prepaid Plus must be topped up before it expires. If it lapses, we
-              pause your newest watches down to {FREE_TIER_MAX_WATCHES} so your
-              oldest watches stay active.
+              pause your newest alerts down to {FREE_TIER_MAX_WATCHES} so your
+              oldest alerts stay active.
             </p>
           )}
 
@@ -107,7 +107,7 @@ export default async function BillingPage({
         />
 
         <p style={{ marginTop: 32 }}>
-          <Link href="/watches">Back to your watches</Link>
+          <Link href="/watches">Back to my alerts</Link>
         </p>
       </div>
     </main>

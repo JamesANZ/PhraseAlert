@@ -33,13 +33,13 @@ export async function POST(
     await initDb();
     const watch = await getWatch(id, userId);
     if (!watch) {
-      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
+      return NextResponse.json({ error: "Alert not found" }, { status: 404 });
     }
 
     if (watch.status !== "watching") {
       return NextResponse.json(
         {
-          error: `Watch is ${watch.status}; only watching watches can be checked`,
+          error: `Alert is ${watch.status}; only active alerts can be checked`,
         },
         { status: 409 },
       );

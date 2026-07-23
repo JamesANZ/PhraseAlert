@@ -73,7 +73,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           return;
         }
         if (data.upgradeUrl) setUpgradeUrl(data.upgradeUrl);
-        throw new Error(data.error ?? "Failed to assess watch");
+        throw new Error(data.error ?? "Failed to assess alert");
       }
 
       if (isOriginal) {
@@ -141,13 +141,13 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           setClarifyTurns((t) => t + 1);
           setError(
             data.error ??
-              "That watch is still too vague. Pick a more specific option.",
+              "That alert is still too vague. Pick a more specific option.",
           );
           setStep("clarify");
           return;
         }
 
-        throw new Error(data.error ?? "Failed to create watch");
+        throw new Error(data.error ?? "Failed to create alert");
       }
       setStep("done");
       router.push("/watches");
@@ -168,7 +168,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
     }
     if (clarifyTurns >= MAX_CLARIFY_TURNS && !customClarification.trim()) {
       setError(
-        "Write a more specific sentence. A topic name alone is not enough for a watch.",
+        "Write a more specific sentence. A topic name alone is not enough for an alert.",
       );
       return;
     }
@@ -186,7 +186,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
       <div className="clarify-panel">
         <p className="loading mono">
           {step === "compiling"
-            ? "Compiling your watch…"
+            ? "Creating your alert…"
             : "Checking specificity…"}
         </p>
       </div>
@@ -200,7 +200,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         <div className="page-header">
           <h1>Make it more specific</h1>
           <p>
-            We need one clear event to watch for. Pick the closest match, or
+            We need one clear event to alert on. Pick the closest match, or
             rewrite it in your own words.
           </p>
         </div>
@@ -246,7 +246,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         <textarea
           id="custom-clarify"
           className="clarify-custom"
-          placeholder="Or write a more specific watch sentence…"
+          placeholder="Or write a more specific alert sentence…"
           value={customClarification}
           onChange={(e) => {
             setCustomClarification(e.target.value);
@@ -326,7 +326,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
         </div>
       </div>
       <p className="hero-note" style={{ marginTop: 16 }}>
-        <Link href="/watches">Back to your watches</Link>
+        <Link href="/watches">Back to my alerts</Link>
       </p>
     </div>
   );

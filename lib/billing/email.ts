@@ -40,7 +40,7 @@ export async function sendExpiryReminderEmail(
     text: [
       `Your prepaid Bellwether Plus access ends on ${when}.`,
       "",
-      "Top up before then to keep up to 25 active watches. If it expires, we'll pause your newest watches down to the free limit of 3.",
+      "Top up before then to keep up to 25 active alerts. If it expires, we'll pause your newest alerts down to the free limit of 3.",
       "",
       `Extend here: ${billingUrl}`,
     ].join("\n"),
@@ -60,14 +60,14 @@ export async function sendDowngradeEmail(
   const billingUrl = `${getAppUrl()}/billing`;
   const lines =
     paused.length === 0
-      ? ["You're now on the Free plan (3 active watches)."]
+      ? ["You're now on the Free plan (3 active alerts)."]
       : [
-          "You're now on the Free plan (3 active watches).",
+          "You're now on the Free plan (3 active alerts).",
           "",
-          "We paused your newest watches so you stay within the free limit:",
+          "We paused your newest alerts so you stay within the free limit:",
           ...paused.map((w) => `• ${w.rawInput}`),
           "",
-          "You can resume watches after upgrading, as long as you're within your plan limit.",
+          "You can resume alerts after upgrading, as long as you're within your plan limit.",
         ];
 
   await resend.emails.send({

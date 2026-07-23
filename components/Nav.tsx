@@ -16,7 +16,7 @@ export async function Nav() {
             <a href="/#examples">Examples</a>
             <a href="/#how">How it works</a>
             <a href="/#pricing">Pricing</a>
-            {session?.user && <Link href="/watches">Your watches</Link>}
+            {session?.user && <Link href="/watches">My alerts</Link>}
             {session?.user && <Link href="/billing">Billing</Link>}
           </nav>
           {session?.user ? (

@@ -1,6 +1,6 @@
 /**
  * @title Landing page
- * @notice Marketing home with hero watch box, example watches, and how-it-works sections.
+ * @notice Marketing home with hero alert box, example alerts, and how-it-works sections.
  */
 import Link from "next/link";
 import { HeroWatchBox } from "@/components/HeroWatchBox";
@@ -8,7 +8,7 @@ import { RevealOnScroll } from "@/components/RevealOnScroll";
 
 const EXAMPLE_GROUPS = [
   {
-    label: "Everyday watches",
+    label: "Everyday alerts",
     description:
       "Rates, sales, tours, company news. Anything you'd ask a friend to keep an eye on.",
     tone: "generic" as const,
@@ -59,7 +59,7 @@ const EXAMPLE_GROUPS = [
   },
 ];
 
-const COMPARE_WATCH = "Notify me when mortgage rates drop below 5%.";
+const COMPARE_ALERT = "Notify me when mortgage rates drop below 5%.";
 
 export default function HomePage() {
   return (
@@ -67,17 +67,17 @@ export default function HomePage() {
       <section className="hero">
         <p className="hero-brand">bellweather</p>
         <h1>
-          Watch for anything.
+          Alert on anything.
           <br />
           <em>Say it in plain English.</em>
         </h1>
         <p className="hero-sub">
-          Describe what you&apos;re waiting for in one sentence. We watch the
+          Describe what you&apos;re waiting for in one sentence. We check the
           web and notify you when it actually happens. No keywords, rules, or
           category menus.
         </p>
         <HeroWatchBox />
-        <p className="hero-note">3 free watches · No credit card</p>
+        <p className="hero-note">3 free alerts · No credit card</p>
       </section>
 
       <RevealOnScroll>
@@ -85,7 +85,7 @@ export default function HomePage() {
           <p className="eyebrow">Examples</p>
           <h2>Type what you want to know.</h2>
           <p className="section-sub">
-            A single sentence is enough. Here are watches people actually set.
+            One sentence is enough. These are the kinds of alerts people create.
           </p>
           <div className="example-groups">
             {EXAMPLE_GROUPS.map((group) => (
@@ -124,7 +124,7 @@ export default function HomePage() {
           </p>
           <div className="compare reveal">
             <p className="compare-watch">
-              Your watch: &quot;{COMPARE_WATCH}&quot;
+              Your alert: &quot;{COMPARE_ALERT}&quot;
             </p>
             <div className="compare-cols">
               <div className="compare-col compare-col-keyword">
@@ -152,7 +152,7 @@ export default function HomePage() {
                 <p className="compare-tally">3 notifications</p>
               </div>
               <div className="compare-col compare-col-watch">
-                <h3 className="compare-title">Bellwether watch</h3>
+                <h3 className="compare-title">Bellwether alert</h3>
                 <ul className="feed">
                   <li className="feed-item skipped">
                     <span className="feed-headline">
@@ -179,15 +179,15 @@ export default function HomePage() {
               </div>
             </div>
             <p className="compare-footnote">
-              Each watch starts when you create it. Only new developments after
-              that can trigger an alert.
+              Each alert starts when you create it. Only new developments after
+              that can trigger a notification.
             </p>
           </div>
         </section>
 
         <section className="section" id="how">
           <p className="eyebrow">How it works</p>
-          <h2>Describe it. We watch. You hear when it happens.</h2>
+          <h2>Describe it. We check. You hear when it happens.</h2>
           <div className="steps">
             <div className="step reveal">
               <p className="step-num" aria-hidden="true">
@@ -203,10 +203,10 @@ export default function HomePage() {
               <p className="step-num" aria-hidden="true">
                 02
               </p>
-              <p className="step-label">We keep watching</p>
+              <p className="step-label">We keep checking</p>
               <p className="step-body">
-                Bellwether checks the web for credible evidence that matches
-                what you described.
+                Bellwether looks across the web for credible evidence that
+                matches what you described.
               </p>
             </div>
             <div className="step reveal">
@@ -224,7 +224,7 @@ export default function HomePage() {
 
         <section className="section" id="pricing">
           <p className="eyebrow">Pricing</p>
-          <h2>Start free. Add more watches when you need them.</h2>
+          <h2>Start free. Add more alerts when you need them.</h2>
           <div className="pricing-grid">
             <div className="plan reveal">
               <h3 className="plan-name">Free</h3>
@@ -232,7 +232,7 @@ export default function HomePage() {
                 <span className="plan-amount">$0</span>
               </p>
               <ul className="plan-features">
-                <li>3 active watches in plain English</li>
+                <li>3 active alerts in plain English</li>
                 <li>Email notifications</li>
                 <li>No credit card required</li>
               </ul>
@@ -247,10 +247,10 @@ export default function HomePage() {
                 <span className="plan-period">/month</span>
               </p>
               <ul className="plan-features">
-                <li>25 active watches</li>
+                <li>25 active alerts</li>
                 <li>More frequent checks</li>
                 <li>Push, SMS, and webhook notifications</li>
-                <li>Watch history and evidence trail</li>
+                <li>Alert history and evidence trail</li>
               </ul>
               <Link className="btn btn-primary" href="/billing">
                 Upgrade to Plus
@@ -272,7 +272,7 @@ export default function HomePage() {
           >
             Create your first alert
           </Link>
-          <p className="hero-note">3 free watches · No credit card</p>
+          <p className="hero-note">3 free alerts · No credit card</p>
         </section>
       </RevealOnScroll>
     </main>

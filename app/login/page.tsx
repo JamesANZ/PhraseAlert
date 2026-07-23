@@ -45,7 +45,7 @@ export default async function LoginPage({
           <div className="page-header">
             <h1>Sign in to bellweather</h1>
             <p>
-              Use Google to save your watches and get notified when the thing
+              Use Google to save your alerts and get notified when the thing
               you&apos;re waiting for happens.
             </p>
           </div>

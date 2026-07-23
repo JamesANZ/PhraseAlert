@@ -35,7 +35,7 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
   useEffect(() => {
     const now = new Date();
     setStamp(
-      `watching from ${now.toLocaleString(undefined, {
+      `checking from ${now.toLocaleString(undefined, {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -116,7 +116,7 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
     <div className={`watch-box${focused ? " is-focused" : ""}`}>
       <div className="watch-box-top">
         <span className="status-dot" aria-hidden="true" />
-        <span className="watch-box-label">Your watch</span>
+        <span className="watch-box-label">Your alert</span>
         <span className="watch-box-stamp">{stamp}</span>
       </div>
       <div className="watch-input-row">

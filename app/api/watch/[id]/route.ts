@@ -22,7 +22,7 @@ export async function GET(
     const { id } = await params;
     const watch = await getWatch(id, userId);
     if (!watch) {
-      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
+      return NextResponse.json({ error: "Alert not found" }, { status: 404 });
     }
     return NextResponse.json({ watch });
   } catch (err) {
@@ -47,7 +47,7 @@ export async function PATCH(
     const status = body.action === "pause" ? "paused" : "watching";
     const watch = await updateWatchStatus(id, userId, status);
     if (!watch) {
-      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
+      return NextResponse.json({ error: "Alert not found" }, { status: 404 });
     }
     return NextResponse.json({ watch });
   } catch (err) {
@@ -55,7 +55,10 @@ export async function PATCH(
     if (message === "Unauthorized") {
       return NextResponse.json({ error: message }, { status: 401 });
     }
-    const status = message.includes("Watch limit") ? 403 : 400;
+    const status =
+      message.includes("Alert limit") || message.includes("Watch limit")
+        ? 403
+        : 400;
     return NextResponse.json(
       {
         error: message,
@@ -76,7 +79,7 @@ export async function DELETE(
     const { id } = await params;
     const deleted = await deleteWatch(id, userId);
     if (!deleted) {
-      return NextResponse.json({ error: "Watch not found" }, { status: 404 });
+      return NextResponse.json({ error: "Alert not found" }, { status: 404 });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {

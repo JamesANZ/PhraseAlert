@@ -1,6 +1,6 @@
 /**
- * @title Watches dashboard
- * @notice Server-rendered list of the user's watches with plan/limit banner.
+ * @title Alerts dashboard
+ * @notice Server-rendered list of the user's alerts with plan/limit banner.
  */
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -36,9 +36,9 @@ export default async function WatchesPage() {
     <main className="page-shell page-shell-app">
       <div className="app-page">
         <header className="app-page-head">
-          <h1>Your watches</h1>
+          <h1>My alerts</h1>
           <p className="app-page-lede">
-            Active alerts we&apos;re checking across the web.
+            Alerts we&apos;re checking across the web.
           </p>
           <div className="app-page-stats">
             <span className="app-page-stat">

@@ -26,6 +26,12 @@ function formatDate(iso: string): string {
   });
 }
 
+function statusLabel(status: WatchListItem["status"]): string {
+  if (status === "watching") return "Active";
+  if (status === "triggered") return "Triggered";
+  return "Paused";
+}
+
 export function WatchList({ watches }: { watches: WatchListItem[] }) {
   const router = useRouter();
 
@@ -33,7 +39,7 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
     id: string,
     action: "pause" | "resume" | "delete",
   ) {
-    if (action === "delete" && !confirm("Delete this watch?")) return;
+    if (action === "delete" && !confirm("Delete this alert?")) return;
 
     const res = await fetch(`/api/watch/${id}`, {
       method: action === "delete" ? "DELETE" : "PATCH",
@@ -60,10 +66,10 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
   if (watches.length === 0) {
     return (
       <div className="empty-state">
-        <p className="empty-state-title">No watches yet</p>
+        <p className="empty-state-title">No alerts yet</p>
         <p>
           Describe something you&apos;re waiting for in plain English. One
-          sentence is enough to start watching.
+          sentence is enough to start.
         </p>
         <Link className="btn btn-primary btn-small" href="/watches/new">
           Create your first alert
@@ -79,7 +85,7 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
           <div className="alert-row-top">
             <p className="alert-row-title">&quot;{watch.rawInput}&quot;</p>
             <span className={`watch-status ${watch.status}`}>
-              {watch.status}
+              {statusLabel(watch.status)}
             </span>
           </div>
           <p className="alert-row-desc">{watch.clarifiedStatement}</p>

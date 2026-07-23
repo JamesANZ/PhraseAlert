@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "That watch is still too vague. Pick a more specific suggestion or rewrite it.",
+            "That alert is still too vague. Pick a more specific suggestion or rewrite it.",
           classification: "VAGUE",
           interpretations: vagueness.interpretations ?? [],
           reasoning: vagueness.reasoning,
@@ -53,7 +53,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 401 });
     }
     const status =
-      message.includes("Watch limit") || message.includes("Free tier")
+      message.includes("Alert limit") ||
+      message.includes("Watch limit") ||
+      message.includes("Free tier")
         ? 403
         : 400;
     return NextResponse.json(
