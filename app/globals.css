@@ -1153,6 +1153,64 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 
+.watch-list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.watch-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.watch-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 7px 12px;
+  border: 1px solid rgba(168, 162, 154, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.watch-filter-btn:hover {
+  color: var(--text);
+  border-color: rgba(168, 162, 154, 0.35);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.watch-filter-btn.is-active {
+  color: var(--text);
+  border-color: rgba(228, 176, 74, 0.4);
+  background: rgba(228, 176, 74, 0.1);
+}
+
+.watch-filter-count {
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
+  font-size: 0.78rem;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.watch-filter-empty {
+  margin-top: 0;
+}
+
 .watch-list {
   display: flex;
   flex-direction: column;

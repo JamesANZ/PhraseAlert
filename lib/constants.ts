@@ -4,7 +4,7 @@
  * @dev Single source of truth for free vs plus watch caps and prepaid period length.
  */
 
-/** @notice Maximum active (non-paused) watches on the free plan. */
+/** @notice Maximum active (`watching`) watches on the free plan. */
 export const FREE_TIER_MAX_WATCHES = 3;
 
 /** @notice Maximum active watches when Plus is active. */

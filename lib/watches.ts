@@ -1,13 +1,13 @@
 /**
  * @title Watch persistence
  * @notice CRUD and quota enforcement for user watches stored in Postgres via Drizzle.
- * @dev Phase 2 product layer. Active watch count excludes paused; limits come from billing entitlements.
+ * @dev Phase 2 product layer. Active watch count is `watching` only; triggered and paused do not count toward limits.
  */
 import { db } from "@/lib/db";
 import { checks, evidence, watches } from "@/lib/db/schema";
 import { getWatchLimit } from "@/lib/billing/entitlements";
 import type { WatchSpec } from "@/types";
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 /** @dev Application-level watch record with camelCase fields and embedded WatchSpec JSON. */
 export interface WatchRow {
@@ -34,14 +34,15 @@ function mapWatch(row: typeof watches.$inferSelect): WatchRow {
 }
 
 /**
- * @notice Count non-paused watches for quota checks.
+ * @notice Count watches still being monitored (`watching`) for quota checks.
+ * @dev Triggered and paused watches do not consume an active slot.
  * @param userId Authenticated user id.
  */
 export async function countActiveWatches(userId: string): Promise<number> {
   const rows = await db
     .select()
     .from(watches)
-    .where(and(eq(watches.userId, userId), ne(watches.status, "paused")));
+    .where(and(eq(watches.userId, userId), eq(watches.status, "watching")));
   return rows.length;
 }
 

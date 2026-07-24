@@ -6,7 +6,7 @@
  */
 import { z } from "zod";
 
-/** @notice Lifecycle state of a saved watch. @dev `paused` watches are excluded from cron checks and active-watch limits. */
+/** @notice Lifecycle state of a saved watch. @dev Only `watching` counts toward active-watch limits; `paused` and `triggered` do not. */
 export const WatchStatusSchema = z.enum(["watching", "triggered", "paused"]);
 export type WatchStatus = z.infer<typeof WatchStatusSchema>;
 
