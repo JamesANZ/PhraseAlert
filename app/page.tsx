@@ -188,7 +188,6 @@ export default function HomePage() {
                 <li>25 active alerts</li>
                 <li>More frequent checks</li>
                 <li>Push, SMS, and webhook notifications</li>
-                <li>Alert history and evidence trail</li>
               </ul>
               <Link className="btn btn-primary" href="/billing">
                 Upgrade to Plus
