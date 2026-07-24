@@ -149,7 +149,7 @@ export const checks = pgTable("checks", {
   id: text("id").primaryKey(),
   watchId: text("watch_id")
     .notNull()
-    .references(() => watches.id),
+    .references(() => watches.id, { onDelete: "cascade" }),
   ranAt: text("ran_at").notNull(),
   sourcesRetrieved: integer("sources_retrieved").notNull().default(0),
   sourcesEvaluated: integer("sources_evaluated").notNull().default(0),
@@ -165,7 +165,7 @@ export const evidence = pgTable("evidence", {
   id: text("id").primaryKey(),
   checkId: text("check_id")
     .notNull()
-    .references(() => checks.id),
+    .references(() => checks.id, { onDelete: "cascade" }),
   url: text("url").notNull(),
   domain: text("domain").notNull(),
   publishedAt: text("published_at"),

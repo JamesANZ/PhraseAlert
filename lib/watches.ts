@@ -4,10 +4,10 @@
  * @dev Phase 2 product layer. Active watch count excludes paused; limits come from billing entitlements.
  */
 import { db } from "@/lib/db";
-import { watches } from "@/lib/db/schema";
+import { checks, evidence, watches } from "@/lib/db/schema";
 import { getWatchLimit } from "@/lib/billing/entitlements";
 import type { WatchSpec } from "@/types";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 
 /** @dev Application-level watch record with camelCase fields and embedded WatchSpec JSON. */
 export interface WatchRow {
@@ -164,12 +164,32 @@ export async function updateWatchStatus(
 
 /**
  * @notice Permanently delete a watch for the owning user.
+ * @dev Removes evidence → checks → watch so FK constraints cannot block deletion.
  * @return True if a row was deleted.
  */
 export async function deleteWatch(
   id: string,
   userId: string,
 ): Promise<boolean> {
+  const owned = await db
+    .select({ id: watches.id })
+    .from(watches)
+    .where(and(eq(watches.id, id), eq(watches.userId, userId)))
+    .limit(1);
+  if (owned.length === 0) return false;
+
+  const checkIds = (
+    await db
+      .select({ id: checks.id })
+      .from(checks)
+      .where(eq(checks.watchId, id))
+  ).map((row) => row.id);
+
+  if (checkIds.length > 0) {
+    await db.delete(evidence).where(inArray(evidence.checkId, checkIds));
+    await db.delete(checks).where(eq(checks.watchId, id));
+  }
+
   const deleted = await db
     .delete(watches)
     .where(and(eq(watches.id, id), eq(watches.userId, userId)))

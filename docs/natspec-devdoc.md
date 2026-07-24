@@ -4,7 +4,7 @@ Generated 2026-07-23T05:45:23.108Z
 
 ## POST /api/billing/checkout:1
 
-*app/api/billing/checkout/route.ts:1*
+_app/api/billing/checkout/route.ts:1_
 
 Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect URL.
 
@@ -12,7 +12,7 @@ Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect U
 
 ## GET /api/billing/status:1
 
-*app/api/billing/status/route.ts:1*
+_app/api/billing/status/route.ts:1_
 
 Returns plan, watch limit, active watch count, and billing period for the session user.
 
@@ -20,7 +20,7 @@ Returns plan, watch limit, active watch count, and billing period for the sessio
 
 ## GET|POST /api/checks/run:1
 
-*app/api/checks/run/route.ts:1*
+_app/api/checks/run/route.ts:1_
 
 Cron endpoint: run checks for all watches in `watching` status.
 
@@ -30,7 +30,7 @@ Cron endpoint: run checks for all watches in `watching` status.
 
 ## app/api/checks/run/route.ts:7
 
-*app/api/checks/run/route.ts:7*
+_app/api/checks/run/route.ts:7_
 
 Batch check all active watches.
 
@@ -38,7 +38,7 @@ Batch check all active watches.
 
 ## POST /api/watch/[id]/check:1
 
-*app/api/watch/[id]/check/route.ts:1*
+_app/api/watch/[id]/check/route.ts:1_
 
 Manually run one check now for a watching watch (dev / dashboard "Check now").
 
@@ -48,7 +48,7 @@ Manually run one check now for a watching watch (dev / dashboard "Check now").
 
 ## app/api/watch/[id]/check/route.ts:8
 
-*app/api/watch/[id]/check/route.ts:8*
+_app/api/watch/[id]/check/route.ts:8_
 
 Run check for one watch owned by the user.
 
@@ -56,7 +56,7 @@ Run check for one watch owned by the user.
 
 ## /api/watch/[id]:1
 
-*app/api/watch/[id]/route.ts:1*
+_app/api/watch/[id]/route.ts:1_
 
 Get, pause/resume, or delete a single watch owned by the session user.
 
@@ -64,7 +64,7 @@ Get, pause/resume, or delete a single watch owned by the session user.
 
 ## POST /api/watch/confirm:1
 
-*app/api/watch/confirm/route.ts:1*
+_app/api/watch/confirm/route.ts:1_
 
 Finalize and persist a watch after the user has clarified a CLEAR sentence.
 
@@ -73,7 +73,7 @@ Finalize and persist a watch after the user has clarified a CLEAR sentence.
 
 ## app/api/watch/confirm/route.ts:13
 
-*app/api/watch/confirm/route.ts:13*
+_app/api/watch/confirm/route.ts:13_
 
 Compile and save watch.
 
@@ -81,7 +81,7 @@ Compile and save watch.
 
 ## POST /api/watch/create:1
 
-*app/api/watch/create/route.ts:1*
+_app/api/watch/create/route.ts:1_
 
 Assess vagueness of a watch sentence before saving (clarification step).
 
@@ -90,12 +90,13 @@ Assess vagueness of a watch sentence before saving (clarification step).
 
 ## app/api/watch/create/route.ts:7
 
-*app/api/watch/create/route.ts:7*
+_app/api/watch/create/route.ts:7_
+
 - **@dev** Request body: raw_input 3–500 chars.
 
 ## app/api/watch/create/route.ts:12
 
-*app/api/watch/create/route.ts:12*
+_app/api/watch/create/route.ts:12_
 
 Run vagueness classification on raw_input.
 
@@ -103,7 +104,7 @@ Run vagueness classification on raw_input.
 
 ## WatchCreator:3
 
-*components/WatchCreator.tsx:3*
+_components/WatchCreator.tsx:3_
 
 Multi-step UI: enter sentence → clarify if vague → confirm and save watch.
 
@@ -111,7 +112,7 @@ Multi-step UI: enter sentence → clarify if vague → confirm and save watch.
 
 ## WatchList:3
 
-*components/WatchList.tsx:3*
+_components/WatchList.tsx:3_
 
 Dashboard list of saved watches with pause, resume, delete, and check-now actions.
 
@@ -119,7 +120,7 @@ Dashboard list of saved watches with pause, resume, delete, and check-now action
 
 ## Eval harness CLI:1
 
-*evals/run.ts:1*
+_evals/run.ts:1_
 
 Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval against fixtures.
 
@@ -128,7 +129,7 @@ Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval 
 
 ## lib/auth/session.ts:4
 
-*lib/auth/session.ts:4*
+_lib/auth/session.ts:4_
 
 Require an authenticated session and return the user id.
 
@@ -137,7 +138,7 @@ Require an authenticated session and return the user id.
 
 ## NextAuth server configuration:1
 
-*lib/auth.ts:1*
+_lib/auth.ts:1_
 
 Auth.js setup with Drizzle adapter and Postgres user/session tables.
 
@@ -145,7 +146,7 @@ Auth.js setup with Drizzle adapter and Postgres user/session tables.
 
 ## lib/billing/enforce-limits.ts:13
 
-*lib/billing/enforce-limits.ts:13*
+_lib/billing/enforce-limits.ts:13_
 
 Called when Plus expires so free users retain their 3 most recently created active watches.
 
@@ -154,7 +155,7 @@ Called when Plus expires so free users retain their 3 most recently created acti
 
 ## Billing entitlements:1
 
-*lib/billing/entitlements.ts:1*
+_lib/billing/entitlements.ts:1_
 
 Resolves effective plan, watch limits, and Plus grant/revoke for a user.
 
@@ -162,12 +163,13 @@ Resolves effective plan, watch limits, and Plus grant/revoke for a user.
 
 ## lib/billing/entitlements.ts:21
 
-*lib/billing/entitlements.ts:21*
+_lib/billing/entitlements.ts:21_
+
 - **@dev** Subscription stays active without period end; prepaid requires future planPeriodEnd.
 
 ## Check orchestrator:1
 
-*lib/check.ts:1*
+_lib/check.ts:1_
 
 Runs one full retrieval → filter → detect → decide cycle for a single watch.
 
@@ -176,17 +178,19 @@ Runs one full retrieval → filter → detect → decide cycle for a single watc
 
 ## lib/check.ts:17
 
-*lib/check.ts:17*
+_lib/check.ts:17_
+
 - **@dev** Cap on candidates sent to the detector per check to control latency and inference cost.
 
 ## lib/check.ts:20
 
-*lib/check.ts:20*
+_lib/check.ts:20_
+
 - **@dev** Summary returned to API routes and cron after a check completes.
 
 ## lib/check.ts:31
 
-*lib/check.ts:31*
+_lib/check.ts:31_
 
 Execute a scheduled or manual check for one watch.
 
@@ -196,7 +200,7 @@ Execute a scheduled or manual check for one watch.
 
 ## Check and evidence persistence:1
 
-*lib/checks.ts:1*
+_lib/checks.ts:1_
 
 Records each check run and per-source evidence for audit trails and URL deduplication.
 
@@ -204,17 +208,19 @@ Records each check run and per-source evidence for audit trails and URL deduplic
 
 ## lib/checks.ts:7
 
-*lib/checks.ts:7*
+_lib/checks.ts:7_
+
 - **@dev** Input for inserting one check row after decide completes.
 
 ## lib/checks.ts:18
 
-*lib/checks.ts:18*
+_lib/checks.ts:18_
+
 - **@dev** One evidence row linked to a check (one evaluated URL).
 
 ## lib/checks.ts:28
 
-*lib/checks.ts:28*
+_lib/checks.ts:28_
 
 Insert a check record and return its id.
 
@@ -224,7 +230,7 @@ Insert a check record and return its id.
 
 ## lib/checks.ts:52
 
-*lib/checks.ts:52*
+_lib/checks.ts:52_
 
 Bulk-insert evidence rows for a check.
 
@@ -233,7 +239,7 @@ Bulk-insert evidence rows for a check.
 
 ## lib/checks.ts:73
 
-*lib/checks.ts:73*
+_lib/checks.ts:73_
 
 Normalized URLs previously stored as evidence for any check on this watch.
 
@@ -243,7 +249,7 @@ Normalized URLs previously stored as evidence for any check on this watch.
 
 ## Watch compiler:1
 
-*lib/compiler.ts:1*
+_lib/compiler.ts:1_
 
 Turns a plain-language watch sentence into a structured WatchSpec, with a vagueness gate first.
 
@@ -252,22 +258,25 @@ Turns a plain-language watch sentence into a structured WatchSpec, with a vaguen
 
 ## lib/compiler.ts:11
 
-*lib/compiler.ts:11*
+_lib/compiler.ts:11_
+
 - **@dev** System prompt for the vagueness classifier. Conservative: prefers VAGUE when unsure.
 
 ## lib/compiler.ts:41
 
-*lib/compiler.ts:41*
+_lib/compiler.ts:41_
+
 - **@dev** System prompt for WatchSpec body generation (trigger/non-trigger conditions, queries, domains).
 
 ## lib/compiler.ts:56
 
-*lib/compiler.ts:56*
+_lib/compiler.ts:56_
+
 - **@dev** Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code).
 
 ## lib/compiler.ts:66
 
-*lib/compiler.ts:66*
+_lib/compiler.ts:66_
 
 Classify whether a watch sentence is specific enough to monitor.
 
@@ -277,7 +286,7 @@ Classify whether a watch sentence is specific enough to monitor.
 
 ## lib/compiler.ts:77
 
-*lib/compiler.ts:77*
+_lib/compiler.ts:77_
 
 Compile a cleared watch sentence into a full WatchSpec ready for persistence.
 
@@ -291,7 +300,7 @@ Compile a cleared watch sentence into a full WatchSpec ready for persistence.
 
 ## lib/compiler.ts:112
 
-*lib/compiler.ts:112*
+_lib/compiler.ts:112_
 
 Combined vagueness check and compile for eval harness and smoke tests.
 
@@ -302,7 +311,7 @@ Combined vagueness check and compile for eval harness and smoke tests.
 
 ## Product constants:1
 
-*lib/constants.ts:1*
+_lib/constants.ts:1_
 
 Tier limits and billing amounts shared across entitlements and UI.
 
@@ -310,17 +319,19 @@ Tier limits and billing amounts shared across entitlements and UI.
 
 ## lib/constants.ts:12
 
-*lib/constants.ts:12*
+_lib/constants.ts:12_
+
 - **@dev** Prepaid Helio period duration in milliseconds (30 days).
 
 ## lib/constants.ts:15
 
-*lib/constants.ts:15*
+_lib/constants.ts:15_
+
 - **@dev** Days-before-expiry offsets for prepaid renewal reminder emails.
 
 ## Neon Postgres database bootstrap:1
 
-*lib/db/index.ts:1*
+_lib/db/index.ts:1_
 
 Drizzle client over Neon's serverless HTTP driver, plus idempotent schema ensure.
 
@@ -328,7 +339,7 @@ Drizzle client over Neon's serverless HTTP driver, plus idempotent schema ensure
 
 ## lib/db/index.ts:26
 
-*lib/db/index.ts:26*
+_lib/db/index.ts:26_
 
 Create tables if missing (safe on every cron/API cold start).
 
@@ -336,7 +347,7 @@ Create tables if missing (safe on every cron/API cold start).
 
 ## Database schema (Drizzle Postgres / Neon):1
 
-*lib/db/schema.ts:1*
+_lib/db/schema.ts:1_
 
 Table definitions for auth, billing, watches, checks, and evidence.
 
@@ -344,42 +355,49 @@ Table definitions for auth, billing, watches, checks, and evidence.
 
 ## lib/db/schema.ts:36
 
-*lib/db/schema.ts:36*
+_lib/db/schema.ts:36_
+
 - **@dev** Stripe or Helio subscription/prepaid records linked to user.
 
 ## lib/db/schema.ts:68
 
-*lib/db/schema.ts:68*
+_lib/db/schema.ts:68_
+
 - **@dev** Idempotent webhook event log (provider + event id) for Stripe and Helio.
 
 ## lib/db/schema.ts:78
 
-*lib/db/schema.ts:78*
+_lib/db/schema.ts:78_
+
 - **@dev** OAuth provider accounts (NextAuth adapter).
 
 ## lib/db/schema.ts:103
 
-*lib/db/schema.ts:103*
+_lib/db/schema.ts:103_
+
 - **@dev** Active login sessions (NextAuth adapter).
 
 ## lib/db/schema.ts:112
 
-*lib/db/schema.ts:112*
+_lib/db/schema.ts:112_
+
 - **@dev** Email magic-link tokens (NextAuth adapter).
 
 ## lib/db/schema.ts:140
 
-*lib/db/schema.ts:140*
+_lib/db/schema.ts:140_
+
 - **@dev** One scheduled or manual check run against a watch.
 
 ## lib/db/schema.ts:156
 
-*lib/db/schema.ts:156*
+_lib/db/schema.ts:156_
+
 - **@dev** Per-URL judgment stored for a check (audit trail for notifications).
 
 ## Notification decision layer:1
 
-*lib/decide.ts:1*
+_lib/decide.ts:1_
 
 Aggregates per-source detection verdicts and decides whether to notify the user.
 
@@ -388,29 +406,33 @@ Aggregates per-source detection verdicts and decides whether to notify the user.
 
 ## lib/decide.ts:9
 
-*lib/decide.ts:9*
+_lib/decide.ts:9_
+
 - **@dev** Minimum confidence from an authoritative domain required for solo-trigger notification.
 
 ## lib/decide.ts:12
 
-*lib/decide.ts:12*
+_lib/decide.ts:12_
+
 - **@dev** One retrieval candidate paired with its detection result.
 
 ## lib/decide.ts:18
 
-*lib/decide.ts:18*
+_lib/decide.ts:18_
+
 - **@dev** Final outcome of the decide step for a single check run.
 
 ## lib/decide.ts:28
 
-*lib/decide.ts:28*
+_lib/decide.ts:28_
+
 - **@dev** True when domain matches an entry in spec.authoritative_domains (supports subdomains).
 - **@param** domain Candidate hostname.
 - **@param** spec Watch spec with authoritative_domains list.
 
 ## lib/decide.ts:37
 
-*lib/decide.ts:37*
+_lib/decide.ts:37_
 
 Decide whether evidence from a check warrants user notification.
 
@@ -422,7 +444,7 @@ Decide whether evidence from a check warrants user notification.
 
 ## Event detector:1
 
-*lib/detector.ts:1*
+_lib/detector.ts:1_
 
 Judges whether a single web source shows the watched event actually occurred.
 
@@ -431,12 +453,13 @@ Judges whether a single web source shows the watched event actually occurred.
 
 ## lib/detector.ts:10
 
-*lib/detector.ts:10*
+_lib/detector.ts:10_
+
 - **@dev** System prompt for per-candidate TRIGGERED / NOT_TRIGGERED / AMBIGUOUS classification.
 
 ## lib/detector.ts:26
 
-*lib/detector.ts:26*
+_lib/detector.ts:26_
 
 Run detection for one retrieval candidate against a WatchSpec.
 
@@ -447,7 +470,7 @@ Run detection for one retrieval candidate against a WatchSpec.
 
 ## Retrieval filters:1
 
-*lib/filter.ts:1*
+_lib/filter.ts:1_
 
 Drops candidates that are too old, already evaluated, or on a denylist before detection.
 
@@ -456,7 +479,7 @@ Drops candidates that are too old, already evaluated, or on a denylist before de
 
 ## lib/filter.ts:4
 
-*lib/filter.ts:4*
+_lib/filter.ts:4_
 
 Canonicalize a URL for deduplication across check runs.
 
@@ -466,7 +489,7 @@ Canonicalize a URL for deduplication across check runs.
 
 ## lib/filter.ts:18
 
-*lib/filter.ts:18*
+_lib/filter.ts:18_
 
 True when the source was published on or after the watch was created.
 
@@ -476,7 +499,7 @@ True when the source was published on or after the watch was created.
 
 ## lib/filter.ts:26
 
-*lib/filter.ts:26*
+_lib/filter.ts:26_
 
 Apply post-watch, dedup, and domain deny filters to a candidate list.
 
@@ -489,7 +512,7 @@ Apply post-watch, dedup, and domain deny filters to a candidate list.
 
 ## Hugging Face inference client:1
 
-*lib/inference.ts:1*
+_lib/inference.ts:1_
 
 Shared LLM completion layer for compiler, detector, and eval harness.
 
@@ -498,22 +521,25 @@ Shared LLM completion layer for compiler, detector, and eval harness.
 
 ## lib/inference.ts:4
 
-*lib/inference.ts:4*
+_lib/inference.ts:4_
+
 - **@dev** Default instruct model when HF_MODEL is unset.
 
 ## lib/inference.ts:7
 
-*lib/inference.ts:7*
+_lib/inference.ts:7_
+
 - **@dev** Models supported for eval comparison runs.
 
 ## lib/inference.ts:17
 
-*lib/inference.ts:17*
+_lib/inference.ts:17_
+
 - **@dev** Lazy singleton InferenceClient; throws if HUGGINGFACE_API_KEY missing.
 
 ## lib/inference.ts:29
 
-*lib/inference.ts:29*
+_lib/inference.ts:29_
 
 Resolve the active model id from env or default.
 
@@ -521,7 +547,7 @@ Resolve the active model id from env or default.
 
 ## lib/inference.ts:34
 
-*lib/inference.ts:34*
+_lib/inference.ts:34_
 
 Run a chat completion and parse the assistant message as JSON.
 
@@ -533,7 +559,7 @@ Run a chat completion and parse the assistant message as JSON.
 
 ## lib/inference.ts:55
 
-*lib/inference.ts:55*
+_lib/inference.ts:55_
 
 Extract JSON from model output, including fenced ```json blocks.
 
@@ -543,7 +569,7 @@ Extract JSON from model output, including fenced ```json blocks.
 
 ## Live retrieval orchestrator:1
 
-*lib/retrieval/index.ts:1*
+_lib/retrieval/index.ts:1_
 
 Runs Tavily search and extract for a WatchSpec's search_queries and builds RetrievalCandidates.
 
@@ -553,47 +579,55 @@ Runs Tavily search and extract for a WatchSpec's search_queries and builds Retri
 
 ## lib/retrieval/index.ts:6
 
-*lib/retrieval/index.ts:6*
+_lib/retrieval/index.ts:6_
+
 - **@dev** Max Tavily search hits per query before merge.
 
 ## lib/retrieval/index.ts:8
 
-*lib/retrieval/index.ts:8*
+_lib/retrieval/index.ts:8_
+
 - **@dev** Top unique URLs sent to Tavily extract for richer snippets.
 
 ## lib/retrieval/index.ts:10
 
-*lib/retrieval/index.ts:10*
+_lib/retrieval/index.ts:10_
+
 - **@dev** Parallel Tavily search calls (one per search_query).
 
 ## lib/retrieval/index.ts:13
 
-*lib/retrieval/index.ts:13*
+_lib/retrieval/index.ts:13_
+
 - **@dev** Hostname without www prefix; "unknown" on parse failure.
 
 ## lib/retrieval/index.ts:22
 
-*lib/retrieval/index.ts:22*
+_lib/retrieval/index.ts:22_
+
 - **@dev** Normalize Tavily published_date to ISO; falls back to retrievedAt when missing or invalid.
 
 ## lib/retrieval/index.ts:40
 
-*lib/retrieval/index.ts:40*
+_lib/retrieval/index.ts:40_
+
 - **@dev** YYYY-MM-DD slice of watch created_at for Tavily start_date filter.
 
 ## lib/retrieval/index.ts:47
 
-*lib/retrieval/index.ts:47*
+_lib/retrieval/index.ts:47_
+
 - **@dev** Bounded-concurrency map for parallel Tavily searches.
 
 ## lib/retrieval/index.ts:71
 
-*lib/retrieval/index.ts:71*
+_lib/retrieval/index.ts:71_
+
 - **@dev** Collapse whitespace and cap snippet length for detector prompts.
 
 ## lib/retrieval/index.ts:78
 
-*lib/retrieval/index.ts:78*
+_lib/retrieval/index.ts:78_
 
 Retrieve web candidates for a watch using its compiled search_queries.
 
@@ -604,7 +638,7 @@ Retrieve web candidates for a watch using its compiled search_queries.
 
 ## Tavily API client:1
 
-*lib/retrieval/tavily.ts:1*
+_lib/retrieval/tavily.ts:1_
 
 Thin fetch wrapper for Tavily /search and /extract endpoints.
 
@@ -613,47 +647,55 @@ Thin fetch wrapper for Tavily /search and /extract endpoints.
 
 ## lib/retrieval/tavily.ts:4
 
-*lib/retrieval/tavily.ts:4*
+_lib/retrieval/tavily.ts:4_
+
 - **@dev** Single result from Tavily search API.
 
 ## lib/retrieval/tavily.ts:14
 
-*lib/retrieval/tavily.ts:14*
+_lib/retrieval/tavily.ts:14_
+
 - **@dev** Response envelope from POST /search.
 
 ## lib/retrieval/tavily.ts:20
 
-*lib/retrieval/tavily.ts:20*
+_lib/retrieval/tavily.ts:20_
+
 - **@dev** Extracted page content for one URL.
 
 ## lib/retrieval/tavily.ts:26
 
-*lib/retrieval/tavily.ts:26*
+_lib/retrieval/tavily.ts:26_
+
 - **@dev** Response envelope from POST /extract.
 
 ## lib/retrieval/tavily.ts:32
 
-*lib/retrieval/tavily.ts:32*
+_lib/retrieval/tavily.ts:32_
+
 - **@dev** Options for tavilySearch. startDate limits to content after watch creation.
 
 ## lib/retrieval/tavily.ts:40
 
-*lib/retrieval/tavily.ts:40*
+_lib/retrieval/tavily.ts:40_
+
 - **@dev** Options for tavilyExtract. query enables chunked relevance extraction.
 
 ## lib/retrieval/tavily.ts:47
 
-*lib/retrieval/tavily.ts:47*
+_lib/retrieval/tavily.ts:47_
+
 - **@dev** Reads TAVILY_API_KEY; throws if missing.
 
 ## lib/retrieval/tavily.ts:56
 
-*lib/retrieval/tavily.ts:56*
+_lib/retrieval/tavily.ts:56_
+
 - **@dev** Shared POST helper with Bearer auth and error surfacing.
 
 ## lib/retrieval/tavily.ts:80
 
-*lib/retrieval/tavily.ts:80*
+_lib/retrieval/tavily.ts:80_
 
 Run a Tavily web search for one query string.
 
@@ -662,7 +704,7 @@ Run a Tavily web search for one query string.
 
 ## lib/retrieval/tavily.ts:100
 
-*lib/retrieval/tavily.ts:100*
+_lib/retrieval/tavily.ts:100_
 
 Fetch full or chunked page content for a list of URLs.
 
@@ -671,7 +713,7 @@ Fetch full or chunked page content for a list of URLs.
 
 ## Watch persistence:1
 
-*lib/watches.ts:1*
+_lib/watches.ts:1_
 
 CRUD and quota enforcement for user watches stored in Postgres via Drizzle.
 
@@ -679,17 +721,19 @@ CRUD and quota enforcement for user watches stored in Postgres via Drizzle.
 
 ## lib/watches.ts:8
 
-*lib/watches.ts:8*
+_lib/watches.ts:8_
+
 - **@dev** Application-level watch record with camelCase fields and embedded WatchSpec JSON.
 
 ## lib/watches.ts:19
 
-*lib/watches.ts:19*
+_lib/watches.ts:19_
+
 - **@dev** Maps Drizzle row to WatchRow.
 
 ## lib/watches.ts:32
 
-*lib/watches.ts:32*
+_lib/watches.ts:32_
 
 Count non-paused watches for quota checks.
 
@@ -697,7 +741,7 @@ Count non-paused watches for quota checks.
 
 ## lib/watches.ts:51
 
-*lib/watches.ts:51*
+_lib/watches.ts:51_
 
 List all watches for a user, newest first.
 
@@ -705,7 +749,7 @@ List all watches for a user, newest first.
 
 ## lib/watches.ts:61
 
-*lib/watches.ts:61*
+_lib/watches.ts:61_
 
 Fetch one watch scoped to owner.
 
@@ -713,7 +757,7 @@ Fetch one watch scoped to owner.
 
 ## lib/watches.ts:75
 
-*lib/watches.ts:75*
+_lib/watches.ts:75_
 
 Persist a compiled WatchSpec as a new watch.
 
@@ -724,7 +768,7 @@ Persist a compiled WatchSpec as a new watch.
 
 ## lib/watches.ts:108
 
-*lib/watches.ts:108*
+_lib/watches.ts:108_
 
 Update watch lifecycle status (pause, resume, or mark triggered).
 
@@ -733,7 +777,7 @@ Update watch lifecycle status (pause, resume, or mark triggered).
 
 ## lib/watches.ts:142
 
-*lib/watches.ts:142*
+_lib/watches.ts:142_
 
 Permanently delete a watch for the owning user.
 
@@ -741,7 +785,7 @@ Permanently delete a watch for the owning user.
 
 ## lib/watches.ts:154
 
-*lib/watches.ts:154*
+_lib/watches.ts:154_
 
 All watches in `watching` status — used by the cron check runner.
 
@@ -749,7 +793,7 @@ All watches in `watching` status — used by the cron check runner.
 
 ## Auth middleware:1
 
-*middleware.ts:1*
+_middleware.ts:1_
 
 Redirects unauthenticated users to /login for protected app routes.
 
@@ -757,7 +801,7 @@ Redirects unauthenticated users to /login for protected app routes.
 
 ## NatSpec comment extractor:1
 
-*scripts/extract-natspec.ts:1*
+_scripts/extract-natspec.ts:1_
 
 Walks TypeScript sources and emits userdoc + devdoc JSON from /** ... *\/ blocks.
 
@@ -765,7 +809,7 @@ Walks TypeScript sources and emits userdoc + devdoc JSON from /** ... *\/ blocks
 
 ## PhraseAlert core types:1
 
-*types/index.ts:1*
+_types/index.ts:1_
 
 Shared Zod schemas and TypeScript types for watches, detection, retrieval, and eval fixtures.
 
@@ -774,7 +818,7 @@ Shared Zod schemas and TypeScript types for watches, detection, retrieval, and e
 
 ## WatchSpec:12
 
-*types/index.ts:12*
+_types/index.ts:12_
 
 Structured specification produced when a user's sentence is compiled into a monitorable watch.
 
@@ -783,7 +827,7 @@ Structured specification produced when a user's sentence is compiled into a moni
 
 ## VaguenessResult:29
 
-*types/index.ts:29*
+_types/index.ts:29_
 
 Outcome of the vagueness gate before a watch can be saved.
 
@@ -791,7 +835,7 @@ Outcome of the vagueness gate before a watch can be saved.
 
 ## types/index.ts:37
 
-*types/index.ts:37*
+_types/index.ts:37_
 
 Per-source judgment on whether credible evidence shows the watched event occurred.
 
@@ -799,7 +843,7 @@ Per-source judgment on whether credible evidence shows the watched event occurre
 
 ## RetrievalCandidate:54
 
-*types/index.ts:54*
+_types/index.ts:54_
 
 A web page (or fixture) candidate passed to the detector after retrieval and filtering.
 
@@ -807,15 +851,18 @@ A web page (or fixture) candidate passed to the detector after retrieval and fil
 
 ## types/index.ts:67
 
-*types/index.ts:67*
+_types/index.ts:67_
+
 - **@dev** Backdated eval fixture: labeled candidate with optional expected verdict for regression scoring.
 
 ## types/index.ts:94
 
-*types/index.ts:94*
+_types/index.ts:94_
+
 - **@dev** Aggregate metrics returned by `evals/run.ts` after fixture and dialogue runs.
 
 ## types/index.ts:109
 
-*types/index.ts:109*
+_types/index.ts:109_
+
 - **@dev** One turn in a multi-step vagueness/clarification smoke dialogue eval.

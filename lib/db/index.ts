@@ -101,7 +101,7 @@ async function ensureSchema(): Promise<void> {
     sql`
       CREATE TABLE IF NOT EXISTS checks (
         id TEXT PRIMARY KEY,
-        watch_id TEXT NOT NULL REFERENCES watches(id),
+        watch_id TEXT NOT NULL REFERENCES watches(id) ON DELETE CASCADE,
         ran_at TEXT NOT NULL,
         sources_retrieved INTEGER NOT NULL DEFAULT 0,
         sources_evaluated INTEGER NOT NULL DEFAULT 0,
@@ -115,7 +115,7 @@ async function ensureSchema(): Promise<void> {
     sql`
       CREATE TABLE IF NOT EXISTS evidence (
         id TEXT PRIMARY KEY,
-        check_id TEXT NOT NULL REFERENCES checks(id),
+        check_id TEXT NOT NULL REFERENCES checks(id) ON DELETE CASCADE,
         url TEXT NOT NULL,
         domain TEXT NOT NULL,
         published_at TEXT,
@@ -123,6 +123,27 @@ async function ensureSchema(): Promise<void> {
         verdict TEXT,
         reasoning TEXT
       )
+    `,
+    // Existing DBs may lack ON DELETE CASCADE; recreate FKs so watch deletes work.
+    sql`
+      DO $$ BEGIN
+        ALTER TABLE checks DROP CONSTRAINT IF EXISTS checks_watch_id_fkey;
+        ALTER TABLE checks
+          ADD CONSTRAINT checks_watch_id_fkey
+          FOREIGN KEY (watch_id) REFERENCES watches(id) ON DELETE CASCADE;
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$
+    `,
+    sql`
+      DO $$ BEGIN
+        ALTER TABLE evidence DROP CONSTRAINT IF EXISTS evidence_check_id_fkey;
+        ALTER TABLE evidence
+          ADD CONSTRAINT evidence_check_id_fkey
+          FOREIGN KEY (check_id) REFERENCES checks(id) ON DELETE CASCADE;
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$
     `,
     sql`
       CREATE TABLE IF NOT EXISTS subscriptions (

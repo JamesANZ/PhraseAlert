@@ -18,7 +18,7 @@ You end up checking manually anyway, or turning alerts off.
 
 PhraseAlert watches for your phrase coming true, not every mention of the topic.
 
-| Keyword alert                                   | PhraseAlert                                                       |
+| Keyword alert                                   | PhraseAlert                                                      |
 | ----------------------------------------------- | ---------------------------------------------------------------- |
 | Fires on any page containing related terms      | Fires only when credible evidence shows the event happened       |
 | Cannot distinguish a guide from an announcement | Compiles explicit trigger and non-trigger conditions at creation |
@@ -44,7 +44,7 @@ If you can describe the event in a sentence, you can watch for it.
 
 **Watch:** "Tell me if Australian partner visa fees increase."
 
-| Source                                                        | Keyword alert                | PhraseAlert            |
+| Source                                                        | Keyword alert                | PhraseAlert           |
 | ------------------------------------------------------------- | ---------------------------- | --------------------- |
 | "Complete guide to partner visa fees in 2026"                 | Alert sent                   | Checked, no change    |
 | "Forum: how much did your partner visa cost?"                 | Alert sent                   | Checked, no change    |

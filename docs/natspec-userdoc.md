@@ -4,7 +4,7 @@ Generated 2026-07-23T05:45:23.107Z
 
 ## POST /api/billing/checkout:1
 
-*app/api/billing/checkout/route.ts:1*
+_app/api/billing/checkout/route.ts:1_
 
 Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect URL.
 
@@ -12,7 +12,7 @@ Start Stripe subscription, Stripe prepaid, or Helio checkout; returns redirect U
 
 ## GET /api/billing/status:1
 
-*app/api/billing/status/route.ts:1*
+_app/api/billing/status/route.ts:1_
 
 Returns plan, watch limit, active watch count, and billing period for the session user.
 
@@ -20,7 +20,7 @@ Returns plan, watch limit, active watch count, and billing period for the sessio
 
 ## GET|POST /api/checks/run:1
 
-*app/api/checks/run/route.ts:1*
+_app/api/checks/run/route.ts:1_
 
 Cron endpoint: run checks for all watches in `watching` status.
 
@@ -30,7 +30,7 @@ Cron endpoint: run checks for all watches in `watching` status.
 
 ## app/api/checks/run/route.ts:7
 
-*app/api/checks/run/route.ts:7*
+_app/api/checks/run/route.ts:7_
 
 Batch check all active watches.
 
@@ -38,7 +38,7 @@ Batch check all active watches.
 
 ## POST /api/watch/[id]/check:1
 
-*app/api/watch/[id]/check/route.ts:1*
+_app/api/watch/[id]/check/route.ts:1_
 
 Manually run one check now for a watching watch (dev / dashboard "Check now").
 
@@ -48,7 +48,7 @@ Manually run one check now for a watching watch (dev / dashboard "Check now").
 
 ## app/api/watch/[id]/check/route.ts:8
 
-*app/api/watch/[id]/check/route.ts:8*
+_app/api/watch/[id]/check/route.ts:8_
 
 Run check for one watch owned by the user.
 
@@ -56,7 +56,7 @@ Run check for one watch owned by the user.
 
 ## /api/watch/[id]:1
 
-*app/api/watch/[id]/route.ts:1*
+_app/api/watch/[id]/route.ts:1_
 
 Get, pause/resume, or delete a single watch owned by the session user.
 
@@ -64,28 +64,25 @@ Get, pause/resume, or delete a single watch owned by the session user.
 
 ## app/api/watch/[id]/route.ts:11
 
-*app/api/watch/[id]/route.ts:11*
+_app/api/watch/[id]/route.ts:11_
 
 GET — fetch one watch by id.
 
-
 ## app/api/watch/[id]/route.ts:33
 
-*app/api/watch/[id]/route.ts:33*
+_app/api/watch/[id]/route.ts:33_
 
 PATCH — pause or resume watch. Resume may 403 if at active watch limit.
 
-
 ## app/api/watch/[id]/route.ts:68
 
-*app/api/watch/[id]/route.ts:68*
+_app/api/watch/[id]/route.ts:68_
 
 DELETE — permanently remove watch.
 
-
 ## POST /api/watch/confirm:1
 
-*app/api/watch/confirm/route.ts:1*
+_app/api/watch/confirm/route.ts:1_
 
 Finalize and persist a watch after the user has clarified a CLEAR sentence.
 
@@ -94,7 +91,7 @@ Finalize and persist a watch after the user has clarified a CLEAR sentence.
 
 ## app/api/watch/confirm/route.ts:13
 
-*app/api/watch/confirm/route.ts:13*
+_app/api/watch/confirm/route.ts:13_
 
 Compile and save watch.
 
@@ -102,7 +99,7 @@ Compile and save watch.
 
 ## POST /api/watch/create:1
 
-*app/api/watch/create/route.ts:1*
+_app/api/watch/create/route.ts:1_
 
 Assess vagueness of a watch sentence before saving (clarification step).
 
@@ -111,7 +108,7 @@ Assess vagueness of a watch sentence before saving (clarification step).
 
 ## app/api/watch/create/route.ts:12
 
-*app/api/watch/create/route.ts:12*
+_app/api/watch/create/route.ts:12_
 
 Run vagueness classification on raw_input.
 
@@ -119,28 +116,25 @@ Run vagueness classification on raw_input.
 
 ## Landing page:1
 
-*app/page.tsx:1*
+_app/page.tsx:1_
 
 Marketing home with hero alert box, example alerts, and how-it-works sections.
 
-
 ## Alerts dashboard:1
 
-*app/watches/page.tsx:1*
+_app/watches/page.tsx:1_
 
 Server-rendered list of the user's alerts with plan/limit banner.
 
-
 ## HeroWatchBox:3
 
-*components/HeroWatchBox.tsx:3*
+_components/HeroWatchBox.tsx:3_
 
 Landing page watch input with rotating examples; routes to /watches/new with the sentence.
 
-
 ## WatchCreator:3
 
-*components/WatchCreator.tsx:3*
+_components/WatchCreator.tsx:3_
 
 Multi-step UI: enter sentence → clarify if vague → confirm and save watch.
 
@@ -148,7 +142,7 @@ Multi-step UI: enter sentence → clarify if vague → confirm and save watch.
 
 ## WatchList:3
 
-*components/WatchList.tsx:3*
+_components/WatchList.tsx:3_
 
 Dashboard list of saved watches with pause, resume, delete, and check-now actions.
 
@@ -156,7 +150,7 @@ Dashboard list of saved watches with pause, resume, delete, and check-now action
 
 ## Eval harness CLI:1
 
-*evals/run.ts:1*
+_evals/run.ts:1_
 
 Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval against fixtures.
 
@@ -165,14 +159,13 @@ Scores compiler, detector, filter, decide, dialogues, and live Tavily retrieval 
 
 ## Session helpers:1
 
-*lib/auth/session.ts:1*
+_lib/auth/session.ts:1_
 
 Thin wrappers around NextAuth `auth()` for API route user id enforcement.
 
-
 ## lib/auth/session.ts:4
 
-*lib/auth/session.ts:4*
+_lib/auth/session.ts:4_
 
 Require an authenticated session and return the user id.
 
@@ -181,14 +174,13 @@ Require an authenticated session and return the user id.
 
 ## lib/auth/session.ts:14
 
-*lib/auth/session.ts:14*
+_lib/auth/session.ts:14_
 
 Return the current session user or null when logged out.
 
-
 ## NextAuth server configuration:1
 
-*lib/auth.ts:1*
+_lib/auth.ts:1_
 
 Auth.js setup with Drizzle adapter and Postgres user/session tables.
 
@@ -196,14 +188,13 @@ Auth.js setup with Drizzle adapter and Postgres user/session tables.
 
 ## Downgrade watch enforcement:1
 
-*lib/billing/enforce-limits.ts:1*
+_lib/billing/enforce-limits.ts:1_
 
 Pauses newest active watches when a user drops to free tier over the cap.
 
-
 ## lib/billing/enforce-limits.ts:13
 
-*lib/billing/enforce-limits.ts:13*
+_lib/billing/enforce-limits.ts:13_
 
 Called when Plus expires so free users retain their 3 most recently created active watches.
 
@@ -212,7 +203,7 @@ Called when Plus expires so free users retain their 3 most recently created acti
 
 ## Billing entitlements:1
 
-*lib/billing/entitlements.ts:1*
+_lib/billing/entitlements.ts:1_
 
 Resolves effective plan, watch limits, and Plus grant/revoke for a user.
 
@@ -220,21 +211,19 @@ Resolves effective plan, watch limits, and Plus grant/revoke for a user.
 
 ## lib/billing/entitlements.ts:10
 
-*lib/billing/entitlements.ts:10*
+_lib/billing/entitlements.ts:10_
 
 Snapshot returned by GET /api/billing/status.
 
-
 ## lib/billing/entitlements.ts:54
 
-*lib/billing/entitlements.ts:54*
+_lib/billing/entitlements.ts:54_
 
 Active watch cap for a user id (free default if user missing).
 
-
 ## Check orchestrator:1
 
-*lib/check.ts:1*
+_lib/check.ts:1_
 
 Runs one full retrieval → filter → detect → decide cycle for a single watch.
 
@@ -243,7 +232,7 @@ Runs one full retrieval → filter → detect → decide cycle for a single watc
 
 ## lib/check.ts:31
 
-*lib/check.ts:31*
+_lib/check.ts:31_
 
 Execute a scheduled or manual check for one watch.
 
@@ -253,7 +242,7 @@ Execute a scheduled or manual check for one watch.
 
 ## Check and evidence persistence:1
 
-*lib/checks.ts:1*
+_lib/checks.ts:1_
 
 Records each check run and per-source evidence for audit trails and URL deduplication.
 
@@ -261,7 +250,7 @@ Records each check run and per-source evidence for audit trails and URL deduplic
 
 ## lib/checks.ts:28
 
-*lib/checks.ts:28*
+_lib/checks.ts:28_
 
 Insert a check record and return its id.
 
@@ -271,7 +260,7 @@ Insert a check record and return its id.
 
 ## lib/checks.ts:52
 
-*lib/checks.ts:52*
+_lib/checks.ts:52_
 
 Bulk-insert evidence rows for a check.
 
@@ -280,7 +269,7 @@ Bulk-insert evidence rows for a check.
 
 ## lib/checks.ts:73
 
-*lib/checks.ts:73*
+_lib/checks.ts:73_
 
 Normalized URLs previously stored as evidence for any check on this watch.
 
@@ -290,7 +279,7 @@ Normalized URLs previously stored as evidence for any check on this watch.
 
 ## Watch compiler:1
 
-*lib/compiler.ts:1*
+_lib/compiler.ts:1_
 
 Turns a plain-language watch sentence into a structured WatchSpec, with a vagueness gate first.
 
@@ -299,7 +288,7 @@ Turns a plain-language watch sentence into a structured WatchSpec, with a vaguen
 
 ## lib/compiler.ts:66
 
-*lib/compiler.ts:66*
+_lib/compiler.ts:66_
 
 Classify whether a watch sentence is specific enough to monitor.
 
@@ -309,7 +298,7 @@ Classify whether a watch sentence is specific enough to monitor.
 
 ## lib/compiler.ts:77
 
-*lib/compiler.ts:77*
+_lib/compiler.ts:77_
 
 Compile a cleared watch sentence into a full WatchSpec ready for persistence.
 
@@ -323,7 +312,7 @@ Compile a cleared watch sentence into a full WatchSpec ready for persistence.
 
 ## lib/compiler.ts:112
 
-*lib/compiler.ts:112*
+_lib/compiler.ts:112_
 
 Combined vagueness check and compile for eval harness and smoke tests.
 
@@ -334,7 +323,7 @@ Combined vagueness check and compile for eval harness and smoke tests.
 
 ## Product constants:1
 
-*lib/constants.ts:1*
+_lib/constants.ts:1_
 
 Tier limits and billing amounts shared across entitlements and UI.
 
@@ -342,28 +331,25 @@ Tier limits and billing amounts shared across entitlements and UI.
 
 ## lib/constants.ts:3
 
-*lib/constants.ts:3*
+_lib/constants.ts:3_
 
 Maximum active (non-paused) watches on the free plan.
 
-
 ## lib/constants.ts:6
 
-*lib/constants.ts:6*
+_lib/constants.ts:6_
 
 Maximum active watches when Plus is active.
 
-
 ## lib/constants.ts:9
 
-*lib/constants.ts:9*
+_lib/constants.ts:9_
 
 Plus subscription price in US cents ($9.00/month).
 
-
 ## Neon Postgres database bootstrap:1
 
-*lib/db/index.ts:1*
+_lib/db/index.ts:1_
 
 Drizzle client over Neon's serverless HTTP driver, plus idempotent schema ensure.
 
@@ -371,7 +357,7 @@ Drizzle client over Neon's serverless HTTP driver, plus idempotent schema ensure
 
 ## lib/db/index.ts:26
 
-*lib/db/index.ts:26*
+_lib/db/index.ts:26_
 
 Create tables if missing (safe on every cron/API cold start).
 
@@ -379,7 +365,7 @@ Create tables if missing (safe on every cron/API cold start).
 
 ## Database schema (Drizzle Postgres / Neon):1
 
-*lib/db/schema.ts:1*
+_lib/db/schema.ts:1_
 
 Table definitions for auth, billing, watches, checks, and evidence.
 
@@ -387,21 +373,19 @@ Table definitions for auth, billing, watches, checks, and evidence.
 
 ## lib/db/schema.ts:15
 
-*lib/db/schema.ts:15*
+_lib/db/schema.ts:15_
 
 NextAuth user row extended with plan and Stripe/Helio billing fields.
 
-
 ## watches:125
 
-*lib/db/schema.ts:125*
+_lib/db/schema.ts:125_
 
 User-created event watches with embedded compiled WatchSpec JSON.
 
-
 ## Notification decision layer:1
 
-*lib/decide.ts:1*
+_lib/decide.ts:1_
 
 Aggregates per-source detection verdicts and decides whether to notify the user.
 
@@ -410,7 +394,7 @@ Aggregates per-source detection verdicts and decides whether to notify the user.
 
 ## lib/decide.ts:37
 
-*lib/decide.ts:37*
+_lib/decide.ts:37_
 
 Decide whether evidence from a check warrants user notification.
 
@@ -422,7 +406,7 @@ Decide whether evidence from a check warrants user notification.
 
 ## Event detector:1
 
-*lib/detector.ts:1*
+_lib/detector.ts:1_
 
 Judges whether a single web source shows the watched event actually occurred.
 
@@ -431,7 +415,7 @@ Judges whether a single web source shows the watched event actually occurred.
 
 ## lib/detector.ts:26
 
-*lib/detector.ts:26*
+_lib/detector.ts:26_
 
 Run detection for one retrieval candidate against a WatchSpec.
 
@@ -442,7 +426,7 @@ Run detection for one retrieval candidate against a WatchSpec.
 
 ## Retrieval filters:1
 
-*lib/filter.ts:1*
+_lib/filter.ts:1_
 
 Drops candidates that are too old, already evaluated, or on a denylist before detection.
 
@@ -451,7 +435,7 @@ Drops candidates that are too old, already evaluated, or on a denylist before de
 
 ## lib/filter.ts:4
 
-*lib/filter.ts:4*
+_lib/filter.ts:4_
 
 Canonicalize a URL for deduplication across check runs.
 
@@ -461,7 +445,7 @@ Canonicalize a URL for deduplication across check runs.
 
 ## lib/filter.ts:18
 
-*lib/filter.ts:18*
+_lib/filter.ts:18_
 
 True when the source was published on or after the watch was created.
 
@@ -471,7 +455,7 @@ True when the source was published on or after the watch was created.
 
 ## lib/filter.ts:26
 
-*lib/filter.ts:26*
+_lib/filter.ts:26_
 
 Apply post-watch, dedup, and domain deny filters to a candidate list.
 
@@ -484,7 +468,7 @@ Apply post-watch, dedup, and domain deny filters to a candidate list.
 
 ## Hugging Face inference client:1
 
-*lib/inference.ts:1*
+_lib/inference.ts:1_
 
 Shared LLM completion layer for compiler, detector, and eval harness.
 
@@ -493,7 +477,7 @@ Shared LLM completion layer for compiler, detector, and eval harness.
 
 ## lib/inference.ts:29
 
-*lib/inference.ts:29*
+_lib/inference.ts:29_
 
 Resolve the active model id from env or default.
 
@@ -501,7 +485,7 @@ Resolve the active model id from env or default.
 
 ## lib/inference.ts:34
 
-*lib/inference.ts:34*
+_lib/inference.ts:34_
 
 Run a chat completion and parse the assistant message as JSON.
 
@@ -513,7 +497,7 @@ Run a chat completion and parse the assistant message as JSON.
 
 ## lib/inference.ts:55
 
-*lib/inference.ts:55*
+_lib/inference.ts:55_
 
 Extract JSON from model output, including fenced ```json blocks.
 
@@ -523,7 +507,7 @@ Extract JSON from model output, including fenced ```json blocks.
 
 ## Live retrieval orchestrator:1
 
-*lib/retrieval/index.ts:1*
+_lib/retrieval/index.ts:1_
 
 Runs Tavily search and extract for a WatchSpec's search_queries and builds RetrievalCandidates.
 
@@ -533,7 +517,7 @@ Runs Tavily search and extract for a WatchSpec's search_queries and builds Retri
 
 ## lib/retrieval/index.ts:78
 
-*lib/retrieval/index.ts:78*
+_lib/retrieval/index.ts:78_
 
 Retrieve web candidates for a watch using its compiled search_queries.
 
@@ -544,7 +528,7 @@ Retrieve web candidates for a watch using its compiled search_queries.
 
 ## Tavily API client:1
 
-*lib/retrieval/tavily.ts:1*
+_lib/retrieval/tavily.ts:1_
 
 Thin fetch wrapper for Tavily /search and /extract endpoints.
 
@@ -553,7 +537,7 @@ Thin fetch wrapper for Tavily /search and /extract endpoints.
 
 ## lib/retrieval/tavily.ts:80
 
-*lib/retrieval/tavily.ts:80*
+_lib/retrieval/tavily.ts:80_
 
 Run a Tavily web search for one query string.
 
@@ -562,7 +546,7 @@ Run a Tavily web search for one query string.
 
 ## lib/retrieval/tavily.ts:100
 
-*lib/retrieval/tavily.ts:100*
+_lib/retrieval/tavily.ts:100_
 
 Fetch full or chunked page content for a list of URLs.
 
@@ -571,7 +555,7 @@ Fetch full or chunked page content for a list of URLs.
 
 ## Watch persistence:1
 
-*lib/watches.ts:1*
+_lib/watches.ts:1_
 
 CRUD and quota enforcement for user watches stored in Postgres via Drizzle.
 
@@ -579,7 +563,7 @@ CRUD and quota enforcement for user watches stored in Postgres via Drizzle.
 
 ## lib/watches.ts:32
 
-*lib/watches.ts:32*
+_lib/watches.ts:32_
 
 Count non-paused watches for quota checks.
 
@@ -587,21 +571,19 @@ Count non-paused watches for quota checks.
 
 ## lib/watches.ts:41
 
-*lib/watches.ts:41*
+_lib/watches.ts:41_
 
 True when user is under their plan's active watch limit.
 
-
 ## lib/watches.ts:46
 
-*lib/watches.ts:46*
+_lib/watches.ts:46_
 
 True when resuming a paused watch would not exceed the limit.
 
-
 ## lib/watches.ts:51
 
-*lib/watches.ts:51*
+_lib/watches.ts:51_
 
 List all watches for a user, newest first.
 
@@ -609,7 +591,7 @@ List all watches for a user, newest first.
 
 ## lib/watches.ts:61
 
-*lib/watches.ts:61*
+_lib/watches.ts:61_
 
 Fetch one watch scoped to owner.
 
@@ -617,7 +599,7 @@ Fetch one watch scoped to owner.
 
 ## lib/watches.ts:75
 
-*lib/watches.ts:75*
+_lib/watches.ts:75_
 
 Persist a compiled WatchSpec as a new watch.
 
@@ -628,7 +610,7 @@ Persist a compiled WatchSpec as a new watch.
 
 ## lib/watches.ts:108
 
-*lib/watches.ts:108*
+_lib/watches.ts:108_
 
 Update watch lifecycle status (pause, resume, or mark triggered).
 
@@ -637,7 +619,7 @@ Update watch lifecycle status (pause, resume, or mark triggered).
 
 ## lib/watches.ts:142
 
-*lib/watches.ts:142*
+_lib/watches.ts:142_
 
 Permanently delete a watch for the owning user.
 
@@ -645,7 +627,7 @@ Permanently delete a watch for the owning user.
 
 ## lib/watches.ts:154
 
-*lib/watches.ts:154*
+_lib/watches.ts:154_
 
 All watches in `watching` status — used by the cron check runner.
 
@@ -653,7 +635,7 @@ All watches in `watching` status — used by the cron check runner.
 
 ## Auth middleware:1
 
-*middleware.ts:1*
+_middleware.ts:1_
 
 Redirects unauthenticated users to /login for protected app routes.
 
@@ -661,7 +643,7 @@ Redirects unauthenticated users to /login for protected app routes.
 
 ## NatSpec comment extractor:1
 
-*scripts/extract-natspec.ts:1*
+_scripts/extract-natspec.ts:1_
 
 Walks TypeScript sources and emits userdoc + devdoc JSON from /** ... *\/ blocks.
 
@@ -669,7 +651,7 @@ Walks TypeScript sources and emits userdoc + devdoc JSON from /** ... *\/ blocks
 
 ## PhraseAlert core types:1
 
-*types/index.ts:1*
+_types/index.ts:1_
 
 Shared Zod schemas and TypeScript types for watches, detection, retrieval, and eval fixtures.
 
@@ -678,21 +660,19 @@ Shared Zod schemas and TypeScript types for watches, detection, retrieval, and e
 
 ## types/index.ts:4
 
-*types/index.ts:4*
+_types/index.ts:4_
 
 Lifecycle state of a saved watch. @dev `paused` watches are excluded from cron checks and active-watch limits.
 
-
 ## types/index.ts:8
 
-*types/index.ts:8*
+_types/index.ts:8_
 
 How often a watch is scheduled for retrieval and judgment. @dev Hourly is reserved for future tiers.
 
-
 ## WatchSpec:12
 
-*types/index.ts:12*
+_types/index.ts:12_
 
 Structured specification produced when a user's sentence is compiled into a monitorable watch.
 
@@ -701,7 +681,7 @@ Structured specification produced when a user's sentence is compiled into a moni
 
 ## VaguenessResult:29
 
-*types/index.ts:29*
+_types/index.ts:29_
 
 Outcome of the vagueness gate before a watch can be saved.
 
@@ -709,7 +689,7 @@ Outcome of the vagueness gate before a watch can be saved.
 
 ## types/index.ts:37
 
-*types/index.ts:37*
+_types/index.ts:37_
 
 Per-source judgment on whether credible evidence shows the watched event occurred.
 
@@ -717,14 +697,13 @@ Per-source judgment on whether credible evidence shows the watched event occurre
 
 ## types/index.ts:45
 
-*types/index.ts:45*
+_types/index.ts:45_
 
 LLM output for a single retrieval candidate against a WatchSpec.
 
-
 ## RetrievalCandidate:54
 
-*types/index.ts:54*
+_types/index.ts:54_
 
 A web page (or fixture) candidate passed to the detector after retrieval and filtering.
 
@@ -732,14 +711,12 @@ A web page (or fixture) candidate passed to the detector after retrieval and fil
 
 ## EvalEvent:75
 
-*types/index.ts:75*
+_types/index.ts:75_
 
 A historical scenario used by the eval harness to score detection quality without live retrieval.
 
-
 ## LiveRetrievalCase:131
 
-*types/index.ts:131*
+_types/index.ts:131_
 
 Integration eval that hits Tavily with real queries and exercises the full check pipeline.
-
