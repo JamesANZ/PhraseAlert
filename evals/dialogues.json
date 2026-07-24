@@ -96,6 +96,29 @@
           "expect_compile": true
         }
       ]
+    },
+    {
+      "id": "missing-locale-assumption-reject",
+      "description": "Sentence that requires assuming a locale/operator stays VAGUE; fully scoped sentence becomes CLEAR",
+      "steps": [
+        {
+          "input": "Notify me when the winning Lotto and Powerball numbers for Saturday, 25 July 2026 are published.",
+          "expect_classification": "VAGUE",
+          "expect_suggestion_keywords": [
+            "australia",
+            "us",
+            "uk",
+            "powerball",
+            "lotto",
+            "national"
+          ]
+        },
+        {
+          "input": "Notify me when Australian Powerball and Saturday Lotto winning numbers for Saturday, 25 July 2026 are published by The Lott",
+          "expect_classification": "CLEAR",
+          "expect_compile": true
+        }
+      ]
     }
   ]
 }

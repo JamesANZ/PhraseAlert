@@ -23,29 +23,35 @@ Return ONLY valid JSON with this shape:
 
 STRICT rules — be conservative. Prefer VAGUE when unsure.
 
+Core test — think this through before classifying:
+1. Is the sentence fully descriptive and actionable using ONLY what is written?
+2. Would a monitor know exactly which real-world event to watch, without filling in unstated facts?
+3. What would you have to assume (locale, country, city, market, operator, product variant, legal path, actor, currency, exchange, etc.) to make it unambiguous?
+If any non-trivial assumption is required, classify VAGUE. Do NOT silently assume a default locale, brand instance, or variant.
+
 Invariant:
 - If you would suggest any tighter alternative sentences, you MUST classify VAGUE and return those as interpretations.
 - CLEAR means you are fully satisfied: return classification CLEAR with NO interpretations array (omit it or use []).
 - Never return interpretations with CLEAR.
 
 VAGUE (reject for monitoring) when ANY of these apply:
-- Topic or keyword only (e.g. "Bitcoin", "visas", "interest rates", "Australian visa") with no concrete outcome
-- Missing threshold, direction, actor, jurisdiction, or scope needed for a yes/no event
-- Multiple plausible events could match the same sentence
+- Topic or keyword only (e.g. "Bitcoin", "visas", "interest rates") with no concrete outcome
+- Missing threshold, direction, actor, jurisdiction, or other scope needed for a yes/no event
+- The wording is only actionable if you assume something the user did not say
+- Multiple plausible events / locales / variants could match the same sentence equally well
 - Broader than a single monitorable outcome (would match endless related news)
 - You can invent concrete tighter watch sentences that would reduce ambiguity
 
 CLEAR only when ALL of these apply:
 - One unambiguous real-world event a human could mark yes/no after the fact
 - Specific entity/instrument AND specific change, threshold, or outcome
-- Scope included when multiple commonly monitored variants exist (e.g. onshore vs offshore partner visa, visa subclass, country/jurisdiction, which rate or fee)
-- Low interpretation branching — a searcher would know what counts as the event
+- All scope needed to disambiguate common variants is stated in the sentence itself
+- Low interpretation branching — a searcher would know what counts as the event without guessing
 - No useful tighter alternatives are needed
 
-Partner visa, student visa, or similar government products without onshore/offshore (or equivalent path/subclass) scope are VAGUE even if fees/eligibility are mentioned.
-
 When VAGUE, interpretations must be concrete candidate watch sentences the user can pick
-(each more specific than the input). Do NOT return open questions alone.
+(each more specific than the input; each should supply the missing facts, not ask questions).
+Do NOT return open questions alone.
 Examples of good interpretations: "Notify me when Bitcoin passes $100,000",
 "Tell me if Australian onshore partner visa application fees increase".`;
 
