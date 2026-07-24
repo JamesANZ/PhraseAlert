@@ -25,7 +25,7 @@ PhraseAlert watches for your phrase coming true, not every mention of the topic.
 | Surfaces old articles that happen to match      | Timestamped at creation; only post-watch information counts      |
 | No reasoning trail                              | Stores what was found, what was evaluated, and why               |
 
-A watch fires when the event happened, not when a page mentions related words. Each watch is also timestamped at creation, so only information published after that point can trigger it.
+A watch fires when the event happened, not when a page mentions related words. Each watch is timestamped at creation. Only information with a confirmed event date on or after that point can trigger a notification.
 
 ## Who it's for
 
@@ -55,42 +55,54 @@ Three keyword alerts. One mattered. PhraseAlert sent that one.
 ## How it works
 
 1. **Describe it.** Write a specific future event in one sentence. Topic keywords alone (e.g. "Bitcoin") are rejected.
-2. **Clarify until clear.** If the sentence is vague, PhraseAlert suggests more specific watch sentences and will not save the watch until it is unambiguous.
+2. **Clarify until clear.** If the sentence is vague, PhraseAlert suggests more specific alert sentences and will not save until it is unambiguous.
 3. **Compile.** A model produces a structured watch spec: trigger conditions, non-triggers, search queries, authoritative domains.
-4. **Watch.** On a schedule, the system retrieves new web content, filters out pre-watch and irrelevant results, and evaluates each candidate.
-5. **Notify.** When credible evidence confirms the event occurred, you get an alert with the evidence trail.
+4. **Watch.** On a daily schedule (and on demand), the system retrieves new web content via Tavily, filters out pre-watch and irrelevant results, and evaluates each candidate.
+5. **Notify.** When credible evidence confirms the event occurred _after_ the alert was created, you get an email with a findings summary and source trail. The same findings appear on the alert detail page.
 
 ## This repository
 
-**Phase 1** (judgment layer):
+PhraseAlert is a Next.js App Router product with a judgment layer, live retrieval, email notifications, billing, and a dashboard.
 
-- Watch compiler (strict vagueness + structured watch spec generation)
-- Detection and decision pipeline
-- Backdated eval harness with historical fixtures + multi-turn dialogue smoke
+**Judgment layer**
+
+- Watch compiler (strict vagueness + structured watch spec)
+- Detection and decision pipeline (authoritative high-confidence _or_ two independent triggers)
+- Hard lock: notify only when TRIGGERED evidence has a parseable event date on/after watch creation
+- Backdated eval harness with historical fixtures, multi-turn dialogue smoke, and live Tavily retrieval
 - Hugging Face Inference Providers (default `meta-llama/Llama-3.3-70B-Instruct`)
 
-**Phase 2** (product shell, in progress):
+**Product**
 
-- Next.js App Router app with landing page
-- Watch creation flow with clarification step
-- Dashboard at `/watches`
-- Neon Postgres via Drizzle (works on Vercel)
-- API routes for create, confirm, pause, delete, check-now
-- Cron endpoint at `/api/checks/run` with Tavily live retrieval
+- Landing page with hero alert composer
+- Create flow with clarification at `/watches/new`
+- Dashboard at `/watches` (“My alerts”) with Active / Triggered filters, pause, resume, delete, and check-now
+- Alert detail / findings page at `/watches/[id]` (same content as the trigger email)
+- Google sign-in via NextAuth
+- Neon Postgres via Drizzle (Vercel-ready)
+- Daily cron checks at `GET|POST /api/checks/run` (08:00 UTC) with Tavily Search + Extract
+- HTML trigger emails via Resend to the Google signup address on `user.email`
 
-Watch email notifications send via Resend to the Google signup address on `user.email` when a check decides to notify.
+In the UI, saved items are called **alerts**. In code and APIs they are still **watches**.
 
 Auth uses NextAuth with Google sign-in only. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI for local development.
 
 ## Billing (Plus)
 
-Plus unlocks 25 active watches for $9/month. Users can:
+| Plan | Active alerts | Price    |
+| ---- | ------------- | -------- |
+| Free | 3             | $0       |
+| Plus | 25            | $9/month |
+
+Only alerts with status `watching` count toward the limit. Triggered and paused alerts do not.
+
+Users can:
 
 - **Subscribe** with a card (Stripe Checkout subscription)
 - **Pay one month** with a card (Stripe Checkout payment) or **crypto** (Helio / MoonPay Commerce)
 - **Top up** prepaid months before they expire (reminders at 7, 3, and 1 days)
 
-When prepaid Plus expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active watches are paused until at most 3 remain.
+When prepaid Plus expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active (`watching`) alerts are paused until at most 3 remain.
 
 ### Stripe setup
 
@@ -112,28 +124,32 @@ When prepaid Plus expires unpaid (or a Stripe subscription is canceled), the acc
 
 ### Expiry emails
 
-Set `RESEND_API_KEY` and `EMAIL_FROM`. Daily cron `POST /api/billing/run` (see `vercel.json`) sends reminders and applies downgrades. Protect with `CRON_SECRET`.
+Set `RESEND_API_KEY` and `EMAIL_FROM`. Daily cron `GET|POST /api/billing/run` (09:00 UTC; see `vercel.json`) sends reminders and applies downgrades. Protect with `CRON_SECRET`.
 
 ## App structure
 
 ```
 app/
   page.tsx                 Landing page
+  login/page.tsx           Google sign-in
   billing/page.tsx         Plan status + checkout
-  watches/page.tsx         Dashboard
+  watches/page.tsx         My alerts dashboard
   watches/new/page.tsx     Create + clarify flow
+  watches/[id]/page.tsx    Alert detail / findings
   api/watch/create/        Vagueness check
   api/watch/confirm/       Compile + persist watch
-  api/watch/[id]/          Get, pause, delete
+  api/watch/[id]/          Get, pause, resume, delete
+  api/watch/[id]/check/    Manual check-now
   api/billing/checkout/    Stripe / Helio checkout
   api/billing/portal/      Stripe Customer Portal
+  api/billing/status/      Plan + limit for session user
   api/billing/webhook/     Stripe + Helio webhooks
   api/billing/run/         Expiry reminders + downgrade
-  api/checks/run/          Scheduled Tavily checks
-  api/watch/[id]/check/    Manual check-now for a watch
-components/                UI components
-lib/                       Compiler, detector, db, watches, billing
-evals/                     Phase 1 eval harness
+  api/checks/run/          Scheduled Tavily checks (GET for Vercel Cron)
+components/                UI (HeroWatchBox, WatchCreator, WatchList, findings, billing)
+lib/                       Compiler, detector, decide, filter, findings, db, watches, billing, notifications
+docs/                      Generated NatSpec user/dev docs (`npm run docs:extract`)
+evals/                     Judgment-layer eval harness
 ```
 
 ## Getting started
@@ -144,12 +160,13 @@ Install dependencies:
 npm install
 ```
 
-Create a `.env` file:
+Create a `.env` file (see `.env.example`):
 
 ```bash
 HUGGINGFACE_API_KEY=hf_...
 AUTH_SECRET=generate-with-openssl-rand-base64-32
-DATABASE_URL=postgresql://...  # Neon connection string from Vercel/Neon dashboard
+DATABASE_URL=postgresql://...  # Neon connection string
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 For Google sign-in:
@@ -160,6 +177,14 @@ GOOGLE_CLIENT_SECRET=...
 ```
 
 Create OAuth credentials in Google Cloud Console and add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI.
+
+For live checks and emails:
+
+```bash
+TAVILY_API_KEY=tvly-...
+RESEND_API_KEY=re_...
+EMAIL_FROM="PhraseAlert <alerts@phrasealert.com>"
+```
 
 Run the app:
 
@@ -174,13 +199,22 @@ Optional:
 ```bash
 HF_MODEL=meta-llama/Llama-3.3-70B-Instruct
 CRON_SECRET=your-secret
+# DATABASE_URL_UNPOOLED=...  # direct Neon URL for migrations
 ```
 
-For Plus billing, copy Stripe / Helio / Resend keys from `.env.example`.
+For Plus billing, copy Stripe / Helio keys from `.env.example`.
+
+Database helpers:
+
+```bash
+npm run db:generate
+npm run db:migrate
+npm run db:push
+```
 
 ## Unit tests
 
-Deterministic Vitest coverage for timestamp filtering and notify decisions (no API keys):
+Deterministic Vitest coverage for filtering, notify decisions, findings, and compiler helpers (no API keys):
 
 ```bash
 npm test
@@ -240,16 +274,29 @@ Vague topic watches (e.g. `"Bitcoin"`) must stay `VAGUE` until a concrete outcom
 - False positive rate <= 5%
 - Fixture-level verdict accuracy >= 85%
 - Pre-watch distractors dropped 100%
+- Post-watch event-date lock: null / unparseable / pre-watch dates never notify
 - Dialogue smoke: keyword rejects + visa multi-turn + one-shot CLEAR
 - Live retrieval smoke: Tavily returns candidates for backdated watches; detector finds TRIGGERED evidence and `should_notify` on known past events (zero retrieval / silent detector miss / decide-without-notify all fail the suite)
 
 ## Retrieval
 
-Set `TAVILY_API_KEY` for live checks. Scheduled `POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. On notify, Resend emails the user’s Google signup address (`RESEND_API_KEY`, optional `EMAIL_FROM`).
+Set `TAVILY_API_KEY` for live checks. Scheduled `GET|POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. On notify, Resend emails HTML findings (`RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_APP_URL` for links).
 
 Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches (including US election 2024 with a 2023 watch timestamp). Brave and RSS providers are typed but not implemented.
 
+## Documentation
+
+NatSpec-style comments on routes and library modules are extracted to `docs/`:
+
+```bash
+npm run docs:extract
+```
+
+See `docs/natspec-userdoc.md` and `docs/natspec-devdoc.md`.
+
 ## Roadmap
 
-- **Phase 2:** email notifications for watches (done), Postgres for production
-- **Phase 3 (in progress):** Stripe + Helio billing (this repo), faster checks, SMS/push/webhooks, evidence trail UI
+- Faster / more frequent checks
+- SMS, push, and webhook delivery
+- Additional retrieval providers (Brave, RSS)
+- Richer findings history across multiple checks
