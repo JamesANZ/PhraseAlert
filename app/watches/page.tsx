@@ -35,7 +35,7 @@ export default async function WatchesPage() {
 
   return (
     <main className="page-shell page-shell-app">
-      <div className="app-page">
+      <div className="app-page app-page-wide">
         <header className="app-page-head">
           <h1>My alerts</h1>
           <p className="app-page-lede">
