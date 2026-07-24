@@ -178,6 +178,16 @@ CRON_SECRET=your-secret
 
 For Plus billing, copy Stripe / Helio / Resend keys from `.env.example`.
 
+## Unit tests
+
+Deterministic Vitest coverage for timestamp filtering and notify decisions (no API keys):
+
+```bash
+npm test
+```
+
+Same as `npm run test:unit`.
+
 ## Run evals
 
 Golden smoke (compiler + detector + dialogues + live Tavily retrieval; recommended gate):
@@ -210,7 +220,7 @@ Multi-turn vagueness dialogues only:
 npm run eval:dialogues
 ```
 
-Live Tavily retrieval only (requires `TAVILY_API_KEY`):
+Live past-event tracking (requires `TAVILY_API_KEY` + model key). Compiles watches with backdated `created_at` (e.g. Trump 2024 from 2023), searches Tavily, and fails loudly if news is missing or the detector silently never fires:
 
 ```bash
 npm run eval:retrieval
@@ -231,13 +241,13 @@ Vague topic watches (e.g. `"Bitcoin"`) must stay `VAGUE` until a concrete outcom
 - Fixture-level verdict accuracy >= 85%
 - Pre-watch distractors dropped 100%
 - Dialogue smoke: keyword rejects + visa multi-turn + one-shot CLEAR
-- Live retrieval smoke: Tavily returns candidates for backdated watches; detector finds TRIGGERED evidence on known past events
+- Live retrieval smoke: Tavily returns candidates for backdated watches; detector finds TRIGGERED evidence and `should_notify` on known past events (zero retrieval / silent detector miss / decide-without-notify all fail the suite)
 
 ## Retrieval
 
 Set `TAVILY_API_KEY` for live checks. Scheduled `POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. Email notify is not wired yet.
 
-Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches. Brave and RSS providers are typed but not implemented.
+Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches (including US election 2024 with a 2023 watch timestamp). Brave and RSS providers are typed but not implemented.
 
 ## Roadmap
 

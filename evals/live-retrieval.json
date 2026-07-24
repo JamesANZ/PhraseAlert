@@ -1,22 +1,37 @@
 {
   "cases": [
     {
+      "id": "live-us-election-2024-trump",
+      "description": "Live Tavily search for Trump winning 2024 election (watch backdated to 2023)",
+      "raw_input": "Notify me when Trump wins the 2024 US presidential election",
+      "clarified_statement": "Donald Trump is declared the winner of the 2024 United States presidential election",
+      "created_at": "2023-01-01T00:00:00-05:00",
+      "require_min_retrieved": 1,
+      "require_min_after_filter": 1,
+      "expect_any_triggered": true,
+      "max_candidates_to_judge": 6
+    },
+    {
       "id": "live-bitcoin-100k",
       "description": "Live Tavily search for Bitcoin crossing $100k (backdated watch)",
       "raw_input": "Notify me when Bitcoin passes $100,000",
+      "clarified_statement": "Bitcoin's USD market price has surpassed $100,000",
       "created_at": "2024-11-01T00:00:00+00:00",
       "require_min_retrieved": 1,
       "require_min_after_filter": 1,
-      "expect_any_triggered": true
+      "expect_any_triggered": true,
+      "max_candidates_to_judge": 6
     },
     {
       "id": "live-super-bowl-2024",
       "description": "Live Tavily search for Super Bowl LVIII winner (backdated watch)",
       "raw_input": "Tell me who wins Super Bowl LVIII",
+      "clarified_statement": "A winner of Super Bowl LVIII (2024) has been determined",
       "created_at": "2024-01-15T00:00:00-08:00",
       "require_min_retrieved": 1,
       "require_min_after_filter": 1,
-      "expect_any_triggered": true
+      "expect_any_triggered": true,
+      "max_candidates_to_judge": 6
     }
   ]
 }

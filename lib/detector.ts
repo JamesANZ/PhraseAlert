@@ -25,8 +25,11 @@ Return ONLY valid JSON:
 }
 
 TRIGGERED: credible evidence the event occurred after the watch was created.
-NOT_TRIGGERED: related coverage but the event has not happened, or it is speculation/recap/noise.
-AMBIGUOUS: plausible trigger but insufficient certainty from this source alone.`;
+NOT_TRIGGERED: related coverage but the event has not happened, or it is speculation/prediction/live dashboard noise without confirming the event.
+AMBIGUOUS: plausible trigger but insufficient certainty from this source alone.
+
+Live price/score pages that only show a current number without stating the watched event occurred are NOT_TRIGGERED.
+Factual news that the event already happened (even if the article is a recap) is TRIGGERED when it clearly affirms the outcome.`;
 
 /**
  * @notice Run detection for one retrieval candidate against a WatchSpec.

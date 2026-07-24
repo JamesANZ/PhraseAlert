@@ -94,6 +94,26 @@ function domainsMatchKeywords(
   return keywords.some((kw) => haystack.includes(kw.toLowerCase()));
 }
 
+/** Prefer authoritative domains when selecting which live candidates to judge. */
+function prioritizeForJudging<T extends { domain: string }>(
+  candidates: T[],
+  authoritativeDomains: string[],
+  limit: number,
+): T[] {
+  const auth = new Set(
+    authoritativeDomains.map((d) => d.toLowerCase().replace(/^www\./, "")),
+  );
+  const isAuth = (domain: string) => {
+    const normalized = domain.toLowerCase().replace(/^www\./, "");
+    return [...auth].some(
+      (a) => normalized === a || normalized.endsWith(`.${a}`),
+    );
+  };
+  const preferred = candidates.filter((c) => isAuth(c.domain));
+  const rest = candidates.filter((c) => !isAuth(c.domain));
+  return [...preferred, ...rest].slice(0, limit);
+}
+
 async function runCompilerEval(events: EvalEvent[]): Promise<boolean> {
   console.log("\n=== Compiler eval ===\n");
   let ok = 0;
@@ -378,10 +398,13 @@ async function runLiveRetrievalEval(
       );
 
       console.log(`  retrieved: ${retrieved.length} candidate(s)`);
-      if (retrieved.length < liveCase.require_min_retrieved) {
+      if (retrieved.length === 0) {
+        caseOk = false;
+        console.log("  ✗ silent miss: no candidates from Tavily");
+      } else if (retrieved.length < liveCase.require_min_retrieved) {
         caseOk = false;
         console.log(
-          `  ✗ need ≥${liveCase.require_min_retrieved} retrieved results`,
+          `  ✗ need ≥${liveCase.require_min_retrieved} retrieved results (got ${retrieved.length})`,
         );
       } else if (!tavilyOk || !shapedOk) {
         caseOk = false;
@@ -399,39 +422,60 @@ async function runLiveRetrievalEval(
       if (filtered.length < liveCase.require_min_after_filter) {
         caseOk = false;
         console.log(
-          `  ✗ need ≥${liveCase.require_min_after_filter} post-filter candidates`,
+          `  ✗ need ≥${liveCase.require_min_after_filter} post-filter candidates (got ${filtered.length})`,
         );
       } else {
         console.log("  ✓ filter kept post-watch candidates");
       }
 
-      if (liveCase.expect_any_triggered && filtered.length > 0) {
-        const toJudge = filtered.slice(0, liveCase.max_candidates_to_judge);
-        const evidence = [];
-        let anyTriggered = false;
-
-        for (const candidate of toJudge) {
-          const detection = await detectEvent(spec, candidate);
-          evidence.push({ candidate, detection });
-          const mark = detection.verdict === "TRIGGERED" ? "✓" : "·";
-          console.log(
-            `  ${mark} ${detection.verdict} (${detection.confidence.toFixed(2)}) — ${candidate.title.slice(0, 55)}`,
-          );
-          if (detection.verdict === "TRIGGERED") anyTriggered = true;
-        }
-
-        const decision = decideFromEvidence(spec, evidence);
-        console.log(
-          `  decision: notify=${decision.should_notify} top=${decision.top_verdict}`,
-        );
-
-        if (!anyTriggered) {
+      if (liveCase.expect_any_triggered) {
+        if (filtered.length === 0) {
           caseOk = false;
           console.log(
-            "  ✗ expected at least one TRIGGERED verdict from live sources",
+            "  ✗ silent miss: cannot detect event — no post-filter candidates",
           );
         } else {
-          console.log("  ✓ live detection found TRIGGERED evidence");
+          const toJudge = prioritizeForJudging(
+            filtered,
+            spec.authoritative_domains,
+            liveCase.max_candidates_to_judge,
+          );
+          console.log(
+            `  judging ${toJudge.length} candidate(s) (auth domains first)`,
+          );
+          const evidence = [];
+          let anyTriggered = false;
+
+          for (const candidate of toJudge) {
+            const detection = await detectEvent(spec, candidate);
+            evidence.push({ candidate, detection });
+            const mark = detection.verdict === "TRIGGERED" ? "✓" : "·";
+            console.log(
+              `  ${mark} ${detection.verdict} (${detection.confidence.toFixed(2)}) — ${candidate.title.slice(0, 55)}`,
+            );
+            if (detection.verdict === "TRIGGERED") anyTriggered = true;
+          }
+
+          const decision = decideFromEvidence(spec, evidence);
+          console.log(
+            `  decision: notify=${decision.should_notify} top=${decision.top_verdict}`,
+          );
+
+          if (!anyTriggered) {
+            caseOk = false;
+            console.log(
+              "  ✗ silent miss: news retrieved but detector never fired",
+            );
+          } else if (!decision.should_notify) {
+            caseOk = false;
+            console.log(
+              "  ✗ silent miss: TRIGGERED evidence found but decide did not notify (auth/corroboration failed)",
+            );
+          } else {
+            console.log(
+              "  ✓ live detection found TRIGGERED evidence and should_notify",
+            );
+          }
         }
       }
     } catch (err) {

@@ -81,6 +81,14 @@ function truncateSnippet(text: string, max = 2500): string {
   return `${cleaned.slice(0, max - 1)}…`;
 }
 
+/** Live tickers/dashboards rarely confirm a discrete watched event. */
+function looksLikeLiveDashboard(title: string, url: string): boolean {
+  const hay = `${title} ${url}`.toLowerCase();
+  return /price today|live (?:price|chart|score|quotes?)|current (?:price|value)|btc to usd live|live bitcoin chart/.test(
+    hay,
+  );
+}
+
 /**
  * @notice Retrieve web candidates for a watch using its compiled search_queries.
  * @dev Merges search results, optionally enriches top URLs via extract, returns RetrievalCandidate[].
@@ -113,13 +121,21 @@ export async function retrieveCandidates(
     for (const result of batch) {
       if (!result?.url) continue;
       const key = normalizeUrl(result.url);
-      if (!byUrl.has(key)) {
+      const existing = byUrl.get(key);
+      // Keep the higher-scoring duplicate when the same URL appears across queries.
+      if (!existing || (result.score ?? 0) > (existing.score ?? 0)) {
         byUrl.set(key, result);
       }
     }
   }
 
-  const uniqueResults = [...byUrl.values()];
+  // Rank by Tavily relevance so extract + judge see event pages, not live dashboards first.
+  const uniqueResults = [...byUrl.values()].sort((a, b) => {
+    const dashA = looksLikeLiveDashboard(a.title || "", a.url) ? 1 : 0;
+    const dashB = looksLikeLiveDashboard(b.title || "", b.url) ? 1 : 0;
+    if (dashA !== dashB) return dashA - dashB;
+    return (b.score ?? 0) - (a.score ?? 0);
+  });
   const extractUrls = uniqueResults
     .slice(0, MAX_EXTRACT_URLS)
     .map((r) => r.url);

@@ -17,6 +17,8 @@
     "eval:retrieval": "tsx evals/run.ts --retrieval-only",
     "eval:smoke": "tsx evals/run.ts --smoke",
     "docs:extract": "tsx scripts/extract-natspec.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -41,6 +43,7 @@
     "@types/react-dom": "^19.0.4",
     "drizzle-kit": "^0.30.5",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.10"
   }
 }

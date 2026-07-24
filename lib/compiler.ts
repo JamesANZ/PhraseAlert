@@ -54,9 +54,12 @@ Return ONLY valid JSON matching this schema:
   "search_queries": ["..."],
   "authoritative_domains": ["..."]
 }
-non_triggers is critical: list coverage that should NOT fire the watch (guides, speculation, unrelated events).
-search_queries should be 2-4 concrete web search phrases.
-authoritative_domains should be official or primary sources where applicable.`;
+non_triggers is critical: list coverage that should NOT fire the watch (guides, speculation, predictions, unrelated events, live dashboards without the event).
+Do NOT list factual reporting that the watched event occurred (including historical news of that occurrence) as a non-trigger.
+search_queries should be 2-4 concrete web search phrases that find evidence the event OCCURRED
+(results, winner declared, threshold crossed, official confirmation). Prefer event/result phrasing with year or outcome words.
+NEVER use live-dashboard queries such as "price today", "current value", "live chart", or "live score".
+authoritative_domains should be official or primary news/data sources where applicable.`;
 
 /** @dev Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code). */
 const CompiledSpecBodySchema = WatchSpecSchema.omit({
