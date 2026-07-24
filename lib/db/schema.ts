@@ -158,6 +158,10 @@ export const checks = pgTable("checks", {
   modelUsed: text("model_used"),
   escalated: boolean("escalated").notNull().default(false),
   costCents: integer("cost_cents").notNull().default(0),
+  /** @dev Human-readable decide-layer reasoning for this check. */
+  decideReasoning: text("decide_reasoning"),
+  /** @dev Model-written user-facing summary stored when a watch notifies. */
+  findingsSummary: text("findings_summary"),
 });
 
 /** @dev Per-URL judgment stored for a check (audit trail for notifications). */
@@ -168,9 +172,12 @@ export const evidence = pgTable("evidence", {
     .references(() => checks.id, { onDelete: "cascade" }),
   url: text("url").notNull(),
   domain: text("domain").notNull(),
+  title: text("title"),
   publishedAt: text("published_at"),
   snippet: text("snippet"),
   verdict: text("verdict"),
+  /** @dev Detector confidence stored as 0–100 integer. */
+  confidence: integer("confidence"),
   reasoning: text("reasoning"),
 });
 

@@ -992,6 +992,10 @@ textarea:focus-visible {
   max-width: 560px;
 }
 
+.app-page-wide {
+  max-width: 640px;
+}
+
 .app-page-head {
   margin-bottom: 22px;
 }
@@ -1091,6 +1095,16 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.025);
 }
 
+.alert-row-main {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.alert-row-main:hover .alert-row-title {
+  color: var(--brass);
+}
+
 .alert-row-top {
   display: flex;
   align-items: flex-start;
@@ -1105,6 +1119,7 @@ textarea:focus-visible {
   color: var(--text);
   min-width: 0;
   letter-spacing: -0.01em;
+  transition: color 0.15s ease;
 }
 
 .alert-row-desc {
@@ -1117,15 +1132,16 @@ textarea:focus-visible {
 .alert-row-foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: 12px;
 }
 
 .alert-row-date {
+  display: block;
+  margin-top: 10px;
   font-size: 0.78rem;
   color: rgba(168, 162, 154, 0.85);
-  white-space: nowrap;
   font-family:
     var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
 }
@@ -1176,6 +1192,157 @@ textarea:focus-visible {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.findings-nav {
+  margin-bottom: 14px;
+}
+
+.findings-back {
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.findings-back:hover {
+  color: var(--text);
+}
+
+.findings-head-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.findings-watch-title {
+  font-size: 1.35rem !important;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.35 !important;
+}
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.findings-section {
+  border: 1px solid rgba(168, 162, 154, 0.16);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 18px 18px 16px;
+}
+
+.findings-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(168, 162, 154, 0.9);
+}
+
+.findings-summary,
+.findings-body {
+  margin: 10px 0 0;
+  color: var(--text);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.findings-meta {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: rgba(168, 162, 154, 0.85);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
+}
+
+.findings-sources {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.findings-source {
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.findings-source:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.findings-source-title {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.findings-source-title:hover {
+  color: var(--brass);
+}
+
+.findings-source-meta {
+  margin: 4px 0 0;
+  font-size: 0.76rem;
+  color: rgba(168, 162, 154, 0.85);
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
+}
+
+.findings-source-snippet {
+  margin: 8px 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.findings-source-reasoning {
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.findings-source-reasoning-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brass);
+}
+
+.findings-empty {
+  border: 1px solid rgba(168, 162, 154, 0.16);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 28px 22px;
+}
+
+.findings-empty-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 560;
+}
+
+.findings-empty p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
 }
 
 .empty-state {
@@ -1375,17 +1542,17 @@ textarea:focus-visible {
   }
 
   .alert-row-foot {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    justify-content: stretch;
   }
 
   .alert-row-actions {
     width: 100%;
   }
 
-  .alert-row-actions .btn {
+  .alert-row-actions .btn,
+  .alert-row-actions a.btn {
     flex: 1;
+    text-align: center;
   }
 }
 

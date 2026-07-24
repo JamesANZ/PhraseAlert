@@ -30,6 +30,7 @@ export default async function WatchesPage() {
     clarifiedStatement: w.spec.clarified_statement,
     status: w.status,
     createdAt: w.createdAt,
+    triggeredAt: w.triggeredAt,
   }));
 
   return (

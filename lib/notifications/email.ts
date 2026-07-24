@@ -5,18 +5,7 @@
  */
 import { Resend } from "resend";
 import { getAppUrl } from "@/lib/billing/stripe";
-
-export interface WatchTriggeredEmailPayload {
-  watchId: string;
-  rawInput: string;
-  clarified: string;
-  reasoning: string;
-  evidence: Array<{
-    url: string;
-    domain: string;
-    snippet: string;
-  }>;
-}
+import { formatFindingsEmailText, type WatchFindings } from "@/lib/findings";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -31,11 +20,11 @@ function fromAddress(): string {
 /**
  * @notice Email the user that their watch found confirming evidence.
  * @param email Destination address (Google signup email).
- * @param payload Watch phrase, decision reasoning, and top evidence links.
+ * @param findings Shared findings payload (same content as the dashboard detail page).
  */
 export async function sendWatchTriggeredEmail(
   email: string,
-  payload: WatchTriggeredEmailPayload,
+  findings: WatchFindings,
 ): Promise<void> {
   const resend = getResend();
   if (!resend) {
@@ -43,35 +32,12 @@ export async function sendWatchTriggeredEmail(
     return;
   }
 
-  const watchesUrl = `${getAppUrl()}/watches`;
-  const evidenceLines =
-    payload.evidence.length === 0
-      ? ["(no evidence links)"]
-      : payload.evidence
-          .slice(0, 5)
-          .flatMap((e, i) =>
-            [
-              `${i + 1}. ${e.domain}`,
-              `   ${e.url}`,
-              e.snippet ? `   ${e.snippet.slice(0, 180)}` : "",
-            ].filter(Boolean),
-          );
+  const detailUrl = `${getAppUrl()}/watches/${findings.watchId}`;
 
   await resend.emails.send({
     from: fromAddress(),
     to: email,
-    subject: `Alert triggered: ${payload.rawInput.slice(0, 80)}`,
-    text: [
-      "PhraseAlert found evidence that matches your watch.",
-      "",
-      `Watch: ${payload.rawInput}`,
-      ...(payload.clarified ? [`Clarified: ${payload.clarified}`, ""] : [""]),
-      `Why: ${payload.reasoning}`,
-      "",
-      "Evidence:",
-      ...evidenceLines,
-      "",
-      `View your watches: ${watchesUrl}`,
-    ].join("\n"),
+    subject: `Alert triggered: ${findings.rawInput.slice(0, 80)}`,
+    text: formatFindingsEmailText(findings, detailUrl),
   });
 }

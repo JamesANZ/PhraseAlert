@@ -109,7 +109,9 @@ async function ensureSchema(): Promise<void> {
         confidence INTEGER,
         model_used TEXT,
         escalated BOOLEAN NOT NULL DEFAULT FALSE,
-        cost_cents INTEGER NOT NULL DEFAULT 0
+        cost_cents INTEGER NOT NULL DEFAULT 0,
+        decide_reasoning TEXT,
+        findings_summary TEXT
       )
     `,
     sql`
@@ -118,12 +120,18 @@ async function ensureSchema(): Promise<void> {
         check_id TEXT NOT NULL REFERENCES checks(id) ON DELETE CASCADE,
         url TEXT NOT NULL,
         domain TEXT NOT NULL,
+        title TEXT,
         published_at TEXT,
         snippet TEXT,
         verdict TEXT,
+        confidence INTEGER,
         reasoning TEXT
       )
     `,
+    sql`ALTER TABLE checks ADD COLUMN IF NOT EXISTS decide_reasoning TEXT`,
+    sql`ALTER TABLE checks ADD COLUMN IF NOT EXISTS findings_summary TEXT`,
+    sql`ALTER TABLE evidence ADD COLUMN IF NOT EXISTS title TEXT`,
+    sql`ALTER TABLE evidence ADD COLUMN IF NOT EXISTS confidence INTEGER`,
     // Existing DBs may lack ON DELETE CASCADE; recreate FKs so watch deletes work.
     sql`
       DO $$ BEGIN

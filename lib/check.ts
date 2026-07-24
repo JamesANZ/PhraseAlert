@@ -9,6 +9,7 @@ import {
   createCheck,
   createEvidence,
   listEvidenceUrlsForWatch,
+  updateCheckFindingsSummary,
 } from "@/lib/checks";
 import {
   decideFromEvidence,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/decide";
 import { detectEvent } from "@/lib/detector";
 import { applyRetrievalFilters } from "@/lib/filter";
+import { buildFindingsForNotify } from "@/lib/findings";
 import { sendWatchTriggeredEmail } from "@/lib/notifications/email";
 import { retrieveCandidates } from "@/lib/retrieval";
 import { updateWatchStatus, type WatchRow } from "@/lib/watches";
@@ -81,6 +83,7 @@ export async function runCheckForWatch(
     confidence: decision.top_confidence,
     modelUsed,
     escalated: decision.needs_corroboration,
+    decideReasoning: decision.reasoning,
   });
 
   await createEvidence(
@@ -88,32 +91,30 @@ export async function runCheckForWatch(
     evidenceRecords.map((e) => ({
       url: e.candidate.url,
       domain: e.candidate.domain,
+      title: e.candidate.title,
       publishedAt: e.candidate.published_at,
       snippet: e.candidate.snippet.slice(0, 2000),
       verdict: e.detection.verdict,
+      confidence: e.detection.confidence,
       reasoning: e.detection.reasoning,
     })),
   );
 
   let triggered = false;
   if (decision.should_notify && watch.status === "watching") {
+    const findings = await buildFindingsForNotify({
+      watchId: watch.id,
+      checkId,
+      rawInput: watch.rawInput,
+      clarified: watch.spec.clarified_statement,
+      decision,
+    });
+    await updateCheckFindingsSummary(checkId, findings.summary);
+
     const user = await getUser(watch.userId);
     if (user?.email) {
       try {
-        const triggeredEvidence = decision.evidence
-          .filter((e) => e.detection.verdict === "TRIGGERED")
-          .map((e) => ({
-            url: e.candidate.url,
-            domain: e.candidate.domain,
-            snippet: e.candidate.snippet,
-          }));
-        await sendWatchTriggeredEmail(user.email, {
-          watchId: watch.id,
-          rawInput: watch.rawInput,
-          clarified: watch.spec.clarified_statement,
-          reasoning: decision.reasoning,
-          evidence: triggeredEvidence,
-        });
+        await sendWatchTriggeredEmail(user.email, findings);
       } catch (err) {
         console.error("[notify] failed to send watch email", {
           watchId: watch.id,

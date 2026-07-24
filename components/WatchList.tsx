@@ -2,7 +2,7 @@
 
 /**
  * @title WatchList
- * @notice Dashboard list of saved watches with pause, resume, delete, and check-now actions.
+ * @notice Dashboard list of saved watches with pause, resume, delete, and findings links.
  * @dev Client component; mutates via /api/watch/[id] PATCH and DELETE.
  */
 import Link from "next/link";
@@ -14,6 +14,7 @@ export interface WatchListItem {
   clarifiedStatement: string;
   status: "watching" | "triggered" | "paused";
   createdAt: string;
+  triggeredAt: string | null;
 }
 
 function formatDate(iso: string): string {
@@ -82,17 +83,22 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
     <div className="alert-panel watch-list">
       {watches.map((watch) => (
         <article key={watch.id} className="alert-row">
-          <div className="alert-row-top">
-            <p className="alert-row-title">&quot;{watch.rawInput}&quot;</p>
-            <span className={`watch-status ${watch.status}`}>
-              {statusLabel(watch.status)}
-            </span>
-          </div>
-          <p className="alert-row-desc">{watch.clarifiedStatement}</p>
-          <div className="alert-row-foot">
+          <Link href={`/watches/${watch.id}`} className="alert-row-main">
+            <div className="alert-row-top">
+              <p className="alert-row-title">&quot;{watch.rawInput}&quot;</p>
+              <span className={`watch-status ${watch.status}`}>
+                {statusLabel(watch.status)}
+              </span>
+            </div>
+            <p className="alert-row-desc">{watch.clarifiedStatement}</p>
             <span className="alert-row-date">
-              Since {formatDate(watch.createdAt)}
+              {watch.status === "triggered" && watch.triggeredAt
+                ? `Triggered ${formatDate(watch.triggeredAt)}`
+                : `Since ${formatDate(watch.createdAt)}`}
+              {watch.status === "triggered" ? " · View findings" : ""}
             </span>
+          </Link>
+          <div className="alert-row-foot">
             <div className="alert-row-actions">
               {watch.status === "paused" ? (
                 <button
@@ -110,7 +116,14 @@ export function WatchList({ watches }: { watches: WatchListItem[] }) {
                 >
                   Pause
                 </button>
-              ) : null}
+              ) : (
+                <Link
+                  className="btn btn-ghost btn-small"
+                  href={`/watches/${watch.id}`}
+                >
+                  Findings
+                </Link>
+              )}
               <button
                 className="btn btn-danger btn-small"
                 type="button"
