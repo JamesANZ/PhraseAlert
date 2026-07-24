@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import { MobileNav } from "@/components/MobileNav";
 
 export async function Nav() {
   const session = await auth();
+  const signedIn = Boolean(session?.user);
+
+  async function handleSignOut() {
+    "use server";
+    await signOut({ redirectTo: "/" });
+  }
 
   return (
     <header className="nav">
@@ -16,21 +23,15 @@ export async function Nav() {
             <a href="/#examples">Examples</a>
             <a href="/#how">How it works</a>
             <a href="/#pricing">Pricing</a>
-            {session?.user && <Link href="/watches">My alerts</Link>}
-            {session?.user && <Link href="/billing">Billing</Link>}
+            {signedIn && <Link href="/watches">My alerts</Link>}
+            {signedIn && <Link href="/billing">Billing</Link>}
           </nav>
-          {session?.user ? (
+          {signedIn ? (
             <div className="nav-actions">
               <Link className="btn btn-small btn-primary" href="/watches/new">
                 New alert
               </Link>
-              <form
-                className="nav-signout-form"
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
+              <form className="nav-signout-form" action={handleSignOut}>
                 <button className="btn btn-small btn-ghost" type="submit">
                   Sign out
                 </button>
@@ -41,6 +42,7 @@ export async function Nav() {
               Sign in
             </Link>
           )}
+          <MobileNav signedIn={signedIn} signOutAction={handleSignOut} />
         </div>
       </div>
     </header>

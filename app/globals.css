@@ -243,6 +243,10 @@ h2 em,
   display: contents;
 }
 
+.mobile-nav {
+  display: none;
+}
+
 /* ------------------------------------------------------------- buttons */
 
 .btn {
@@ -1872,6 +1876,85 @@ textarea:focus-visible {
 
   .nav-links {
     display: none;
+  }
+
+  .nav-end > .nav-actions,
+  .nav-end > .btn {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: block;
+  }
+
+  .mobile-nav-toggle {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-content: center;
+    gap: 5px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.025);
+    cursor: pointer;
+  }
+
+  .mobile-nav-toggle span {
+    display: block;
+    width: 17px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: var(--text);
+  }
+
+  .mobile-nav-panel {
+    position: fixed;
+    z-index: 60;
+    top: 70px;
+    left: 16px;
+    right: 16px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: rgba(12, 18, 33, 0.98);
+    box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(18px);
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+  }
+
+  .mobile-nav-links a {
+    padding: 11px 12px;
+    border-radius: 5px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .mobile-nav-links a:hover {
+    background: rgba(129, 151, 255, 0.1);
+    color: var(--brass-bright);
+  }
+
+  .mobile-nav-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 4px 4px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .mobile-nav-actions .btn,
+  .mobile-nav-actions form {
+    flex: 1;
+  }
+
+  .mobile-nav-actions .btn {
+    width: 100%;
   }
 
   .watch-input-row {
