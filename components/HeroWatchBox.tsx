@@ -116,12 +116,12 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
     <div className={`watch-box${focused ? " is-focused" : ""}`}>
       <div className="watch-box-top">
         <span className="status-dot" aria-hidden="true" />
-        <span className="watch-box-label">Your phrase</span>
+        <span className="watch-box-label">Your alert</span>
         <span className="watch-box-stamp">{stamp}</span>
       </div>
       <div className="watch-input-row">
         <label className="visually-hidden" htmlFor="watch-input">
-          Write the phrase you want to watch
+          Write what you want to get alerted on
         </label>
         <div className="watch-input-wrap">
           <input
@@ -142,7 +142,7 @@ export function HeroWatchBox({ initialInput = "" }: { initialInput?: string }) {
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSubmit();
             }}
-            aria-label="Write the phrase you want to watch"
+            aria-label="Write what you want to get alerted on"
           />
           <span
             className={`type-ghost${ghostHidden || value ? " hidden" : ""}`}

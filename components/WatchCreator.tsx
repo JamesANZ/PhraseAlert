@@ -285,8 +285,8 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
       <div className="page-header">
         <h1>Create an alert</h1>
         <p>
-          Write the phrase you want PhraseAlert to watch. One clear phrase is
-          enough. We&apos;ll ask you to clarify if it&apos;s too vague.
+          Write what you want to get alerted on in plain English. We&apos;ll ask
+          if it&apos;s unclear.
         </p>
       </div>
       {error && (

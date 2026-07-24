@@ -3,9 +3,7 @@ export function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <span className="footer-brand">PhraseAlert</span>
-        <span className="footer-muted">
-          Write a phrase. Get alerted when it&apos;s true.
-        </span>
+        <span className="footer-muted">Get alerted on anything.</span>
       </div>
     </footer>
   );

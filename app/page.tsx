@@ -8,9 +8,8 @@ import { RevealOnScroll } from "@/components/RevealOnScroll";
 
 const EXAMPLE_GROUPS = [
   {
-    label: "Everyday phrases",
-    description:
-      "Rates, sales, tours, company news. Anything you'd ask a friend to keep an eye on.",
+    label: "Everyday alerts",
+    description: "Rates, sales, tours, company news.",
     tone: "generic" as const,
     examples: [
       {
@@ -32,9 +31,8 @@ const EXAMPLE_GROUPS = [
     ],
   },
   {
-    label: "Narrow outcomes",
-    description:
-      "Visa fees, drug approvals, product launches. Precise events with a clear yes or no.",
+    label: "Specific events",
+    description: "Visa fees, drug approvals, product launches.",
     tone: "specific" as const,
     examples: [
       {
@@ -66,15 +64,11 @@ export default function HomePage() {
     <main id="top">
       <section className="hero">
         <p className="hero-brand">PhraseAlert</p>
-        <h1>
-          Write a phrase.
-          <br />
-          <em>Get alerted when it&apos;s true.</em>
-        </h1>
+        <h1>Get alerted on anything.</h1>
         <p className="hero-sub">
-          Turn any outcome into one clear phrase. PhraseAlert watches the web
-          and notifies you only when it actually happens, not every time the
-          topic gets mentioned.
+          Write what you want to know in plain English. PhraseAlert watches the
+          web and notifies you when it happens, not every time the topic is
+          mentioned.
         </p>
         <HeroWatchBox />
         <p className="hero-note">3 free alerts · No credit card</p>
@@ -82,11 +76,10 @@ export default function HomePage() {
 
       <RevealOnScroll>
         <section className="section" id="examples">
-          <p className="eyebrow">Example phrases</p>
-          <h2>If you can say it, you can watch it.</h2>
+          <p className="eyebrow">Examples</p>
+          <h2>What you can get alerted on</h2>
           <p className="section-sub">
-            One phrase is the whole setup. These are the kinds of alerts people
-            create.
+            One sentence is the whole setup. No keywords or filters.
           </p>
           <div className="example-groups">
             {EXAMPLE_GROUPS.map((group) => (
@@ -112,20 +105,19 @@ export default function HomePage() {
         </section>
 
         <section className="section" id="difference">
-          <p className="eyebrow">Not a keyword matcher</p>
+          <p className="eyebrow">The difference</p>
           <h2>
-            We watch for your phrase coming true,
+            You get notified when it happens,
             <br />
-            not every mention of the topic.
+            not every time the topic is mentioned.
           </h2>
           <p className="section-sub">
-            Keyword tools fire on guides, forum threads, and old news.
-            PhraseAlert waits for credible evidence that your phrase has become
-            true.
+            Keyword alerts fire on guides, forum threads, and old news.
+            PhraseAlert waits for evidence that the event actually occurred.
           </p>
           <div className="compare reveal">
             <p className="compare-watch">
-              Your phrase: &quot;{COMPARE_ALERT}&quot;
+              Your alert: &quot;{COMPARE_ALERT}&quot;
             </p>
             <div className="compare-cols">
               <div className="compare-col compare-col-keyword">
@@ -180,44 +172,42 @@ export default function HomePage() {
               </div>
             </div>
             <p className="compare-footnote">
-              Each phrase starts when you create it. Only new developments after
-              that can trigger a notification.
+              An alert only covers events after you create it.
             </p>
           </div>
         </section>
 
         <section className="section" id="how">
           <p className="eyebrow">How it works</p>
-          <h2>Write a phrase. We check. You get alerted.</h2>
+          <h2>Three steps</h2>
           <div className="steps">
             <div className="step reveal">
               <p className="step-num" aria-hidden="true">
                 01
               </p>
-              <p className="step-label">Write your phrase</p>
+              <p className="step-label">Write your alert</p>
               <p className="step-body">
-                Say the outcome the way you&apos;d tell a friend. One clear
-                phrase is enough. No keywords or rules to configure.
+                Describe what you want to know in plain English. One sentence is
+                enough.
               </p>
             </div>
             <div className="step reveal">
               <p className="step-num" aria-hidden="true">
                 02
               </p>
-              <p className="step-label">We keep checking</p>
+              <p className="step-label">We check the web</p>
               <p className="step-body">
-                PhraseAlert looks across the web for credible evidence that your
-                phrase has come true.
+                PhraseAlert looks for credible evidence that the event has
+                occurred.
               </p>
             </div>
             <div className="step reveal">
               <p className="step-num" aria-hidden="true">
                 03
               </p>
-              <p className="step-label">You get one clear alert</p>
+              <p className="step-label">You get notified</p>
               <p className="step-body">
-                When it happens, we let you know. Until then, silence. No noise,
-                no false alarms.
+                When it happens, we email you. Until then, nothing.
               </p>
             </div>
           </div>
@@ -225,7 +215,7 @@ export default function HomePage() {
 
         <section className="section" id="pricing">
           <p className="eyebrow">Pricing</p>
-          <h2>Start free. Watch more phrases when you need to.</h2>
+          <h2>Free to start. Plus if you need more alerts.</h2>
           <div className="pricing-grid">
             <div className="plan reveal">
               <h3 className="plan-name">Free</h3>
@@ -233,7 +223,7 @@ export default function HomePage() {
                 <span className="plan-amount">$0</span>
               </p>
               <ul className="plan-features">
-                <li>3 active phrase alerts</li>
+                <li>3 active alerts</li>
                 <li>Email notifications</li>
                 <li>No credit card required</li>
               </ul>
@@ -248,7 +238,7 @@ export default function HomePage() {
                 <span className="plan-period">/month</span>
               </p>
               <ul className="plan-features">
-                <li>25 active phrase alerts</li>
+                <li>25 active alerts</li>
                 <li>More frequent checks</li>
                 <li>Push, SMS, and webhook notifications</li>
                 <li>Alert history and evidence trail</li>
@@ -262,16 +252,12 @@ export default function HomePage() {
 
         <section className="section final-cta">
           <p className="hero-brand reveal">PhraseAlert</p>
-          <h2 className="reveal">
-            Waiting on something?
-            <br />
-            <em>Put it in a phrase.</em>
-          </h2>
+          <h2 className="reveal">Get alerted on anything.</h2>
           <Link
             className="btn btn-primary btn-large reveal"
             href="/watches/new"
           >
-            Create your first alert
+            Create an alert
           </Link>
           <p className="hero-note">3 free alerts · No credit card</p>
         </section>
