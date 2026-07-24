@@ -71,6 +71,20 @@ export default function HomePage() {
           mentioned.
         </p>
         <HeroWatchBox />
+        <div className="hero-signal" aria-hidden="true">
+          <svg viewBox="0 0 416 208" fill="none">
+            <path
+              d="M0 150.5C28 150.5 33.5 132.5 54 132.5C78 132.5 81 165 107 165C132.5 165 141.5 96 173 96C205 96 206.5 120 234 120C261 120 260 57 291 57C316.5 57 326.5 83.5 347.5 83.5C373 83.5 377 37 416 37"
+              className="hero-signal-line"
+            />
+            <path
+              d="M0 150.5C28 150.5 33.5 132.5 54 132.5C78 132.5 81 165 107 165C132.5 165 141.5 96 173 96C205 96 206.5 120 234 120C261 120 260 57 291 57C316.5 57 326.5 83.5 347.5 83.5C373 83.5 377 37 416 37V208H0V150.5Z"
+              className="hero-signal-fill"
+            />
+            <circle cx="291" cy="57" r="5" className="hero-signal-node" />
+            <circle cx="416" cy="37" r="5" className="hero-signal-node" />
+          </svg>
+        </div>
         <p className="hero-note">3 free alerts · No credit card</p>
       </section>
 
