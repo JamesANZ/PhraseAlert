@@ -11,62 +11,41 @@ export default function AppleIcon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#15181d",
+        background: "#070b16",
       }}
     >
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
+          width: 124,
+          height: 124,
+          borderRadius: 28,
+          background: "#111c33",
+          border: "3px solid #273858",
+          position: "relative",
         }}
       >
-        {/* handle */}
         <div
           style={{
-            width: 18,
-            height: 14,
-            border: "6px solid #d4ad5a",
-            borderBottom: "none",
-            borderRadius: "18px 18px 0 0",
-            marginBottom: -2,
+            width: 82,
+            height: 3,
+            borderRadius: 3,
+            background: "#8197ff",
+            transform: "rotate(-13deg)",
           }}
         />
-        {/* crown */}
         <div
           style={{
+            position: "absolute",
             width: 28,
-            height: 12,
-            background: "#d4ad5a",
-            borderRadius: 6,
-            marginBottom: -1,
+            height: 28,
+            borderRadius: 14,
+            background: "#8197ff",
+            boxShadow: "0 0 0 16px rgba(129, 151, 255, 0.18)",
           }}
         />
-        {/* body */}
-        <div
-          style={{
-            width: 88,
-            height: 72,
-            background: "#d4ad5a",
-            borderRadius: "8px 8px 44px 44px",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            paddingBottom: 10,
-          }}
-        >
-          {/* clapper */}
-          <div
-            style={{
-              width: 16,
-              height: 16,
-              borderRadius: 8,
-              background: "#6bc49a",
-              boxShadow: "0 0 0 6px rgba(107, 196, 154, 0.35)",
-              marginBottom: -18,
-            }}
-          />
-        </div>
       </div>
     </div>,
     { ...size },
