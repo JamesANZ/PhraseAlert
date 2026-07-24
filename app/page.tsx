@@ -61,12 +61,11 @@ export default function HomePage() {
   return (
     <main id="top">
       <section className="hero">
-        <p className="hero-brand">PhraseAlert</p>
+        <p className="hero-brand">Anything. The moment it happens.</p>
         <h1>Get alerted on anything.</h1>
         <p className="hero-sub">
-          Write what you want to know in plain English. PhraseAlert watches the
-          web and notifies you when it happens, not every time the topic is
-          mentioned.
+          Tell us what you want to know. We&apos;ll notify you if and when it
+          happens.
         </p>
         <HeroWatchBox />
         <div className="hero-signal" aria-hidden="true">
