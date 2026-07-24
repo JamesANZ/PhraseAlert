@@ -67,6 +67,28 @@ describe("isPublishedAfterWatch", () => {
       ),
     ).toBe(false);
   });
+
+  it("drops invalid or empty published_at", () => {
+    expect(
+      isPublishedAfterWatch(
+        candidate({
+          url: "https://example.com/undated",
+          published_at: "not-a-date",
+        }),
+        WATCH_CREATED_AT,
+      ),
+    ).toBe(false);
+
+    expect(
+      isPublishedAfterWatch(
+        candidate({
+          url: "https://example.com/empty",
+          published_at: "",
+        }),
+        WATCH_CREATED_AT,
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("applyRetrievalFilters", () => {
@@ -118,5 +140,19 @@ describe("applyRetrievalFilters", () => {
     );
     expect(filtered).toHaveLength(1);
     expect(filtered[0].domain).toBe("reuters.com");
+  });
+
+  it("drops undated candidates alongside pre-watch ones", () => {
+    const undated = candidate({
+      url: "https://example.com/no-date",
+      domain: "example.com",
+      published_at: "invalid",
+    });
+    const filtered = applyRetrievalFilters(
+      [preWatch, undated, postWatch],
+      WATCH_CREATED_AT,
+    );
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].domain).toBe("apnews.com");
   });
 });

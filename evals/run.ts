@@ -296,6 +296,18 @@ async function runDialogueEval(dialogues: EvalDialogue[]): Promise<boolean> {
         }
 
         if (
+          step.expect_classification === "CLEAR" &&
+          (vagueness.interpretations?.length ?? 0) > 0
+        ) {
+          dialogueOk = false;
+          console.log("FAIL (CLEAR must not include suggestions)");
+          console.log(
+            `      got: ${(vagueness.interpretations ?? []).join(" | ")}`,
+          );
+          continue;
+        }
+
+        if (
           step.expect_classification === "VAGUE" &&
           !suggestionsMatchKeywords(
             vagueness.interpretations,

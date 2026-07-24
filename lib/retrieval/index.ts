@@ -25,9 +25,12 @@ function domainFromUrl(url: string): string {
   }
 }
 
-/** @dev Normalize Tavily published_date to ISO; falls back to retrievedAt when missing or invalid. */
-function toIsoDate(value: string | null | undefined, fallback: string): string {
-  if (!value) return fallback;
+/**
+ * @dev Normalize Tavily published_date to ISO.
+ * @return ISO string, or null when missing/invalid (undated candidates are dropped).
+ */
+function toIsoDate(value: string | null | undefined): string | null {
+  if (!value) return null;
 
   const trimmed = value.trim();
   // YYYY-MM-DD
@@ -40,7 +43,7 @@ function toIsoDate(value: string | null | undefined, fallback: string): string {
     return parsed.toISOString();
   }
 
-  return fallback;
+  return null;
 }
 
 /** @dev YYYY-MM-DD slice of watch created_at for Tavily start_date filter. */
@@ -93,14 +96,14 @@ function looksLikeLiveDashboard(title: string, url: string): boolean {
  * @notice Retrieve web candidates for a watch using its compiled search_queries.
  * @dev Merges search results, optionally enriches top URLs via extract, returns RetrievalCandidate[].
  * @param spec WatchSpec with search_queries and created_at.
- * @param options.retrievedAt Fallback published_at when Tavily omits dates.
+ * @param options.retrievedAt Reserved for callers; undated hits are dropped (no now-fallback).
  * @return Deduplicated candidates ready for applyRetrievalFilters.
  */
 export async function retrieveCandidates(
   spec: WatchSpec,
   options: { retrievedAt?: string } = {},
 ): Promise<RetrievalCandidate[]> {
-  const retrievedAt = options.retrievedAt ?? new Date().toISOString();
+  void options.retrievedAt;
   const startDate = startDateFromCreatedAt(spec.created_at);
 
   const searchBatches = await mapPool(
@@ -158,20 +161,25 @@ export async function retrieveCandidates(
     }
   }
 
-  return uniqueResults.map((result) => {
+  const candidates: RetrievalCandidate[] = [];
+  for (const result of uniqueResults) {
+    const publishedAt = toIsoDate(result.published_date);
+    if (!publishedAt) continue;
+
     const key = normalizeUrl(result.url);
     const extracted = extractedByUrl.get(key);
     const snippet = truncateSnippet(
       extracted || result.content || result.title || "",
     );
 
-    return {
+    candidates.push({
       url: result.url,
       domain: domainFromUrl(result.url),
       title: result.title || result.url,
       snippet,
-      published_at: toIsoDate(result.published_date, retrievedAt),
+      published_at: publishedAt,
       retrieval_source: "tavily" as const,
-    };
-  });
+    });
+  }
+  return candidates;
 }

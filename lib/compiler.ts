@@ -24,17 +24,24 @@ Return ONLY valid JSON with this shape:
 
 STRICT rules — be conservative. Prefer VAGUE when unsure.
 
+Invariant:
+- If you would suggest any tighter alternative sentences, you MUST classify VAGUE and return those as interpretations.
+- CLEAR means you are fully satisfied: return classification CLEAR with NO interpretations array (omit it or use []).
+- Never return interpretations with CLEAR.
+
 VAGUE (reject for monitoring) when ANY of these apply:
 - Topic or keyword only (e.g. "Bitcoin", "visas", "interest rates", "Australian visa") with no concrete outcome
 - Missing threshold, direction, actor, jurisdiction, or scope needed for a yes/no event
 - Multiple plausible events could match the same sentence
 - Broader than a single monitorable outcome (would match endless related news)
+- You can invent concrete tighter watch sentences that would reduce ambiguity
 
 CLEAR only when ALL of these apply:
 - One unambiguous real-world event a human could mark yes/no after the fact
 - Specific entity/instrument AND specific change, threshold, or outcome
 - Scope included when multiple commonly monitored variants exist (e.g. onshore vs offshore partner visa, visa subclass, country/jurisdiction, which rate or fee)
 - Low interpretation branching — a searcher would know what counts as the event
+- No useful tighter alternatives are needed
 
 Partner visa, student visa, or similar government products without onshore/offshore (or equivalent path/subclass) scope are VAGUE even if fees/eligibility are mentioned.
 
@@ -54,12 +61,38 @@ Return ONLY valid JSON matching this schema:
   "search_queries": ["..."],
   "authoritative_domains": ["..."]
 }
-non_triggers is critical: list coverage that should NOT fire the watch (guides, speculation, predictions, unrelated events, live dashboards without the event).
-Do NOT list factual reporting that the watched event occurred (including historical news of that occurrence) as a non-trigger.
+non_triggers is critical: list coverage that should NOT fire the watch (guides, speculation, predictions, unrelated events, live dashboards without the event, and recaps or historical reporting that the event already occurred before the watch was created).
+Do NOT list factual post-watch reporting that the watched event newly occurred as a non-trigger.
 search_queries should be 2-4 concrete web search phrases that find evidence the event OCCURRED
 (results, winner declared, threshold crossed, official confirmation). Prefer event/result phrasing with year or outcome words.
 NEVER use live-dashboard queries such as "price today", "current value", "live chart", or "live score".
 authoritative_domains should be official or primary news/data sources where applicable.`;
+
+/**
+ * @notice Enforce: suggestions always mean VAGUE; CLEAR never carries interpretations.
+ * @dev Exported for unit tests; applied at the end of assessVagueness.
+ */
+export function enforceVaguenessInvariant(
+  result: VaguenessResult,
+): VaguenessResult {
+  const interpretations = (result.interpretations ?? [])
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  if (interpretations.length > 0) {
+    return {
+      ...result,
+      classification: "VAGUE",
+      interpretations,
+    };
+  }
+
+  return {
+    classification: result.classification,
+    reasoning: result.reasoning,
+  };
+}
 
 /** @dev Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code). */
 const CompiledSpecBodySchema = WatchSpecSchema.omit({
@@ -84,7 +117,7 @@ export async function assessVagueness(
     VAGUENESS_SYSTEM,
     `Assess this watch sentence:\n"${rawInput}"`,
   );
-  return VaguenessResultSchema.parse(parsed);
+  return enforceVaguenessInvariant(VaguenessResultSchema.parse(parsed));
 }
 
 /**

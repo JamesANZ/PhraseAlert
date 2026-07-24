@@ -26,8 +26,8 @@ export function normalizeUrl(url: string): string {
 }
 
 /**
- * @notice True when the source was published on or after the watch was created.
- * @dev Pre-watch articles (guides, old news) must not trigger alerts.
+ * @notice True when published_at is a usable timestamp on or after watch creation.
+ * @dev Pre-watch articles and undated/invalid dates must not trigger alerts.
  * @param candidate Retrieval candidate with published_at.
  * @param watchCreatedAt ISO datetime from watch creation.
  */
@@ -35,7 +35,12 @@ export function isPublishedAfterWatch(
   candidate: RetrievalCandidate,
   watchCreatedAt: string,
 ): boolean {
-  return new Date(candidate.published_at) >= new Date(watchCreatedAt);
+  const published = new Date(candidate.published_at);
+  const created = new Date(watchCreatedAt);
+  if (Number.isNaN(published.getTime()) || Number.isNaN(created.getTime())) {
+    return false;
+  }
+  return published >= created;
 }
 
 /**

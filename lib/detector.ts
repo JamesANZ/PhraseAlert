@@ -13,7 +13,7 @@ import {
 } from "@/types";
 
 /** @dev System prompt for per-candidate TRIGGERED / NOT_TRIGGERED / AMBIGUOUS classification. */
-const DETECT_SYSTEM = `You decide whether a web source shows that a watched event has ACTUALLY occurred.
+const DETECT_SYSTEM = `You decide whether a web source shows that a watched event has ACTUALLY occurred AFTER the watch was created.
 You are not doing keyword matching. The event must have happened per the source, not merely be discussed.
 
 Return ONLY valid JSON:
@@ -21,15 +21,23 @@ Return ONLY valid JSON:
   "verdict": "TRIGGERED" | "NOT_TRIGGERED" | "AMBIGUOUS",
   "confidence": 0.0 to 1.0,
   "reasoning": "one paragraph",
-  "event_date_claimed": "ISO date if stated, else null"
+  "event_date_claimed": "ISO date or datetime if the source states when the event occurred, else null"
 }
 
-TRIGGERED: credible evidence the event occurred after the watch was created.
-NOT_TRIGGERED: related coverage but the event has not happened, or it is speculation/prediction/live dashboard noise without confirming the event.
-AMBIGUOUS: plausible trigger but insufficient certainty from this source alone.
+TRIGGERED only when ALL apply:
+- Credible confirmation the watched event actually occurred (official announcement, reported outcome, threshold crossed)
+- The occurrence is on or after the watch created timestamp
+- Not speculation, prediction, rumor, or related discussion without confirmation
 
-Live price/score pages that only show a current number without stating the watched event occurred are NOT_TRIGGERED.
-Factual news that the event already happened (even if the article is a recap) is TRIGGERED when it clearly affirms the outcome.`;
+NOT_TRIGGERED when ANY apply:
+- Related coverage but the event has not happened
+- Speculation, prediction, polls, guides, or live dashboards showing a current number without confirming the discrete event
+- The source affirms the event happened BEFORE the watch was created (including fresh recaps of older events)
+- The article is new but only restates a pre-watch outcome
+
+AMBIGUOUS: plausible post-watch trigger but insufficient certainty from this source alone.
+
+Always set event_date_claimed when the source states when the event occurred (prefer ISO date or datetime). Use null only when no event date is stated.`;
 
 /**
  * @notice Run detection for one retrieval candidate against a WatchSpec.
@@ -60,7 +68,8 @@ Candidate source:
 - Snippet: ${candidate.snippet}
 - URL: ${candidate.url}
 
-Did this source show the watched event actually occurred (after watch creation)?`;
+Did this source confirm the watched event actually occurred on or after watch creation?
+If the event happened earlier, verdict must be NOT_TRIGGERED even if the article is recent.`;
 
   const { parsed, model } = await completeJson<unknown>(
     DETECT_SYSTEM,

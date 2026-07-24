@@ -72,6 +72,30 @@
           "expect_compile": true
         }
       ]
+    },
+    {
+      "id": "tariffs-topic-reject",
+      "description": "Bare tariffs topic stays VAGUE with concrete tightenings; scoped sentence becomes CLEAR",
+      "steps": [
+        {
+          "input": "Tariffs",
+          "expect_classification": "VAGUE",
+          "expect_suggestion_keywords": [
+            "trump",
+            "us",
+            "china",
+            "australia",
+            "increase",
+            "percent",
+            "%"
+          ]
+        },
+        {
+          "input": "Notify me if Trump increases tariffs on Australian exports in 2026",
+          "expect_classification": "CLEAR",
+          "expect_compile": true
+        }
+      ]
     }
   ]
 }

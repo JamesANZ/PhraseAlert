@@ -44,10 +44,50 @@ function isAuthoritative(domain: string, spec: WatchSpec): boolean {
 }
 
 /**
+ * @notice Parse event_date_claimed into a Date, or null if missing/unparseable.
+ * @dev YYYY-MM-DD is treated as UTC midnight.
+ */
+export function parseEventDateClaimed(
+  value: string | null | undefined,
+): Date | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const d = new Date(`${trimmed}T00:00:00.000Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * @notice True when TRIGGERED evidence has a parseable event date on/after watch creation.
+ * @dev Hard lock: null/unparseable/pre-watch event dates never count toward notify.
+ */
+export function isPostWatchConfirmedTrigger(
+  detection: DetectionResult,
+  watchCreatedAt: string,
+): boolean {
+  if (detection.verdict !== "TRIGGERED") return false;
+
+  const eventDate = parseEventDateClaimed(detection.event_date_claimed);
+  if (!eventDate) return false;
+
+  const created = new Date(watchCreatedAt);
+  if (Number.isNaN(created.getTime())) return false;
+
+  return eventDate >= created;
+}
+
+/**
  * @notice Decide whether evidence from a check warrants user notification.
  * @dev Notification paths: (1) authoritative source ≥0.75 confidence TRIGGERED, or (2) ≥2 TRIGGERED from distinct domains.
- *      Single non-authoritative trigger sets needs_corroboration without notifying.
- * @param spec Watch spec (for authoritative domain list).
+ *      Only TRIGGERED evidence with event_date_claimed on/after created_at is eligible.
+ *      Single non-authoritative eligible trigger sets needs_corroboration without notifying.
+ * @param spec Watch spec (for authoritative domain list and created_at).
  * @param evidence Filtered candidates with detection results from this check.
  * @return DecideResult with should_notify, top verdict, and human-readable reasoning.
  */
@@ -66,10 +106,28 @@ export function decideFromEvidence(
     };
   }
 
-  const triggered = evidence.filter((e) => e.detection.verdict === "TRIGGERED");
+  const rawTriggered = evidence.filter(
+    (e) => e.detection.verdict === "TRIGGERED",
+  );
+  const triggered = rawTriggered.filter((e) =>
+    isPostWatchConfirmedTrigger(e.detection, spec.created_at),
+  );
+
   const best = [...evidence].sort(
     (a, b) => b.detection.confidence - a.detection.confidence,
   )[0];
+
+  if (rawTriggered.length > 0 && triggered.length === 0) {
+    return {
+      should_notify: false,
+      top_verdict: "NOT_TRIGGERED",
+      top_confidence: best.detection.confidence,
+      evidence,
+      needs_corroboration: false,
+      reasoning:
+        "Triggered sources lacked a confirmed event date on or after watch creation.",
+    };
+  }
 
   const authoritativeTriggers = triggered.filter((e) =>
     isAuthoritative(e.candidate.domain, spec),
