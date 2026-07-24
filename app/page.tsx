@@ -57,8 +57,6 @@ const EXAMPLE_GROUPS = [
   },
 ];
 
-const COMPARE_ALERT = "Notify me when mortgage rates drop below 5%.";
-
 export default function HomePage() {
   return (
     <main id="top">
@@ -119,76 +117,12 @@ export default function HomePage() {
         </section>
 
         <section className="section" id="difference">
-          <p className="eyebrow">The difference</p>
-          <h2>
-            You get notified when it happens,
-            <br />
-            not every time the topic is mentioned.
-          </h2>
+          <p className="eyebrow">Your alert</p>
+          <h2>Get alerted when any future event happens.</h2>
           <p className="section-sub">
-            Keyword alerts fire on guides, forum threads, and old news.
-            PhraseAlert waits for evidence that the event actually occurred.
+            Set an alert for something you care about. We&apos;ll let you know
+            when it happens.
           </p>
-          <div className="compare reveal">
-            <p className="compare-watch">
-              Your alert: &quot;{COMPARE_ALERT}&quot;
-            </p>
-            <div className="compare-cols">
-              <div className="compare-col compare-col-keyword">
-                <h3 className="compare-title">Keyword alert</h3>
-                <ul className="feed">
-                  <li className="feed-item fired-noise">
-                    <span className="feed-headline">
-                      Complete guide to mortgage rates in 2026
-                    </span>
-                    <span className="feed-verdict">Alert sent</span>
-                  </li>
-                  <li className="feed-item fired-noise">
-                    <span className="feed-headline">
-                      Forum thread: will rates ever drop below 5%?
-                    </span>
-                    <span className="feed-verdict">Alert sent</span>
-                  </li>
-                  <li className="feed-item fired-noise">
-                    <span className="feed-headline">
-                      Fed cuts rates; average 30-year mortgage now 4.8%
-                    </span>
-                    <span className="feed-verdict">Alert sent</span>
-                  </li>
-                </ul>
-                <p className="compare-tally">3 notifications</p>
-              </div>
-              <div className="compare-col compare-col-watch">
-                <h3 className="compare-title">PhraseAlert</h3>
-                <ul className="feed">
-                  <li className="feed-item skipped">
-                    <span className="feed-headline">
-                      Complete guide to mortgage rates in 2026
-                    </span>
-                    <span className="feed-verdict">No change</span>
-                  </li>
-                  <li className="feed-item skipped">
-                    <span className="feed-headline">
-                      Forum thread: will rates ever drop below 5%?
-                    </span>
-                    <span className="feed-verdict">No change</span>
-                  </li>
-                  <li className="feed-item fired-signal">
-                    <span className="feed-headline">
-                      Fed cuts rates; average 30-year mortgage now 4.8%
-                    </span>
-                    <span className="feed-verdict">Notified</span>
-                  </li>
-                </ul>
-                <p className="compare-tally compare-tally-signal">
-                  1 notification
-                </p>
-              </div>
-            </div>
-            <p className="compare-footnote">
-              An alert only covers events after you create it.
-            </p>
-          </div>
         </section>
 
         <section className="section" id="how">
