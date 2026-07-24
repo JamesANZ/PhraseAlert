@@ -1,6 +1,6 @@
-import { Resend } from "resend";
+import { getPublicAppUrl } from "@/lib/billing/stripe";
 import type { PausedWatchSummary } from "@/lib/billing/enforce-limits";
-import { getAppUrl } from "@/lib/billing/stripe";
+import { Resend } from "resend";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -23,7 +23,7 @@ export async function sendExpiryReminderEmail(
     return;
   }
 
-  const billingUrl = `${getAppUrl()}/billing`;
+  const billingUrl = `${getPublicAppUrl()}/billing`;
   const when = periodEnd.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -57,7 +57,7 @@ export async function sendDowngradeEmail(
     return;
   }
 
-  const billingUrl = `${getAppUrl()}/billing`;
+  const billingUrl = `${getPublicAppUrl()}/billing`;
   const lines =
     paused.length === 0
       ? ["You're now on the Free plan (3 active alerts)."]

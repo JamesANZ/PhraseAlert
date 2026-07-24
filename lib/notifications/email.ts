@@ -4,8 +4,12 @@
  * @dev Recipient is the Google signup address on `user.email`. Soft-fails if RESEND_API_KEY is missing.
  */
 import { Resend } from "resend";
-import { getAppUrl } from "@/lib/billing/stripe";
-import { formatFindingsEmailText, type WatchFindings } from "@/lib/findings";
+import { getPublicAppUrl } from "@/lib/billing/stripe";
+import {
+  formatFindingsEmailHtml,
+  formatFindingsEmailText,
+  type WatchFindings,
+} from "@/lib/findings";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -32,12 +36,13 @@ export async function sendWatchTriggeredEmail(
     return;
   }
 
-  const detailUrl = `${getAppUrl()}/watches/${findings.watchId}`;
+  const detailUrl = `${getPublicAppUrl()}/watches/${findings.watchId}`;
 
   await resend.emails.send({
     from: fromAddress(),
     to: email,
     subject: `Alert triggered: ${findings.rawInput.slice(0, 80)}`,
     text: formatFindingsEmailText(findings, detailUrl),
+    html: formatFindingsEmailHtml(findings, detailUrl),
   });
 }

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { checks, evidence } from "@/lib/db/schema";
 import { normalizeUrl } from "@/lib/filter";
 import {
+  cleanDisplayText,
   fallbackFindingsSummary,
   type FindingsSource,
   type WatchFindings,
@@ -147,10 +148,10 @@ function mapEvidenceRow(row: typeof evidence.$inferSelect): FindingsSource {
   return {
     url: row.url,
     domain: row.domain,
-    title: row.title || row.domain,
-    snippet: row.snippet ?? "",
+    title: cleanDisplayText(row.title || row.domain),
+    snippet: cleanDisplayText(row.snippet ?? ""),
     confidence: row.confidence == null ? null : row.confidence / 100,
-    reasoning: row.reasoning ?? "",
+    reasoning: cleanDisplayText(row.reasoning ?? ""),
     publishedAt: row.publishedAt,
   };
 }

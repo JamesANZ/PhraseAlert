@@ -3,6 +3,7 @@
  * @notice Renders the same findings content used in the trigger email.
  */
 import type { WatchFindings } from "@/lib/findings";
+import { isUsefulSnippet, softTruncate } from "@/lib/findings";
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -79,8 +80,10 @@ export function WatchFindingsView({ findings }: { findings: WatchFindings }) {
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
-                {source.snippet ? (
-                  <p className="findings-source-snippet">{source.snippet}</p>
+                {isUsefulSnippet(source.snippet) ? (
+                  <p className="findings-source-snippet">
+                    {softTruncate(source.snippet, 280)}
+                  </p>
                 ) : null}
                 {source.reasoning ? (
                   <p className="findings-source-reasoning">

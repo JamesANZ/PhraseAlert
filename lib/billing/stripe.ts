@@ -15,12 +15,57 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
+const PRODUCTION_APP_URL = "https://phrasealert.com";
+
+function normalizeOrigin(url: string): string {
+  const withProtocol = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  return withProtocol.replace(/\/$/, "");
+}
+
+function isLocalhostUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @notice Base URL for the running app (may be localhost in local dev).
+ */
 export function getAppUrl(): string {
-  return (
-    process.env.AUTH_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    "http://localhost:3000"
-  );
+  const candidates = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.APP_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined,
+    process.env.AUTH_URL,
+  ].filter((value): value is string => Boolean(value?.trim()));
+
+  for (const candidate of candidates) {
+    const origin = normalizeOrigin(candidate.trim());
+    if (!isLocalhostUrl(origin)) return origin;
+  }
+
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production"
+  ) {
+    return PRODUCTION_APP_URL;
+  }
+
+  const local = candidates[0];
+  return local ? normalizeOrigin(local.trim()) : "http://localhost:3000";
+}
+
+/**
+ * @notice Public site URL for emails and outbound links — never localhost.
+ */
+export function getPublicAppUrl(): string {
+  const url = getAppUrl();
+  return isLocalhostUrl(url) ? PRODUCTION_APP_URL : url;
 }
 
 export async function getOrCreateStripeCustomer(
