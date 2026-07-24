@@ -4,6 +4,7 @@
  * @dev Phase 1+2 bridge. Persists check and evidence rows; updates watch status on notification.
  * @custom:pipeline step 5 — check (orchestrates retrieve, filter, detect, decide)
  */
+import { getUser } from "@/lib/billing/entitlements";
 import {
   createCheck,
   createEvidence,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/decide";
 import { detectEvent } from "@/lib/detector";
 import { applyRetrievalFilters } from "@/lib/filter";
+import { sendWatchTriggeredEmail } from "@/lib/notifications/email";
 import { retrieveCandidates } from "@/lib/retrieval";
 import { updateWatchStatus, type WatchRow } from "@/lib/watches";
 
@@ -95,6 +97,37 @@ export async function runCheckForWatch(
 
   let triggered = false;
   if (decision.should_notify && watch.status === "watching") {
+    const user = await getUser(watch.userId);
+    if (user?.email) {
+      try {
+        const triggeredEvidence = decision.evidence
+          .filter((e) => e.detection.verdict === "TRIGGERED")
+          .map((e) => ({
+            url: e.candidate.url,
+            domain: e.candidate.domain,
+            snippet: e.candidate.snippet,
+          }));
+        await sendWatchTriggeredEmail(user.email, {
+          watchId: watch.id,
+          rawInput: watch.rawInput,
+          clarified: watch.spec.clarified_statement,
+          reasoning: decision.reasoning,
+          evidence: triggeredEvidence,
+        });
+      } catch (err) {
+        console.error("[notify] failed to send watch email", {
+          watchId: watch.id,
+          userId: watch.userId,
+          err,
+        });
+      }
+    } else {
+      console.warn("[notify] no email for user; skip watch email", {
+        watchId: watch.id,
+        userId: watch.userId,
+      });
+    }
+
     await updateWatchStatus(watch.id, watch.userId, "triggered");
     triggered = true;
   }

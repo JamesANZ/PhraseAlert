@@ -78,7 +78,7 @@ Three keyword alerts. One mattered. PhraseAlert sent that one.
 - API routes for create, confirm, pause, delete, check-now
 - Cron endpoint at `/api/checks/run` with Tavily live retrieval
 
-Not built yet: email notifications for watches.
+Watch email notifications send via Resend to the Google signup address on `user.email` when a check decides to notify.
 
 Auth uses NextAuth with Google sign-in only. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI for local development.
 
@@ -245,11 +245,11 @@ Vague topic watches (e.g. `"Bitcoin"`) must stay `VAGUE` until a concrete outcom
 
 ## Retrieval
 
-Set `TAVILY_API_KEY` for live checks. Scheduled `POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. Email notify is not wired yet.
+Set `TAVILY_API_KEY` for live checks. Scheduled `POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. On notify, Resend emails the user’s Google signup address (`RESEND_API_KEY`, optional `EMAIL_FROM`).
 
 Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches (including US election 2024 with a 2023 watch timestamp). Brave and RSS providers are typed but not implemented.
 
 ## Roadmap
 
-- **Phase 2 (remaining):** email notifications for watches, Postgres for production
+- **Phase 2:** email notifications for watches (done), Postgres for production
 - **Phase 3 (in progress):** Stripe + Helio billing (this repo), faster checks, SMS/push/webhooks, evidence trail UI
