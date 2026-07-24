@@ -182,4 +182,3 @@ export const evidence = pgTable("evidence", {
 });
 
 export type DbUser = typeof authUsers.$inferSelect;
-export type DbWatch = typeof watches.$inferSelect;

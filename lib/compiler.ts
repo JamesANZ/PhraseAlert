@@ -4,7 +4,6 @@
  * @dev Phase 1 judgment layer. Uses Hugging Face chat completion via `completeJson` with strict system prompts.
  * @custom:pipeline step 1 — compile
  */
-import { z } from "zod";
 import { completeJson } from "./inference";
 import {
   VaguenessResultSchema,
@@ -124,6 +123,7 @@ export async function assessVagueness(
  * @notice Compile a cleared watch sentence into a full WatchSpec ready for persistence.
  * @dev Assigns id, user_id, created_at, check_frequency, and status unless overridden in options.
  * @param rawInput Original user input (preserved on the spec).
+ * @param options
  * @param options.clarifiedStatement Final unambiguous statement after clarification.
  * @param options.createdAt ISO timestamp anchoring the post-watch-only filter.
  * @param options.id Optional watch id (defaults to `w_<uuid8>`).
@@ -162,23 +162,4 @@ Compile this into a Watch Spec body.`,
     check_frequency: "daily",
     status: "watching",
   });
-}
-
-/**
- * @notice Combined vagueness check and compile for eval harness and smoke tests.
- * @dev Skips compilation when classification is VAGUE.
- * @param rawInput Watch sentence.
- * @param createdAt Fixed timestamp for reproducible eval runs.
- * @return Vagueness result and optional compiled spec.
- */
-export async function compileWithClarification(
-  rawInput: string,
-  createdAt: string,
-): Promise<{ vagueness: VaguenessResult; spec?: WatchSpec }> {
-  const vagueness = await assessVagueness(rawInput);
-  if (vagueness.classification === "VAGUE") {
-    return { vagueness };
-  }
-  const spec = await compileWatchSpec(rawInput, { createdAt });
-  return { vagueness, spec };
 }

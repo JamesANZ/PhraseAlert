@@ -9,14 +9,6 @@ import { InferenceClient } from "@huggingface/inference";
 /** @dev Default instruct model when HF_MODEL is unset. */
 export const DEFAULT_MODEL = "meta-llama/Llama-3.3-70B-Instruct";
 
-/** @dev Models supported for eval comparison runs. */
-export const CANDIDATE_MODELS = [
-  "meta-llama/Llama-3.3-70B-Instruct",
-  "meta-llama/Meta-Llama-3.1-8B-Instruct",
-  "Qwen/Qwen2.5-7B-Instruct",
-  "mistralai/Mistral-7B-Instruct-v0.3",
-] as const;
-
 let client: InferenceClient | null = null;
 
 /** @dev Lazy singleton InferenceClient; throws if HUGGINGFACE_API_KEY missing. */

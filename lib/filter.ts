@@ -66,8 +66,6 @@ export function applyRetrievalFilters(
     const normalized = normalizeUrl(candidate.url);
     if (seenUrls.has(normalized)) return false;
 
-    if (deny.has(candidate.domain.toLowerCase())) return false;
-
-    return true;
+    return !deny.has(candidate.domain.toLowerCase());
   });
 }

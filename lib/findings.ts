@@ -78,8 +78,7 @@ export function softTruncate(text: string, max: number): string {
 export function isUsefulSnippet(text: string): boolean {
   const cleaned = cleanDisplayText(text);
   if (cleaned.length < 48) return false;
-  if (SNIPPET_NOISE_RE.test(cleaned)) return false;
-  return true;
+  return !SNIPPET_NOISE_RE.test(cleaned);
 }
 
 /**
@@ -120,9 +119,7 @@ export function fallbackFindingsSummary(
           .map((s) => s.domain)
           .join(" and ")}.`
       : "";
-  const detail = top.reasoning
-    ? ` ${softTruncate(top.reasoning, 220)}`
-    : "";
+  const detail = top.reasoning ? ` ${softTruncate(top.reasoning, 220)}` : "";
   return `We found confirming coverage on ${top.domain}.${detail}${extras}`.trim();
 }
 
@@ -268,7 +265,7 @@ export function formatFindingsEmailHtml(
 ): string {
   const sourcesHtml =
     findings.sources.length === 0
-      ? "<p style=\"margin:0;color:#6b7280;\">(no evidence links)</p>"
+      ? '<p style="margin:0;color:#6b7280;">(no evidence links)</p>'
       : `<ol style="margin:0;padding-left:20px;">${findings.sources
           .slice(0, 5)
           .map((s) => {

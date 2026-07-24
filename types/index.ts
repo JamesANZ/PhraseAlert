@@ -8,11 +8,9 @@ import { z } from "zod";
 
 /** @notice Lifecycle state of a saved watch. @dev Only `watching` counts toward active-watch limits; `paused` and `triggered` do not. */
 export const WatchStatusSchema = z.enum(["watching", "triggered", "paused"]);
-export type WatchStatus = z.infer<typeof WatchStatusSchema>;
 
 /** @notice How often a watch is scheduled for retrieval and judgment. @dev Hourly is reserved for future tiers. */
 export const CheckFrequencySchema = z.enum(["daily", "hourly"]);
-export type CheckFrequency = z.infer<typeof CheckFrequencySchema>;
 
 /**
  * @title WatchSpec
@@ -91,7 +89,6 @@ export const EvalFixtureSchema = z.object({
   candidate: RetrievalCandidateSchema,
   expect_verdict: VerdictSchema.optional(),
 });
-export type EvalFixture = z.infer<typeof EvalFixtureSchema>;
 
 /**
  * @title EvalEvent
@@ -113,7 +110,6 @@ export type EvalEvent = z.infer<typeof EvalEventSchema>;
 export const EvalEventsFileSchema = z.object({
   events: z.array(EvalEventSchema),
 });
-export type EvalEventsFile = z.infer<typeof EvalEventsFileSchema>;
 
 /** @dev Aggregate metrics returned by `evals/run.ts` after fixture and dialogue runs. */
 export interface EvalScores {
@@ -138,7 +134,6 @@ export const DialogueStepSchema = z.object({
   expect_compile: z.boolean().optional(),
   expect_domain_keywords: z.array(z.string()).optional(),
 });
-export type DialogueStep = z.infer<typeof DialogueStepSchema>;
 
 export const EvalDialogueSchema = z.object({
   id: z.string(),
@@ -150,7 +145,6 @@ export type EvalDialogue = z.infer<typeof EvalDialogueSchema>;
 export const EvalDialoguesFileSchema = z.object({
   dialogues: z.array(EvalDialogueSchema),
 });
-export type EvalDialoguesFile = z.infer<typeof EvalDialoguesFileSchema>;
 
 /**
  * @title LiveRetrievalCase
@@ -172,4 +166,3 @@ export type LiveRetrievalCase = z.infer<typeof LiveRetrievalCaseSchema>;
 export const LiveRetrievalFileSchema = z.object({
   cases: z.array(LiveRetrievalCaseSchema),
 });
-export type LiveRetrievalFile = z.infer<typeof LiveRetrievalFileSchema>;

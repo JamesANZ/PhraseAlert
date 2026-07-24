@@ -27,10 +27,7 @@ function isPlusActive(user: DbUser, now = Date.now()): boolean {
   if (user.plan !== "plus") return false;
 
   if (user.billingMode === "subscription") {
-    if (user.planPeriodEnd && user.planPeriodEnd.getTime() <= now) {
-      return false;
-    }
-    return true;
+    return !(user.planPeriodEnd && user.planPeriodEnd.getTime() <= now);
   }
 
   if (user.billingMode === "prepaid") {

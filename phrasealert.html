@@ -1048,16 +1048,16 @@
       (function () {
         "use strict";
 
-        var reduceMotion = window.matchMedia(
+        const reduceMotion = window.matchMedia(
           "(prefers-reduced-motion: reduce)",
         ).matches;
 
         /* ---------- watch timestamp (forward-looking detail) ---------- */
 
-        var stamp = document.getElementById("watch-stamp");
+        const stamp = document.getElementById("watch-stamp");
         if (stamp) {
-          var now = new Date();
-          var opts = {
+          const now = new Date();
+          const opts = {
             day: "2-digit",
             month: "short",
             year: "numeric",
@@ -1070,7 +1070,7 @@
 
         /* ---------- typewriter ---------- */
 
-        var examples = [
+        const examples = [
           "Tell me if Australian partner visa fees increase\u2026",
           "Notify me when Bitcoin passes $100,000\u2026",
           "Tell me if Australia announces another lockdown\u2026",
@@ -1079,26 +1079,26 @@
           "Notify me if this company announces an IPO\u2026",
         ];
 
-        var typeText = document.getElementById("type-text");
-        var ghost = document.getElementById("type-ghost");
-        var input = document.getElementById("watch-input");
-        var box = document.getElementById("watch-box");
+        const typeText = document.getElementById("type-text");
+        const ghost = document.getElementById("type-ghost");
+        const input = document.getElementById("watch-input");
+        const box = document.getElementById("watch-box");
 
-        var TYPE_MS = 42; // per character while typing
-        var DELETE_MS = 16; // per character while deleting
-        var HOLD_MS = 2100; // pause at full sentence
-        var GAP_MS = 500; // pause before next sentence
+        const TYPE_MS = 42; // per character while typing
+        const DELETE_MS = 16; // per character while deleting
+        const HOLD_MS = 2100; // pause at full sentence
+        const GAP_MS = 500; // pause before next sentence
 
-        var exampleIndex = 0;
-        var charIndex = 0;
-        var deleting = false;
-        var timer = null;
-        var stopped = false;
+        let exampleIndex = 0;
+        let charIndex = 0;
+        let deleting = false;
+        let timer = null;
+        let stopped = false;
 
         function tick() {
           if (stopped) return;
 
-          var sentence = examples[exampleIndex];
+          const sentence = examples[exampleIndex];
 
           if (!deleting) {
             charIndex++;
@@ -1170,7 +1170,7 @@
 
         /* ---------- create watch button (prototype behaviour) ---------- */
 
-        var btn = document.getElementById("create-watch-btn");
+        const btn = document.getElementById("create-watch-btn");
         if (btn && input) {
           btn.addEventListener("click", function () {
             if (input.value.trim().length === 0) {
@@ -1194,7 +1194,7 @@
 
         /* ---------- reveal on scroll ---------- */
 
-        var revealTargets = document.querySelectorAll(
+        const revealTargets = document.querySelectorAll(
           ".example-card, .compare, .step, .plan, .final-cta h2, .final-cta .btn",
         );
 
@@ -1203,7 +1203,7 @@
         });
 
         if ("IntersectionObserver" in window && !reduceMotion) {
-          var observer = new IntersectionObserver(
+          const observer = new IntersectionObserver(
             function (entries) {
               entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
