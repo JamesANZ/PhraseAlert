@@ -15,6 +15,7 @@
     "eval:detector": "tsx evals/run.ts --detector-only",
     "eval:dialogues": "tsx evals/run.ts --dialogues-only",
     "eval:retrieval": "tsx evals/run.ts --retrieval-only",
+    "eval:revisit": "tsx evals/run.ts --revisit-only",
     "eval:smoke": "tsx evals/run.ts --smoke",
     "docs:extract": "tsx scripts/extract-natspec.ts",
     "test": "vitest run",

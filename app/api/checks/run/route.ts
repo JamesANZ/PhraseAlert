@@ -1,18 +1,21 @@
 /**
  * @title GET|POST /api/checks/run
- * @notice Cron endpoint: run checks for all watches in `watching` status.
- * @dev Vercel Cron invokes GET; POST kept for manual runs. Protected by
- *      Authorization: Bearer CRON_SECRET when CRON_SECRET is set.
+ * @notice Cron endpoint: run checks for `watching` watches that are due.
+ * @dev Vercel Cron invokes GET hourly; POST kept for manual runs. A watch is due
+ *      when its daily cadence has elapsed or the AI queued a follow-up whose
+ *      time has arrived — so most hourly ticks skip most watches (cost guard).
+ *      Protected by Authorization: Bearer CRON_SECRET when CRON_SECRET is set.
  * @custom:env TAVILY_API_KEY, CRON_SECRET (optional)
  */
 import { NextResponse } from "next/server";
 import { runCheckForWatch } from "@/lib/check";
 import { initDb } from "@/lib/db";
+import { isWatchDue } from "@/lib/monitoring-plan";
 import { listWatchingWatches } from "@/lib/watches";
 
 /**
- * @notice Batch check all active watches.
- * @return 200 { ok, checked, triggered, errors, results } | 401 bad cron secret | 503 no Tavily
+ * @notice Batch check all due active watches.
+ * @return 200 { ok, checked, skipped, triggered, errors, results } | 401 bad cron secret | 503 no Tavily
  */
 async function handle(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -30,7 +33,10 @@ async function handle(request: Request) {
   }
 
   await initDb();
-  const watches = await listWatchingWatches();
+  const allWatching = await listWatchingWatches();
+  const now = new Date();
+  const watches = allWatching.filter((watch) => isWatchDue(watch, now));
+  const skipped = allWatching.length - watches.length;
 
   let triggered = 0;
   const errors: Array<{ watch_id: string; error: string }> = [];
@@ -66,6 +72,7 @@ async function handle(request: Request) {
   return NextResponse.json({
     ok: true,
     checked: watches.length,
+    skipped,
     triggered,
     errors,
     results,

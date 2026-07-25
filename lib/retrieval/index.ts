@@ -93,21 +93,27 @@ function looksLikeLiveDashboard(title: string, url: string): boolean {
 }
 
 /**
- * @notice Retrieve web candidates for a watch using its compiled search_queries.
+ * @notice Retrieve web candidates for a watch using its compiled search_queries
+ *         (or an explicit query list from the monitoring plan's current round).
  * @dev Merges search results, optionally enriches top URLs via extract, returns RetrievalCandidate[].
  * @param spec WatchSpec with search_queries and created_at.
  * @param options.retrievedAt Reserved for callers; undated hits are dropped (no now-fallback).
+ * @param options.queries Bounded query list for this round; defaults to spec.search_queries.
  * @return Deduplicated candidates ready for applyRetrievalFilters.
  */
 export async function retrieveCandidates(
   spec: WatchSpec,
-  options: { retrievedAt?: string } = {},
+  options: { retrievedAt?: string; queries?: string[] } = {},
 ): Promise<RetrievalCandidate[]> {
   void options.retrievedAt;
   const startDate = startDateFromCreatedAt(spec.created_at);
+  const queries =
+    options.queries && options.queries.length > 0
+      ? options.queries
+      : spec.search_queries;
 
   const searchBatches = await mapPool(
-    spec.search_queries,
+    queries,
     SEARCH_CONCURRENCY,
     async (query) => {
       const response = await tavilySearch(query, {
@@ -182,4 +188,47 @@ export async function retrieveCandidates(
     });
   }
   return candidates;
+}
+
+/**
+ * @notice Re-fetch specific previously seen pages so their CURRENT content can be judged again.
+ * @dev Used for plan-approved re-checks of pages that update in place (official data
+ *      pages, results pages). published_at is set to fetch time: the page's original
+ *      date is unknown after an in-place update, and the notify decision still
+ *      requires a post-watch event date from the judged content itself.
+ * @param spec WatchSpec (clarified_statement focuses the extract chunks).
+ * @param urls Budget-validated URLs from the monitoring plan.
+ * @return One candidate per URL that returned content; failures are skipped.
+ */
+export async function retrieveByUrls(
+  spec: WatchSpec,
+  urls: string[],
+): Promise<RetrievalCandidate[]> {
+  if (urls.length === 0) return [];
+
+  try {
+    const extracted = await tavilyExtract(urls, {
+      query: spec.clarified_statement,
+      chunksPerSource: 3,
+      extractDepth: "basic",
+    });
+
+    const fetchedAt = new Date().toISOString();
+    const candidates: RetrievalCandidate[] = [];
+    for (const item of extracted.results ?? []) {
+      if (!item.url || !item.raw_content) continue;
+      candidates.push({
+        url: item.url,
+        domain: domainFromUrl(item.url),
+        title: item.url,
+        snippet: truncateSnippet(item.raw_content),
+        published_at: fetchedAt,
+        retrieval_source: "tavily" as const,
+      });
+    }
+    return candidates;
+  } catch {
+    // A failed re-fetch should not fail the whole check.
+    return [];
+  }
 }

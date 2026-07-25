@@ -6,7 +6,7 @@
 import { db } from "@/lib/db";
 import { checks, evidence, watches } from "@/lib/db/schema";
 import { getWatchLimit } from "@/lib/billing/entitlements";
-import type { WatchSpec } from "@/types";
+import type { PlanRuntimeState, WatchSpec } from "@/types";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
 /** @dev Application-level watch record with camelCase fields and embedded WatchSpec JSON. */
@@ -158,6 +158,28 @@ export async function updateWatchStatus(
           ? new Date().toISOString()
           : existing.triggeredAt,
     })
+    .where(and(eq(watches.id, id), eq(watches.userId, userId)));
+
+  return getWatch(id, userId);
+}
+
+/**
+ * @notice Save the monitoring plan's runtime state after a check.
+ * @dev Stored inside the watch's spec JSONB (no schema migration). Drives the
+ *      hourly cron guard and per-URL re-check budgets.
+ * @return Updated WatchRow or null if not found.
+ */
+export async function updateWatchPlanState(
+  id: string,
+  userId: string,
+  planState: PlanRuntimeState,
+): Promise<WatchRow | null> {
+  const existing = await getWatch(id, userId);
+  if (!existing) return null;
+
+  await db
+    .update(watches)
+    .set({ spec: { ...existing.spec, plan_state: planState } })
     .where(and(eq(watches.id, id), eq(watches.userId, userId)));
 
   return getWatch(id, userId);

@@ -11,17 +11,21 @@ import { fileURLToPath } from "node:url";
 import { assessVagueness, compileWatchSpec } from "../lib/compiler";
 import { decideFromEvidence } from "../lib/decide";
 import { detectEvent } from "../lib/detector";
-import { applyRetrievalFilters } from "../lib/filter";
+import { applyRetrievalFilters, normalizeUrl } from "../lib/filter";
 import { getModel } from "../lib/inference";
+import { filterRevisitUrls, planForSpec } from "../lib/monitoring-plan";
 import { retrieveCandidates } from "../lib/retrieval";
 import {
   EvalDialoguesFileSchema,
   EvalEventsFileSchema,
   LiveRetrievalFileSchema,
+  PlanRuntimeStateSchema,
+  RevisitEvalFileSchema,
   type EvalDialogue,
   type EvalEvent,
   type EvalScores,
   type LiveRetrievalCase,
+  type RevisitEvalCase,
   type Verdict,
 } from "../types";
 
@@ -33,6 +37,7 @@ type Mode =
   | "detector-only"
   | "dialogues-only"
   | "retrieval-only"
+  | "revisit-only"
   | "smoke";
 
 function parseMode(): Mode {
@@ -41,6 +46,7 @@ function parseMode(): Mode {
   if (args.includes("--detector-only")) return "detector-only";
   if (args.includes("--dialogues-only")) return "dialogues-only";
   if (args.includes("--retrieval-only")) return "retrieval-only";
+  if (args.includes("--revisit-only")) return "revisit-only";
   if (args.includes("--smoke")) return "smoke";
   return "full";
 }
@@ -58,6 +64,11 @@ function loadDialogues(): EvalDialogue[] {
 function loadLiveRetrievalCases(): LiveRetrievalCase[] {
   const raw = readFileSync(join(__dirname, "live-retrieval.json"), "utf-8");
   return LiveRetrievalFileSchema.parse(JSON.parse(raw)).cases;
+}
+
+function loadRevisitCases(): RevisitEvalCase[] {
+  const raw = readFileSync(join(__dirname, "revisit.json"), "utf-8");
+  return RevisitEvalFileSchema.parse(JSON.parse(raw)).cases;
 }
 
 function requireTavily(): void {
@@ -130,8 +141,9 @@ async function runCompilerEval(events: EvalEvent[]): Promise<boolean> {
       const hasTriggers = spec.trigger_conditions.length > 0;
       const hasNonTriggers = spec.non_triggers.length > 0;
       const hasQueries = spec.search_queries.length > 0;
+      const hasPlan = (spec.monitoring_plan?.baseline_queries.length ?? 0) > 0;
 
-      if (hasTriggers && hasNonTriggers && hasQueries) {
+      if (hasTriggers && hasNonTriggers && hasQueries && hasPlan) {
         ok++;
         console.log("OK");
         console.log(
@@ -507,6 +519,114 @@ async function runLiveRetrievalEval(
   return passed === cases.length;
 }
 
+/**
+ * Two-pass eval: the same URL's content changes between checks. Verifies that
+ * (1) the default pipeline blocks the seen URL, (2) the monitoring plan's
+ * revisit policy re-admits it, and (3) the detector + decide layers then
+ * trigger on the updated content.
+ */
+async function runRevisitEval(cases: RevisitEvalCase[]): Promise<boolean> {
+  console.log("\n=== Revisit (page-update) eval ===\n");
+  console.log(`Model: ${getModel()}\n`);
+
+  let passed = 0;
+
+  for (const revisitCase of cases) {
+    console.log(`--- ${revisitCase.id}: ${revisitCase.description}`);
+    let caseOk = true;
+    const spec = revisitCase.spec;
+    const plan = planForSpec(spec);
+    const createdAt = spec.created_at;
+
+    try {
+      // Pass 1: page shows no outcome yet.
+      const pass1 = revisitCase.pass1.candidate;
+      const detection1 = await detectEvent(spec, pass1);
+      const match1 = verdictMatches(
+        revisitCase.pass1.expect_verdict,
+        detection1.verdict,
+      );
+      console.log(
+        `  ${match1 ? "✓" : "✗"} pass 1: ${detection1.verdict} (${detection1.confidence.toFixed(2)}) — expected ${revisitCase.pass1.expect_verdict}`,
+      );
+      if (!match1) caseOk = false;
+
+      const seen = new Set([normalizeUrl(pass1.url)]);
+
+      // Default behavior: the seen URL is blocked on the next check.
+      const pass2 = revisitCase.pass2.candidate;
+      const blocked = applyRetrievalFilters([pass2], createdAt, seen);
+      if (blocked.length === 0) {
+        console.log("  ✓ seen URL blocked by default on the second check");
+      } else {
+        caseOk = false;
+        console.log("  ✗ seen URL was NOT blocked by default");
+      }
+
+      // Plan-approved re-check: policy re-admits the URL within budget.
+      const state = PlanRuntimeStateSchema.parse({});
+      const eligible = filterRevisitUrls(plan, state, [pass2.url], seen);
+      if (eligible.length === 1) {
+        console.log("  ✓ revisit policy re-admits the URL within budget");
+      } else {
+        caseOk = false;
+        console.log("  ✗ revisit policy did not admit the URL");
+      }
+
+      const allowed = applyRetrievalFilters(
+        [pass2],
+        createdAt,
+        seen,
+        [],
+        new Set(eligible.map((u) => normalizeUrl(u))),
+      );
+      if (allowed.length !== 1) {
+        caseOk = false;
+        console.log("  ✗ filter did not re-admit the approved URL");
+      }
+
+      // Pass 2: the updated page should now trigger and notify.
+      const detection2 = await detectEvent(spec, pass2);
+      const match2 = verdictMatches(
+        revisitCase.pass2.expect_verdict,
+        detection2.verdict,
+      );
+      console.log(
+        `  ${match2 ? "✓" : "✗"} pass 2: ${detection2.verdict} (${detection2.confidence.toFixed(2)}) — expected ${revisitCase.pass2.expect_verdict}`,
+      );
+      if (!match2) {
+        caseOk = false;
+        console.log(`      reasoning: ${detection2.reasoning.slice(0, 150)}`);
+      }
+
+      const decision = decideFromEvidence(spec, [
+        { candidate: pass1, detection: detection1 },
+        { candidate: pass2, detection: detection2 },
+      ]);
+      console.log(
+        `  decision: notify=${decision.should_notify} — ${decision.reasoning}`,
+      );
+      if (!decision.should_notify) {
+        caseOk = false;
+        console.log("  ✗ updated page did not lead to a notification");
+      }
+    } catch (err) {
+      caseOk = false;
+      console.log(`  FAIL (${err instanceof Error ? err.message : err})`);
+    }
+
+    if (caseOk) {
+      passed++;
+      console.log(`  → revisit case PASS\n`);
+    } else {
+      console.log(`  → revisit case FAIL\n`);
+    }
+  }
+
+  console.log(`Revisit: ${passed}/${cases.length} passed`);
+  return passed === cases.length;
+}
+
 function printSummary(scores: EvalScores): boolean {
   console.log("=== Summary ===\n");
   console.log(
@@ -558,9 +678,10 @@ async function main(): Promise<void> {
   const events = loadEvents();
   const dialogues = loadDialogues();
   const liveCases = loadLiveRetrievalCases();
+  const revisitCases = loadRevisitCases();
 
   console.log(
-    `PhraseAlert eval harness — ${events.length} events, ${dialogues.length} dialogues, ${liveCases.length} live retrieval cases`,
+    `PhraseAlert eval harness — ${events.length} events, ${dialogues.length} dialogues, ${liveCases.length} live retrieval cases, ${revisitCases.length} revisit cases`,
   );
   console.log(`Mode: ${mode}`);
   console.log(`Model: ${getModel()}`);
@@ -588,11 +709,17 @@ async function main(): Promise<void> {
     process.exit(ok ? 0 : 1);
   }
 
+  if (mode === "revisit-only") {
+    ok = (await runRevisitEval(revisitCases)) && ok;
+    process.exit(ok ? 0 : 1);
+  }
+
   if (mode === "smoke" || mode === "full") {
     ok = (await runCompilerEval(events)) && ok;
     const scores = await runDetectorEval(events);
     ok = printSummary(scores) && ok;
     ok = (await runDialogueEval(dialogues)) && ok;
+    ok = (await runRevisitEval(revisitCases)) && ok;
     ok = (await runLiveRetrievalEval(liveCases)) && ok;
     process.exit(ok ? 0 : 1);
   }

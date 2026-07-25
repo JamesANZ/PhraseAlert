@@ -46,10 +46,13 @@ export function isPublishedAfterWatch(
 /**
  * @notice Apply post-watch, dedup, and domain deny filters to a candidate list.
  * @dev Called after Tavily retrieval and before detection. Order preserved from input.
+ *      Seen URLs are excluded by default; the monitoring plan can exempt specific
+ *      URLs it approved for a re-check (pages that update in place).
  * @param candidates Raw retrieval results.
  * @param watchCreatedAt Watch creation timestamp for temporal filter.
  * @param seenUrls Normalized URLs from prior checks on this watch (default empty).
  * @param denylistDomains Hostnames to exclude (default empty).
+ * @param allowSeenUrls Normalized URLs exempt from the seen-URL exclusion (default empty).
  * @return Filtered candidates eligible for detection.
  */
 export function applyRetrievalFilters(
@@ -57,6 +60,7 @@ export function applyRetrievalFilters(
   watchCreatedAt: string,
   seenUrls: Set<string> = new Set(),
   denylistDomains: string[] = [],
+  allowSeenUrls: Set<string> = new Set(),
 ): RetrievalCandidate[] {
   const deny = new Set(denylistDomains.map((d) => d.toLowerCase()));
 
@@ -64,7 +68,9 @@ export function applyRetrievalFilters(
     if (!isPublishedAfterWatch(candidate, watchCreatedAt)) return false;
 
     const normalized = normalizeUrl(candidate.url);
-    if (seenUrls.has(normalized)) return false;
+    if (seenUrls.has(normalized) && !allowSeenUrls.has(normalized)) {
+      return false;
+    }
 
     return !deny.has(candidate.domain.toLowerCase());
   });

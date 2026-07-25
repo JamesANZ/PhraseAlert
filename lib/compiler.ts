@@ -5,7 +5,10 @@
  * @custom:pipeline step 1 — compile
  */
 import { completeJson } from "./inference";
+import { sanitizeMonitoringPlan } from "./monitoring-plan";
 import {
+  MonitoringPlanSchema,
+  PLAN_MAX_QUERIES,
   VaguenessResultSchema,
   WatchSpecSchema,
   type VaguenessResult,
@@ -64,14 +67,28 @@ Return ONLY valid JSON matching this schema:
   "non_triggers": ["..."],
   "entities": ["..."],
   "search_queries": ["..."],
-  "authoritative_domains": ["..."]
+  "authoritative_domains": ["..."],
+  "monitoring_plan": {
+    "baseline_queries": ["..."],
+    "follow_up_queries": ["..."],
+    "revisit": {
+      "allowed": true | false,
+      "domains": ["..."],
+      "max_revisits_per_url": 0-3
+    }
+  }
 }
 non_triggers is critical: list coverage that should NOT fire the watch (guides, speculation, predictions, unrelated events, live dashboards without the event, and recaps or historical reporting that the event already occurred before the watch was created).
 Do NOT list factual post-watch reporting that the watched event newly occurred as a non-trigger.
 search_queries should be 2-4 concrete web search phrases that find evidence the event OCCURRED
 (results, winner declared, threshold crossed, official confirmation). Prefer event/result phrasing with year or outcome words.
 NEVER use live-dashboard queries such as "price today", "current value", "live chart", or "live score".
-authoritative_domains should be official or primary news/data sources where applicable.`;
+authoritative_domains should be official or primary news/data sources where applicable.
+
+monitoring_plan directs how the monitor keeps searching over time:
+- baseline_queries: the searches to run on every check (usually the same as search_queries).
+- follow_up_queries: 1-4 DIFFERENT searches to run only when the first results are inconclusive — corroboration phrasing, official-confirmation phrasing, alternate wording of the outcome.
+- revisit: whether previously seen pages may be fetched and judged AGAIN. Set allowed=true when key sources publish at stable URLs that update in place (official statistics or data pages, results pages, agency summaries) so the outcome appears on a page the monitor has already seen. List those domains. Use allowed=false when confirmation will arrive as new articles instead.`;
 
 /**
  * @notice Enforce: suggestions always mean VAGUE; CLEAR never carries interpretations.
@@ -99,7 +116,7 @@ export function enforceVaguenessInvariant(
   };
 }
 
-/** @dev Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code). */
+/** @dev Zod subset of WatchSpec fields the model is allowed to produce (metadata added in code; monitoring plan sanitized separately). */
 const CompiledSpecBodySchema = WatchSpecSchema.omit({
   id: true,
   user_id: true,
@@ -107,6 +124,8 @@ const CompiledSpecBodySchema = WatchSpecSchema.omit({
   created_at: true,
   check_frequency: true,
   status: true,
+  monitoring_plan: true,
+  plan_state: true,
 });
 
 /**
@@ -159,8 +178,19 @@ Compile this into a Watch Spec body.`,
     clarified_statement: clarified,
   });
 
+  // Sanitize the AI-written monitoring plan; fall back to a plan that mirrors
+  // today's behavior (baseline queries only, no re-checks) when it is unusable.
+  const monitoringPlan =
+    sanitizeMonitoringPlan(
+      (parsed as Record<string, unknown>)?.monitoring_plan,
+    ) ??
+    MonitoringPlanSchema.parse({
+      baseline_queries: body.search_queries.slice(0, PLAN_MAX_QUERIES),
+    });
+
   return WatchSpecSchema.parse({
     ...body,
+    monitoring_plan: monitoringPlan,
     id: options.id ?? `w_${crypto.randomUUID().slice(0, 8)}`,
     user_id: options.userId ?? "eval_user",
     raw_input: rawInput,

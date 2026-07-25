@@ -1,0 +1,69 @@
+{
+  "cases": [
+    {
+      "id": "auckland-rain-page-update",
+      "description": "Official weather page updates in place: no rain recorded in the morning, rainfall confirmed in the evening. The monitor must be able to re-judge the same URL and trigger.",
+      "spec": {
+        "id": "w_eval_revisit_rain",
+        "raw_input": "Notify me if Auckland records rain on Saturday, 25 July 2026.",
+        "clarified_statement": "Auckland, New Zealand records measurable rainfall (at least 0.1 mm at an official weather station) on Saturday 25 July 2026 local time.",
+        "trigger_conditions": [
+          "An official or credible source reports measurable rainfall recorded in Auckland on 25 July 2026"
+        ],
+        "non_triggers": [
+          "Forecasts or predictions of rain",
+          "Rain recorded in other cities or on other dates",
+          "Live weather dashboards that show conditions without confirming recorded rainfall for the day"
+        ],
+        "entities": ["Auckland", "New Zealand", "rainfall"],
+        "search_queries": [
+          "Auckland rainfall recorded 25 July 2026",
+          "Auckland weather Saturday 25 July 2026 rain confirmed"
+        ],
+        "authoritative_domains": ["metservice.com", "niwa.co.nz"],
+        "monitoring_plan": {
+          "plan_version": 1,
+          "baseline_queries": [
+            "Auckland rainfall recorded 25 July 2026",
+            "Auckland weather Saturday 25 July 2026 rain confirmed"
+          ],
+          "follow_up_queries": [
+            "MetService Auckland daily rainfall summary 25 July 2026"
+          ],
+          "revisit": {
+            "allowed": true,
+            "domains": ["metservice.com"],
+            "max_revisits_per_url": 2
+          }
+        },
+        "created_at": "2026-07-24T20:00:00+12:00",
+        "check_frequency": "daily",
+        "status": "watching"
+      },
+      "pass1": {
+        "label": "negative",
+        "expect_verdict": "NOT_TRIGGERED",
+        "candidate": {
+          "url": "https://www.metservice.com/towns-cities/locations/auckland/observations",
+          "domain": "metservice.com",
+          "title": "Auckland observations — MetService",
+          "snippet": "Auckland observations, Saturday 25 July 2026, updated 9:00 am: partly cloudy, 13C. Rainfall recorded today so far: 0.0 mm. Showers are possible later this evening.",
+          "published_at": "2026-07-25T09:00:00+12:00",
+          "retrieval_source": "fixture"
+        }
+      },
+      "pass2": {
+        "label": "positive",
+        "expect_verdict": "TRIGGERED",
+        "candidate": {
+          "url": "https://www.metservice.com/towns-cities/locations/auckland/observations",
+          "domain": "metservice.com",
+          "title": "Auckland observations — MetService",
+          "snippet": "Auckland observations, Saturday 25 July 2026, end-of-day summary updated 9:30 pm: 14.2 mm of rain was recorded at the Auckland (Mangere) station on Saturday 25 July 2026. Measurable rainfall confirmed for the day.",
+          "published_at": "2026-07-25T21:30:00+12:00",
+          "retrieval_source": "fixture"
+        }
+      }
+    }
+  ]
+}

@@ -131,6 +131,25 @@ describe("applyRetrievalFilters", () => {
     expect(filtered[0].domain).toBe("reuters.com");
   });
 
+  it("keeps a seen URL when the plan approved it for a re-check", () => {
+    const seen = new Set([normalizeUrl("https://apnews.com/trump-wins-2024/")]);
+    const allow = new Set([
+      normalizeUrl("https://apnews.com/trump-wins-2024/"),
+    ]);
+    const filtered = applyRetrievalFilters(
+      [postWatch, later],
+      WATCH_CREATED_AT,
+      seen,
+      [],
+      allow,
+    );
+    expect(filtered).toHaveLength(2);
+    expect(filtered.map((c) => c.domain)).toEqual([
+      "apnews.com",
+      "reuters.com",
+    ]);
+  });
+
   it("excludes denylisted domains", () => {
     const filtered = applyRetrievalFilters(
       [postWatch, later],
