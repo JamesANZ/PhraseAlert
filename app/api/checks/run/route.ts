@@ -1,9 +1,9 @@
 /**
  * @title GET|POST /api/checks/run
  * @notice Cron endpoint: run checks for `watching` watches that are due.
- * @dev Vercel Cron invokes GET hourly; POST kept for manual runs. A watch is due
- *      when its daily cadence has elapsed or the AI queued a follow-up whose
- *      time has arrived — so most hourly ticks skip most watches (cost guard).
+ * @dev Vercel Cron invokes GET daily (08:00 UTC); POST kept for manual runs.
+ *      A watch is due when its daily cadence has elapsed or the AI queued a
+ *      follow-up whose time has arrived.
  *      Protected by Authorization: Bearer CRON_SECRET when CRON_SECRET is set.
  * @custom:env TAVILY_API_KEY, CRON_SECRET (optional)
  */
