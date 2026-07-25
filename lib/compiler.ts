@@ -81,9 +81,9 @@ Return ONLY valid JSON matching this schema:
 non_triggers is critical: list coverage that should NOT fire the watch (guides, speculation, predictions, unrelated events, live dashboards without the event, and recaps or historical reporting that the event already occurred before the watch was created).
 Do NOT list factual post-watch reporting that the watched event newly occurred as a non-trigger.
 search_queries should be 2-4 concrete web search phrases that find evidence the event OCCURRED
-(results, winner declared, threshold crossed, official confirmation). Prefer event/result phrasing with year or outcome words.
+(results, winner declared, threshold crossed, official confirmation, recorded measurements). Prefer event/result phrasing with year or outcome words — NOT forecast/warning phrasing.
 NEVER use live-dashboard queries such as "price today", "current value", "live chart", or "live score".
-authoritative_domains should be official or primary news/data sources where applicable.
+authoritative_domains should be official or primary news/data sources where applicable. Spell domain names correctly (e.g. metservice.com, not metervice.com).
 
 monitoring_plan directs how the monitor keeps searching over time:
 - baseline_queries: the searches to run on every check (usually the same as search_queries).
@@ -127,6 +127,25 @@ const CompiledSpecBodySchema = WatchSpecSchema.omit({
   monitoring_plan: true,
   plan_state: true,
 });
+
+/** @dev Common LLM misspellings of well-known domains. */
+const DOMAIN_TYPOS: Record<string, string> = {
+  "metervice.com": "metservice.com",
+  "metservce.com": "metservice.com",
+  "metsrevice.com": "metservice.com",
+};
+
+/** @notice Fix known domain typos from model output. */
+export function normalizeDomains(domains: unknown): string[] {
+  if (!Array.isArray(domains)) return [];
+  return domains
+    .filter((d): d is string => typeof d === "string")
+    .map((d) => {
+      const cleaned = d.trim().toLowerCase().replace(/^www\./, "");
+      return DOMAIN_TYPOS[cleaned] ?? cleaned;
+    })
+    .filter(Boolean);
+}
 
 /**
  * @notice Classify whether a watch sentence is specific enough to monitor.
@@ -173,17 +192,31 @@ Clarified statement: "${clarified}"
 Compile this into a Watch Spec body.`,
   );
 
+  const rawParsed = parsed as Record<string, unknown>;
   const body = CompiledSpecBodySchema.parse({
-    ...(parsed as Record<string, unknown>),
+    ...rawParsed,
     clarified_statement: clarified,
+    // Fix common model typos in domain names before Zod accepts the body.
+    authoritative_domains: normalizeDomains(rawParsed.authoritative_domains),
   });
 
   // Sanitize the AI-written monitoring plan; fall back to a plan that mirrors
   // today's behavior (baseline queries only, no re-checks) when it is unusable.
+  const monitoringPlanRaw = rawParsed.monitoring_plan;
+  if (
+    monitoringPlanRaw &&
+    typeof monitoringPlanRaw === "object" &&
+    "revisit" in monitoringPlanRaw
+  ) {
+    const revisit = (monitoringPlanRaw as { revisit?: { domains?: unknown } })
+      .revisit;
+    if (revisit) {
+      revisit.domains = normalizeDomains(revisit.domains);
+    }
+  }
+
   const monitoringPlan =
-    sanitizeMonitoringPlan(
-      (parsed as Record<string, unknown>)?.monitoring_plan,
-    ) ??
+    sanitizeMonitoringPlan(monitoringPlanRaw) ??
     MonitoringPlanSchema.parse({
       baseline_queries: body.search_queries.slice(0, PLAN_MAX_QUERIES),
     });

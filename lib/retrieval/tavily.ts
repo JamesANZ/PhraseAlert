@@ -34,12 +34,14 @@ export interface TavilyExtractResponse {
   failed_results?: Array<{ url: string; error: string }>;
 }
 
-/** @dev Options for tavilySearch. startDate limits to content after watch creation. */
+/** @dev Options for tavilySearch. */
 export interface TavilySearchOptions {
   maxResults?: number;
   searchDepth?: "basic" | "advanced";
   startDate?: string;
   topic?: "general" | "news" | "finance";
+  /** @dev Prefer results from these hostnames when the API honors the filter. */
+  includeDomains?: string[];
 }
 
 /** @dev Options for tavilyExtract. query enables chunked relevance extraction. */
@@ -101,6 +103,10 @@ export async function tavilySearch(
 
   if (opts.startDate) {
     body.start_date = opts.startDate;
+  }
+
+  if (opts.includeDomains && opts.includeDomains.length > 0) {
+    body.include_domains = opts.includeDomains;
   }
 
   return tavilyFetch<TavilySearchResponse>("/search", body);

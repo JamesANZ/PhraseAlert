@@ -1,7 +1,9 @@
 /**
  * @title Live retrieval orchestrator
  * @notice Runs Tavily search and extract for a WatchSpec's search_queries and builds RetrievalCandidates.
- * @dev Phase 2. Constrains results to post-watch window via Tavily start_date; dedupes by normalized URL.
+ * @dev Phase 2. Dedupes by normalized URL. Does NOT pass Tavily start_date — that filter
+ *      silently drops undated live/official pages that often hold the confirmation. Temporal
+ *      safety stays in applyRetrievalFilters + decide (event_date_claimed).
  * @custom:pipeline step 2 — retrieve
  * @custom:env TAVILY_API_KEY
  */
@@ -13,8 +15,8 @@ import { tavilyExtract, tavilySearch, type TavilySearchResult } from "./tavily";
 const MAX_RESULTS_PER_QUERY = 5;
 /** @dev Top unique URLs sent to Tavily extract for richer snippets. */
 const MAX_EXTRACT_URLS = 5;
-/** @dev Parallel Tavily search calls (one per search_query). */
-const SEARCH_CONCURRENCY = 2;
+/** @dev Parallel Tavily search calls (one per search_query × topic). */
+const SEARCH_CONCURRENCY = 3;
 
 /** @dev Hostname without www prefix; "unknown" on parse failure. */
 function domainFromUrl(url: string): string {
@@ -27,30 +29,53 @@ function domainFromUrl(url: string): string {
 
 /**
  * @dev Normalize Tavily published_date to ISO.
- * @return ISO string, or null when missing/invalid (undated candidates are dropped).
+ * @return ISO string, or retrievedAt when missing/invalid so undated news and
+ *         official live pages still reach the detector (decide still requires a
+ *         post-watch event_date_claimed before notifying).
  */
-function toIsoDate(value: string | null | undefined): string | null {
-  if (!value) return null;
+export function toIsoDate(
+  value: string | null | undefined,
+  retrievedAt?: string,
+): string | null {
+  if (value) {
+    const trimmed = value.trim();
+    // YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const d = new Date(`${trimmed}T00:00:00.000Z`);
+      if (!Number.isNaN(d.getTime())) return d.toISOString();
+    }
 
-  const trimmed = value.trim();
-  // YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return new Date(`${trimmed}T00:00:00.000Z`).toISOString();
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString();
+    }
   }
 
-  const parsed = new Date(trimmed);
-  if (!Number.isNaN(parsed.getTime())) {
-    return parsed.toISOString();
+  if (retrievedAt) {
+    const fallback = new Date(retrievedAt);
+    if (!Number.isNaN(fallback.getTime())) return fallback.toISOString();
   }
 
   return null;
 }
 
-/** @dev YYYY-MM-DD slice of watch created_at for Tavily start_date filter. */
-function startDateFromCreatedAt(createdAt: string): string | undefined {
-  const d = new Date(createdAt);
-  if (Number.isNaN(d.getTime())) return undefined;
-  return d.toISOString().slice(0, 10);
+/** @dev Infer a publish date from common CMS URL patterns when Tavily omits it. */
+export function publishedDateFromUrl(url: string): string | null {
+  try {
+    const path = new URL(url).pathname;
+    // /2026/07/25/ or /2026-07-25/
+    const dashed = path.match(/\/(20\d{2})\/(\d{2})\/(\d{2})(?:\/|$)/);
+    if (dashed) {
+      return toIsoDate(`${dashed[1]}-${dashed[2]}-${dashed[3]}`);
+    }
+    const compact = path.match(/\/(20\d{2})-(\d{2})-(\d{2})(?:\/|$)/);
+    if (compact) {
+      return toIsoDate(`${compact[1]}-${compact[2]}-${compact[3]}`);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
 }
 
 /** @dev Bounded-concurrency map for parallel Tavily searches. */
@@ -93,11 +118,27 @@ function looksLikeLiveDashboard(title: string, url: string): boolean {
 }
 
 /**
+ * @dev True when every year embedded in the URL is before the watch's year.
+ *      Catches historical climate PDFs / archive paths that Tavily still ranks high
+ *      and that can confuse the detector into inventing a post-watch event date.
+ */
+export function urlLooksHistorical(url: string, watchCreatedAt: string): boolean {
+  const created = new Date(watchCreatedAt);
+  if (Number.isNaN(created.getTime())) return false;
+  const createdYear = created.getUTCFullYear();
+  const years = [...url.matchAll(/20\d{2}/g)].map((m) => Number(m[0]));
+  if (years.length === 0) return false;
+  return years.every((y) => y < createdYear);
+}
+
+/**
  * @notice Retrieve web candidates for a watch using its compiled search_queries
  *         (or an explicit query list from the monitoring plan's current round).
- * @dev Merges search results, optionally enriches top URLs via extract, returns RetrievalCandidate[].
+ * @dev Merges general + news topic searches at advanced depth, enriches top URLs
+ *      via extract, returns RetrievalCandidate[]. Undated hits keep a retrievedAt
+ *      fallback so official observation pages are not silently discarded.
  * @param spec WatchSpec with search_queries and created_at.
- * @param options.retrievedAt Reserved for callers; undated hits are dropped (no now-fallback).
+ * @param options.retrievedAt Used as published_at when Tavily omits a date.
  * @param options.queries Bounded query list for this round; defaults to spec.search_queries.
  * @return Deduplicated candidates ready for applyRetrievalFilters.
  */
@@ -105,21 +146,49 @@ export async function retrieveCandidates(
   spec: WatchSpec,
   options: { retrievedAt?: string; queries?: string[] } = {},
 ): Promise<RetrievalCandidate[]> {
-  void options.retrievedAt;
-  const startDate = startDateFromCreatedAt(spec.created_at);
+  const retrievedAt = options.retrievedAt ?? new Date().toISOString();
   const queries =
     options.queries && options.queries.length > 0
       ? options.queries
       : spec.search_queries;
 
+  // Run each query against both general and news indexes. News often has dates;
+  // general (advanced) finds local/official pages Google surfaces that news misses.
+  // Do not pass Tavily start_date — it drops undated confirmation pages entirely.
+  const searchJobs: Array<{
+    query: string;
+    topic: "general" | "news";
+  }> = queries.flatMap((query) => [
+    { query, topic: "general" as const },
+    { query, topic: "news" as const },
+  ]);
+
+  // Also search inside authoritative domains. Tavily's open web ranking often
+  // buries official observation/result pages under forecast aggregators; site:
+  // queries surface them the way a human would on Google.
+  const seed = queries[0] ?? spec.clarified_statement;
+  const authDomains = spec.authoritative_domains
+    .map((d) => d.toLowerCase().replace(/^www\./, "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  for (const domain of authDomains.slice(0, 3)) {
+    searchJobs.push({
+      query: `site:${domain} ${seed}`,
+      topic: "general",
+    });
+  }
+
   const searchBatches = await mapPool(
-    queries,
+    searchJobs,
     SEARCH_CONCURRENCY,
-    async (query) => {
+    async ({ query, topic }) => {
       const response = await tavilySearch(query, {
         maxResults: MAX_RESULTS_PER_QUERY,
-        searchDepth: "basic",
-        startDate,
+        searchDepth: "advanced",
+        topic,
+        // Bias news searches toward the watch's preferred domains when set.
+        includeDomains:
+          topic === "news" && authDomains.length > 0 ? authDomains : undefined,
       });
       return response.results ?? [];
     },
@@ -131,18 +200,47 @@ export async function retrieveCandidates(
       if (!result?.url) continue;
       const key = normalizeUrl(result.url);
       const existing = byUrl.get(key);
-      // Keep the higher-scoring duplicate when the same URL appears across queries.
-      if (!existing || (result.score ?? 0) > (existing.score ?? 0)) {
+      // Prefer the hit that has a publish date; otherwise keep the higher score.
+      const resultDated = Boolean(result.published_date);
+      const existingDated = Boolean(existing?.published_date);
+      if (!existing) {
+        byUrl.set(key, result);
+        continue;
+      }
+      if (resultDated && !existingDated) {
+        byUrl.set(key, result);
+        continue;
+      }
+      if (resultDated === existingDated && (result.score ?? 0) > (existing.score ?? 0)) {
         byUrl.set(key, result);
       }
     }
   }
 
-  // Rank by Tavily relevance so extract + judge see event pages, not live dashboards first.
+  const authDomainSet = new Set(authDomains);
+  const isAuthoritativeUrl = (url: string) => {
+    try {
+      const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+      return [...authDomainSet].some(
+        (a) => host === a || host.endsWith(`.${a}`),
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  // Prefer authoritative domains, then dated hits, then Tavily score. Demote
+  // live dashboards so extract + judge see confirmation pages first.
   const uniqueResults = [...byUrl.values()].sort((a, b) => {
     const dashA = looksLikeLiveDashboard(a.title || "", a.url) ? 1 : 0;
     const dashB = looksLikeLiveDashboard(b.title || "", b.url) ? 1 : 0;
     if (dashA !== dashB) return dashA - dashB;
+    const authA = isAuthoritativeUrl(a.url) ? 0 : 1;
+    const authB = isAuthoritativeUrl(b.url) ? 0 : 1;
+    if (authA !== authB) return authA - authB;
+    const datedA = a.published_date ? 0 : 1;
+    const datedB = b.published_date ? 0 : 1;
+    if (datedA !== datedB) return datedA - datedB;
     return (b.score ?? 0) - (a.score ?? 0);
   });
   const extractUrls = uniqueResults
@@ -169,7 +267,12 @@ export async function retrieveCandidates(
 
   const candidates: RetrievalCandidate[] = [];
   for (const result of uniqueResults) {
-    const publishedAt = toIsoDate(result.published_date);
+    if (urlLooksHistorical(result.url, spec.created_at)) continue;
+
+    const publishedAt =
+      toIsoDate(result.published_date) ||
+      publishedDateFromUrl(result.url) ||
+      toIsoDate(null, retrievedAt);
     if (!publishedAt) continue;
 
     const key = normalizeUrl(result.url);
