@@ -1,7 +1,7 @@
 /**
  * @title Notification decision layer
  * @notice Aggregates per-source detection verdicts and decides whether to notify the user.
- * @dev Phase 1 judgment layer. Implements corroboration: authoritative high-confidence OR two independent triggers.
+ * @dev Phase 1 judgment layer. A high-confidence confirmed source or two independent triggers can notify.
  * @custom:pipeline step 4 — decide
  */
 import type {
@@ -13,6 +13,8 @@ import type {
 
 /** @dev Minimum confidence from an authoritative domain required for solo-trigger notification. */
 export const TRIGGER_CONFIDENCE_THRESHOLD = 0.75;
+/** @dev Higher bar for a solo trigger from a domain not explicitly marked authoritative. */
+export const NON_AUTHORITATIVE_TRIGGER_CONFIDENCE_THRESHOLD = 0.9;
 
 /** @dev One retrieval candidate paired with its detection result. */
 export interface EvidenceRecord {
@@ -84,9 +86,10 @@ export function isPostWatchConfirmedTrigger(
 
 /**
  * @notice Decide whether evidence from a check warrants user notification.
- * @dev Notification paths: (1) authoritative source ≥0.75 confidence TRIGGERED, or (2) ≥2 TRIGGERED from distinct domains.
+ * @dev Notification paths: (1) authoritative source ≥0.75 confidence TRIGGERED,
+ *      (2) any source ≥0.9 confidence TRIGGERED, or (3) ≥2 TRIGGERED from distinct domains.
  *      Only TRIGGERED evidence with event_date_claimed on/after created_at is eligible.
- *      Single non-authoritative eligible trigger sets needs_corroboration without notifying.
+ *      Lower-confidence single-source triggers require corroboration.
  * @param spec Watch spec (for authoritative domain list and created_at).
  * @param evidence Filtered candidates with detection results from this check.
  * @return DecideResult with should_notify, top verdict, and human-readable reasoning.
@@ -147,6 +150,22 @@ export function decideFromEvidence(
     };
   }
 
+  const highConfidenceTrigger = triggered.find(
+    (e) =>
+      e.detection.confidence >= NON_AUTHORITATIVE_TRIGGER_CONFIDENCE_THRESHOLD,
+  );
+
+  if (highConfidenceTrigger) {
+    return {
+      should_notify: true,
+      top_verdict: "TRIGGERED",
+      top_confidence: highConfidenceTrigger.detection.confidence,
+      evidence,
+      needs_corroboration: false,
+      reasoning: `Source ${highConfidenceTrigger.candidate.domain} confirmed the event with high confidence ${highConfidenceTrigger.detection.confidence}.`,
+    };
+  }
+
   const independentDomains = new Set(triggered.map((e) => e.candidate.domain));
   if (triggered.length >= 2 && independentDomains.size >= 2) {
     const top = triggered.sort(
@@ -170,7 +189,7 @@ export function decideFromEvidence(
       evidence,
       needs_corroboration: true,
       reasoning:
-        "Single non-authoritative trigger; would schedule corroboration in production.",
+        "Single trigger below the solo-source confidence threshold; requires corroboration.",
     };
   }
 

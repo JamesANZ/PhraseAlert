@@ -28,6 +28,33 @@ function domainFromUrl(url: string): string {
 }
 
 /**
+ * @dev Keep one prolific domain from consuming every bounded detector slot.
+ *      Results are already relevance-ranked; defer only entries beyond the
+ *      per-domain allowance, then append them so no result is discarded.
+ */
+export function diversifyResultsByDomain<T extends { url: string }>(
+  ranked: T[],
+  maxPerDomain = 2,
+): T[] {
+  const selected: T[] = [];
+  const deferred: T[] = [];
+  const counts = new Map<string, number>();
+
+  for (const result of ranked) {
+    const domain = domainFromUrl(result.url);
+    const count = counts.get(domain) ?? 0;
+    if (count < maxPerDomain) {
+      selected.push(result);
+      counts.set(domain, count + 1);
+    } else {
+      deferred.push(result);
+    }
+  }
+
+  return [...selected, ...deferred];
+}
+
+/**
  * @dev Normalize Tavily published_date to ISO.
  * @return ISO string, or retrievedAt when missing/invalid so undated news and
  *         official live pages still reach the detector (decide still requires a
@@ -122,7 +149,10 @@ function looksLikeLiveDashboard(title: string, url: string): boolean {
  *      Catches historical climate PDFs / archive paths that Tavily still ranks high
  *      and that can confuse the detector into inventing a post-watch event date.
  */
-export function urlLooksHistorical(url: string, watchCreatedAt: string): boolean {
+export function urlLooksHistorical(
+  url: string,
+  watchCreatedAt: string,
+): boolean {
   const created = new Date(watchCreatedAt);
   if (Number.isNaN(created.getTime())) return false;
   const createdYear = created.getUTCFullYear();
@@ -168,7 +198,12 @@ export async function retrieveCandidates(
   // queries surface them the way a human would on Google.
   const seed = queries[0] ?? spec.clarified_statement;
   const authDomains = spec.authoritative_domains
-    .map((d) => d.toLowerCase().replace(/^www\./, "").trim())
+    .map((d) =>
+      d
+        .toLowerCase()
+        .replace(/^www\./, "")
+        .trim(),
+    )
     .filter(Boolean)
     .slice(0, 4);
   for (const domain of authDomains.slice(0, 3)) {
@@ -211,7 +246,10 @@ export async function retrieveCandidates(
         byUrl.set(key, result);
         continue;
       }
-      if (resultDated === existingDated && (result.score ?? 0) > (existing.score ?? 0)) {
+      if (
+        resultDated === existingDated &&
+        (result.score ?? 0) > (existing.score ?? 0)
+      ) {
         byUrl.set(key, result);
       }
     }
@@ -231,7 +269,7 @@ export async function retrieveCandidates(
 
   // Prefer authoritative domains, then dated hits, then Tavily score. Demote
   // live dashboards so extract + judge see confirmation pages first.
-  const uniqueResults = [...byUrl.values()].sort((a, b) => {
+  const rankedResults = [...byUrl.values()].sort((a, b) => {
     const dashA = looksLikeLiveDashboard(a.title || "", a.url) ? 1 : 0;
     const dashB = looksLikeLiveDashboard(b.title || "", b.url) ? 1 : 0;
     if (dashA !== dashB) return dashA - dashB;
@@ -243,6 +281,7 @@ export async function retrieveCandidates(
     if (datedA !== datedB) return datedA - datedB;
     return (b.score ?? 0) - (a.score ?? 0);
   });
+  const uniqueResults = diversifyResultsByDomain(rankedResults);
   const extractUrls = uniqueResults
     .slice(0, MAX_EXTRACT_URLS)
     .map((r) => r.url);

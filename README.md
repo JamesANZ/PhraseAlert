@@ -67,7 +67,7 @@ PhraseAlert is a Next.js App Router product with a judgment layer, live retrieva
 **Judgment layer**
 
 - Watch compiler (strict vagueness + structured watch spec)
-- Detection and decision pipeline (authoritative high-confidence _or_ two independent triggers)
+- Detection and decision pipeline (high-confidence confirmation or two independent triggers)
 - Hard lock: notify only when TRIGGERED evidence has a parseable event date on/after watch creation
 - Backdated eval harness with historical fixtures, multi-turn dialogue smoke, and live Tavily retrieval
 - Hugging Face Inference Providers (default `meta-llama/Llama-3.3-70B-Instruct`)

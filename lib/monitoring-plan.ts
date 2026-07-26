@@ -82,13 +82,24 @@ export function sanitizeMonitoringPlan(input: unknown): MonitoringPlan | null {
 }
 
 /**
- * @notice Plan for a spec: the AI-written one, or a fallback that reproduces
- *         today's behavior (fixed queries, no backups, no re-checks) for old watches.
+ * @notice Plan for a spec: the AI-written one, or a safe fallback that gives
+ *         legacy watches a confirmation query and bounded authoritative-page re-checks.
  */
 export function planForSpec(spec: WatchSpec): MonitoringPlan {
   if (spec.monitoring_plan) return spec.monitoring_plan;
+  const confirmationQuery =
+    `${spec.clarified_statement} confirmed result`.slice(
+      0,
+      PLAN_MAX_QUERY_LENGTH,
+    );
   return MonitoringPlanSchema.parse({
     baseline_queries: spec.search_queries.slice(0, PLAN_MAX_QUERIES),
+    follow_up_queries: [confirmationQuery],
+    revisit: {
+      allowed: spec.authoritative_domains.length > 0,
+      domains: spec.authoritative_domains.slice(0, PLAN_MAX_REVISIT_DOMAINS),
+      max_revisits_per_url: 2,
+    },
   });
 }
 

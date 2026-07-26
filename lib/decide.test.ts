@@ -148,9 +148,18 @@ describe("decideFromEvidence", () => {
     expect(result.needs_corroboration).toBe(false);
   });
 
-  it("requires corroboration for a single non-authoritative trigger", () => {
+  it("notifies for a high-confidence single non-authoritative trigger", () => {
     const result = decideFromEvidence(spec(), [
-      evidence("blog.example.com", "TRIGGERED", 0.95),
+      evidence("weather25.com", "TRIGGERED", 0.9),
+    ]);
+    expect(result.should_notify).toBe(true);
+    expect(result.top_verdict).toBe("TRIGGERED");
+    expect(result.needs_corroboration).toBe(false);
+  });
+
+  it("requires corroboration for a lower-confidence single non-authoritative trigger", () => {
+    const result = decideFromEvidence(spec(), [
+      evidence("blog.example.com", "TRIGGERED", 0.89),
     ]);
     expect(result.should_notify).toBe(false);
     expect(result.top_verdict).toBe("TRIGGERED");

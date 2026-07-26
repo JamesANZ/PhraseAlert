@@ -1,5 +1,44 @@
 import { describe, expect, it } from "vitest";
-import { publishedDateFromUrl, toIsoDate, urlLooksHistorical } from "./index";
+import {
+  diversifyResultsByDomain,
+  publishedDateFromUrl,
+  toIsoDate,
+  urlLooksHistorical,
+} from "./index";
+
+describe("diversifyResultsByDomain", () => {
+  it("prevents one domain from consuming all early evaluation slots", () => {
+    const ranked = [
+      { url: "https://bbc.com/1" },
+      { url: "https://bbc.com/2" },
+      { url: "https://bbc.com/3" },
+      { url: "https://bbc.com/4" },
+      { url: "https://theguardian.com/result" },
+      { url: "https://rnz.co.nz/result" },
+    ];
+
+    expect(
+      diversifyResultsByDomain(ranked).map((result) => result.url),
+    ).toEqual([
+      "https://bbc.com/1",
+      "https://bbc.com/2",
+      "https://theguardian.com/result",
+      "https://rnz.co.nz/result",
+      "https://bbc.com/3",
+      "https://bbc.com/4",
+    ]);
+  });
+
+  it("preserves the original order when domains are already diverse", () => {
+    const ranked = [
+      { url: "https://bbc.com/result" },
+      { url: "https://theguardian.com/result" },
+      { url: "https://rnz.co.nz/result" },
+    ];
+
+    expect(diversifyResultsByDomain(ranked)).toEqual(ranked);
+  });
+});
 
 describe("toIsoDate", () => {
   it("parses YYYY-MM-DD as UTC midnight", () => {

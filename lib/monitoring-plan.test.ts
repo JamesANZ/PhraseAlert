@@ -88,11 +88,17 @@ describe("planForSpec", () => {
     expect(planForSpec(s)).toEqual(plan());
   });
 
-  it("falls back to today's behavior for legacy watches", () => {
+  it("gives legacy watches a confirmation query and bounded revisits", () => {
     const legacy = planForSpec(spec());
     expect(legacy.baseline_queries).toEqual(spec().search_queries);
-    expect(legacy.follow_up_queries).toEqual([]);
-    expect(legacy.revisit.allowed).toBe(false);
+    expect(legacy.follow_up_queries).toEqual([
+      `${spec().clarified_statement} confirmed result`,
+    ]);
+    expect(legacy.revisit).toEqual({
+      allowed: true,
+      domains: ["metservice.com"],
+      max_revisits_per_url: 2,
+    });
   });
 });
 
