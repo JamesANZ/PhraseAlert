@@ -141,7 +141,10 @@ export function normalizeDomains(domains: unknown): string[] {
   return domains
     .filter((d): d is string => typeof d === "string")
     .map((d) => {
-      const cleaned = d.trim().toLowerCase().replace(/^www\./, "");
+      const cleaned = d
+        .trim()
+        .toLowerCase()
+        .replace(/^www\./, "");
       return DOMAIN_TYPOS[cleaned] ?? cleaned;
     })
     .filter(Boolean);
