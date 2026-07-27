@@ -6,7 +6,11 @@
  * @dev Persists check and evidence rows; updates watch status and plan state.
  * @custom:pipeline step 5 — check (orchestrates retrieve, filter, detect, decide, plan)
  */
-import { getUser } from "@/lib/billing/entitlements";
+import {
+  getEffectivePlan,
+  getUser,
+  planAllowsSms,
+} from "@/lib/billing/entitlements";
 import {
   createCheck,
   createEvidence,
@@ -22,6 +26,7 @@ import { detectEvent } from "@/lib/detector";
 import { applyRetrievalFilters, normalizeUrl } from "@/lib/filter";
 import { buildFindingsForNotify } from "@/lib/findings";
 import {
+  clampRecheckHours,
   decideNextAction,
   filterRevisitUrls,
   planForSpec,
@@ -29,6 +34,7 @@ import {
   recordRevisits,
 } from "@/lib/monitoring-plan";
 import { sendWatchTriggeredEmail } from "@/lib/notifications/email";
+import { sendWatchTriggeredSms } from "@/lib/notifications/sms";
 import { retrieveByUrls, retrieveCandidates } from "@/lib/retrieval";
 import {
   updateWatchPlanState,
@@ -242,12 +248,24 @@ export async function runCheckForWatch(
       });
     }
 
+    if (user && planAllowsSms(getEffectivePlan(user)) && user.phoneE164) {
+      try {
+        await sendWatchTriggeredSms(user.phoneE164, findings);
+      } catch (err) {
+        console.error("[notify] failed to send watch SMS", {
+          watchId: watch.id,
+          userId: watch.userId,
+          err,
+        });
+      }
+    }
+
     await updateWatchStatus(watch.id, watch.userId, "triggered");
     triggered = true;
   }
 
   // Save plan state for the next run: last-run time, re-check budgets, and any
-  // follow-up the AI queued (which makes the watch due before its daily run).
+  // follow-up the AI queued (which may make the watch due before baseline).
   const newState: PlanRuntimeState = {
     ...planState,
     last_check_at: now,
@@ -258,6 +276,12 @@ export async function runCheckForWatch(
   };
 
   if (!triggered && nextAction && nextAction.recheck_after_hours != null) {
+    const userForPlan = await getUser(watch.userId);
+    const effectivePlan = userForPlan ? getEffectivePlan(userForPlan) : "free";
+    const recheckHours = clampRecheckHours(
+      nextAction.recheck_after_hours,
+      effectivePlan,
+    );
     const revisitUrls = filterRevisitUrls(
       plan,
       newState,
@@ -266,7 +290,7 @@ export async function runCheckForWatch(
     );
     newState.pending_follow_up = true;
     newState.next_eligible_at = new Date(
-      Date.parse(now) + nextAction.recheck_after_hours * 3600_000,
+      Date.parse(now) + recheckHours * 3600_000,
     ).toISOString();
     newState.pending_actions = {
       use_follow_up_queries:

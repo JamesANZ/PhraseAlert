@@ -7,7 +7,15 @@ import type {
 } from "@/types";
 
 vi.mock("@/lib/billing/entitlements", () => ({
-  getUser: vi.fn(async () => ({ email: "user@example.com" })),
+  getUser: vi.fn(async () => ({
+    email: "user@example.com",
+    plan: "free",
+    billingMode: "none",
+    planPeriodEnd: null,
+    phoneE164: null,
+  })),
+  getEffectivePlan: vi.fn(() => "free"),
+  planAllowsSms: vi.fn(() => false),
 }));
 vi.mock("@/lib/checks", () => ({
   createCheck: vi.fn(async () => "chk_test"),
@@ -23,6 +31,9 @@ vi.mock("@/lib/findings", () => ({
 }));
 vi.mock("@/lib/notifications/email", () => ({
   sendWatchTriggeredEmail: vi.fn(async () => undefined),
+}));
+vi.mock("@/lib/notifications/sms", () => ({
+  sendWatchTriggeredSms: vi.fn(async () => undefined),
 }));
 vi.mock("@/lib/retrieval", () => ({
   retrieveCandidates: vi.fn(async () => []),
