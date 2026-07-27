@@ -184,6 +184,7 @@ export async function compileWatchSpec(
     createdAt?: string;
     id?: string;
     userId?: string;
+    checkFrequency?: "daily" | "every_6h" | "hourly" | "every_15m";
   } = {},
 ): Promise<WatchSpec> {
   const clarified = options.clarifiedStatement ?? rawInput;
@@ -231,7 +232,7 @@ Compile this into a Watch Spec body.`,
     user_id: options.userId ?? "eval_user",
     raw_input: rawInput,
     created_at: options.createdAt ?? new Date().toISOString(),
-    check_frequency: "daily",
+    check_frequency: options.checkFrequency ?? "daily",
     status: "watching",
   });
 }

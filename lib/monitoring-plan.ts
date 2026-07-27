@@ -9,7 +9,10 @@
 import type { DecideResult, EvidenceRecord } from "@/lib/decide";
 import { normalizeUrl } from "@/lib/filter";
 import { completeJson } from "@/lib/inference";
+import { PLAN_BASELINE_MS, PLAN_CEILING_MS } from "@/lib/constants";
+import type { Plan } from "@/lib/billing/entitlements";
 import {
+  CheckFrequencySchema,
   MonitoringPlanSchema,
   NextActionSchema,
   PLAN_MAX_QUERIES,
@@ -22,9 +25,25 @@ import {
   type PlanRuntimeState,
   type WatchSpec,
 } from "@/types";
+import type { z } from "zod";
 
-/** @dev A watch with no pending follow-up runs on its normal cadence: once this many hours after its last run. */
+/** @dev Legacy alias: free-tier baseline in hours. */
 export const DAILY_CADENCE_HOURS = 23;
+
+export type CheckFrequency = z.infer<typeof CheckFrequencySchema>;
+
+/** @notice Map effective plan → compiled check_frequency stamp. */
+export function checkFrequencyForPlan(plan: Plan): CheckFrequency {
+  if (plan === "max") return "hourly";
+  if (plan === "plus") return "every_6h";
+  return "daily";
+}
+
+/** @notice Clamp AI recheck delay so it is never faster than the plan ceiling. */
+export function clampRecheckHours(hours: number, plan: Plan): number {
+  const ceilingHours = PLAN_CEILING_MS[plan] / 3600_000;
+  return Math.max(hours, ceilingHours);
+}
 
 /** @dev Trim strings and slice arrays so slightly-over-budget model output is kept rather than rejected. */
 function trimStrings(
@@ -171,18 +190,24 @@ export function recordRevisits(
 }
 
 /**
- * @notice Cron guard: should this watch run on the current hourly tick?
- * @dev Runs when it has never run, its normal daily cadence is due, or the AI
- *      queued a follow-up whose time has arrived. Everything else is skipped
- *      so the hourly cron does not multiply cost.
+ * @notice Cron guard: should this watch run on the current tick?
+ * @dev Due when never run, baseline elapsed for the owner's plan, or an AI
+ *      follow-up's next_eligible_at has arrived. Ceiling is enforced when the
+ *      follow-up delay is written (see clampRecheckHours).
  */
-export function isWatchDue(watch: { spec: WatchSpec }, now: Date): boolean {
+export function isWatchDue(
+  watch: { spec: WatchSpec },
+  now: Date,
+  plan: Plan = "free",
+): boolean {
   const state = planStateForSpec(watch.spec);
   if (!state.last_check_at) return true;
 
   const last = Date.parse(state.last_check_at);
   if (Number.isNaN(last)) return true;
-  if (now.getTime() - last >= DAILY_CADENCE_HOURS * 3600_000) return true;
+
+  const baselineMs = PLAN_BASELINE_MS[plan];
+  if (now.getTime() - last >= baselineMs) return true;
 
   if (state.pending_follow_up && state.next_eligible_at) {
     const eligible = Date.parse(state.next_eligible_at);

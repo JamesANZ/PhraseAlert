@@ -171,7 +171,7 @@ describe("recordRevisits", () => {
   });
 });
 
-describe("isWatchDue (hourly cron cost guard)", () => {
+describe("isWatchDue (plan cadence)", () => {
   const now = new Date("2026-07-25T12:00:00Z");
 
   function watchWith(planState?: Partial<PlanRuntimeState>) {
@@ -190,10 +190,30 @@ describe("isWatchDue (hourly cron cost guard)", () => {
     ).toBe(false);
   });
 
-  it("is due again once the daily cadence elapses", () => {
+  it("is due again once the free daily cadence elapses", () => {
     expect(
       isWatchDue(watchWith({ last_check_at: "2026-07-24T11:00:00Z" }), now),
     ).toBe(true);
+  });
+
+  it("is due on Plus after the 6h baseline", () => {
+    expect(
+      isWatchDue(
+        watchWith({ last_check_at: "2026-07-25T05:00:00Z" }),
+        now,
+        "plus",
+      ),
+    ).toBe(true);
+  });
+
+  it("is skipped on Plus before the 6h baseline", () => {
+    expect(
+      isWatchDue(
+        watchWith({ last_check_at: "2026-07-25T08:00:00Z" }),
+        now,
+        "plus",
+      ),
+    ).toBe(false);
   });
 
   it("is due early when a pending follow-up's time has arrived", () => {

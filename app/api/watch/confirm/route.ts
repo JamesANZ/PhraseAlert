@@ -7,7 +7,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth/session";
+import { getEffectivePlan, getUser } from "@/lib/billing/entitlements";
 import { assessVagueness, compileWatchSpec } from "@/lib/compiler";
+import { initDb } from "@/lib/db";
+import { checkFrequencyForPlan } from "@/lib/monitoring-plan";
 import { createWatch } from "@/lib/watches";
 
 const BodySchema = z.object({
@@ -21,6 +24,7 @@ const BodySchema = z.object({
  */
 export async function POST(request: Request) {
   try {
+    await initDb();
     const userId = await requireUserId();
     const body = BodySchema.parse(await request.json());
     const clarified = body.clarified_statement ?? body.raw_input;
@@ -39,10 +43,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const user = await getUser(userId);
+    const effectivePlan = user ? getEffectivePlan(user) : "free";
+
     const spec = await compileWatchSpec(body.raw_input, {
       clarifiedStatement: clarified,
       userId,
       createdAt: new Date().toISOString(),
+      checkFrequency: checkFrequencyForPlan(effectivePlan),
     });
 
     const watch = await createWatch(spec, userId);
