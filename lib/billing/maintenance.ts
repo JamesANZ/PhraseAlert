@@ -1,6 +1,6 @@
 import { EXPIRY_REMINDER_DAYS } from "@/lib/constants";
 import {
-  listExpiredPlusUsers,
+  listExpiredPaidUsers,
   listUsersNeedingExpiryReminders,
 } from "@/lib/billing/entitlements";
 import { downgradeUser } from "@/lib/billing/subscriptions";
@@ -34,6 +34,7 @@ export async function runBillingMaintenance(now = Date.now()): Promise<{
       user.email,
       user.daysLeft,
       user.planPeriodEnd,
+      user.plan === "max" ? "max" : "plus",
     );
     await recordBillingEvent(
       eventId,
@@ -43,9 +44,8 @@ export async function runBillingMaintenance(now = Date.now()): Promise<{
     reminders += 1;
   }
 
-  const expired = await listExpiredPlusUsers(now);
+  const expired = await listExpiredPaidUsers(now);
   for (const user of expired) {
-    // Active Stripe subscriptions without a past period end are filtered out in listExpiredPlusUsers
     const { paused } = await downgradeUser(user.id);
     if (user.email) {
       await sendDowngradeEmail(user.email, paused);

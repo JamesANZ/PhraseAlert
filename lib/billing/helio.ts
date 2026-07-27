@@ -1,7 +1,10 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { PLUS_MONTHLY_PRICE_CENTS } from "@/lib/constants";
+import {
+  MAX_MONTHLY_PRICE_CENTS,
+  PLUS_MONTHLY_PRICE_CENTS,
+} from "@/lib/constants";
 import { getAppUrl } from "@/lib/billing/stripe";
-import { getUser } from "@/lib/billing/entitlements";
+import { getUser, type PaidPlan } from "@/lib/billing/entitlements";
 
 const HELIO_API_BASE = process.env.HELIO_API_BASE ?? "https://api.hel.io/v1";
 
@@ -25,10 +28,26 @@ export function verifyHelioSignature(
   }
 }
 
-export async function createHelioCheckout(userId: string): Promise<string> {
+function helioPaylinkId(plan: PaidPlan): string {
+  if (plan === "max") {
+    return (
+      process.env.HELIO_PAYLINK_ID_MAX ?? process.env.HELIO_PAYLINK_ID ?? ""
+    );
+  }
+  return process.env.HELIO_PAYLINK_ID ?? "";
+}
+
+function planAmountCents(plan: PaidPlan): number {
+  return plan === "max" ? MAX_MONTHLY_PRICE_CENTS : PLUS_MONTHLY_PRICE_CENTS;
+}
+
+export async function createHelioCheckout(
+  userId: string,
+  plan: PaidPlan = "plus",
+): Promise<string> {
   const publicKey = process.env.HELIO_API_KEY;
   const secretKey = process.env.HELIO_SECRET_KEY;
-  const paylinkId = process.env.HELIO_PAYLINK_ID;
+  const paylinkId = helioPaylinkId(plan);
 
   if (!publicKey || !secretKey || !paylinkId) {
     throw new Error(
@@ -39,7 +58,7 @@ export async function createHelioCheckout(userId: string): Promise<string> {
   const user = await getUser(userId);
   if (!user) throw new Error("User not found");
 
-  const amount = (PLUS_MONTHLY_PRICE_CENTS / 100).toFixed(2);
+  const amount = (planAmountCents(plan) / 100).toFixed(2);
   const res = await fetch(
     `${HELIO_API_BASE}/charge/api-key?apiKey=${encodeURIComponent(publicKey)}`,
     {
@@ -57,6 +76,7 @@ export async function createHelioCheckout(userId: string): Promise<string> {
             additionalJSON: JSON.stringify({
               userId,
               kind: "prepaid_month",
+              plan,
               returnUrl: `${getAppUrl()}/billing?success=1`,
             }),
           },
@@ -120,6 +140,40 @@ export function extractHelioUserId(payload: unknown): string | null {
   }
 
   return null;
+}
+
+export function extractHelioPlan(payload: unknown): PaidPlan {
+  const walk = (value: unknown): PaidPlan | null => {
+    if (!value || typeof value !== "object") return null;
+    const obj = value as Record<string, unknown>;
+    if (obj.plan === "max" || obj.plan === "plus") return obj.plan;
+
+    for (const key of [
+      "meta",
+      "metadata",
+      "additionalJSON",
+      "customerDetails",
+      "data",
+      "transaction",
+      "payment",
+    ]) {
+      const child = obj[key];
+      if (typeof child === "string") {
+        try {
+          const parsed = JSON.parse(child) as Record<string, unknown>;
+          if (parsed.plan === "max" || parsed.plan === "plus")
+            return parsed.plan;
+        } catch {
+          /* ignore */
+        }
+      } else {
+        const found = walk(child);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  return walk(payload) ?? "plus";
 }
 
 export function extractHelioEventId(payload: unknown): string {

@@ -1,5 +1,11 @@
+import {
+  FREE_TIER_MAX_WATCHES,
+  MAX_TIER_MAX_WATCHES,
+  PLUS_TIER_MAX_WATCHES,
+} from "@/lib/constants";
 import { getPublicAppUrl } from "@/lib/billing/stripe";
 import type { PausedWatchSummary } from "@/lib/billing/enforce-limits";
+import type { PaidPlan } from "@/lib/billing/entitlements";
 import { Resend } from "resend";
 
 function getResend(): Resend | null {
@@ -12,10 +18,19 @@ function fromAddress(): string {
   return process.env.EMAIL_FROM ?? "PhraseAlert <onboarding@resend.dev>";
 }
 
+function planLabel(plan: PaidPlan): string {
+  return plan === "max" ? "Max" : "Plus";
+}
+
+function planWatchCap(plan: PaidPlan): number {
+  return plan === "max" ? MAX_TIER_MAX_WATCHES : PLUS_TIER_MAX_WATCHES;
+}
+
 export async function sendExpiryReminderEmail(
   email: string,
   daysLeft: number,
   periodEnd: Date,
+  plan: PaidPlan = "plus",
 ): Promise<void> {
   const resend = getResend();
   if (!resend) {
@@ -29,18 +44,20 @@ export async function sendExpiryReminderEmail(
     month: "long",
     day: "numeric",
   });
+  const label = planLabel(plan);
+  const cap = planWatchCap(plan);
 
   await resend.emails.send({
     from: fromAddress(),
     to: email,
     subject:
       daysLeft === 1
-        ? "Your PhraseAlert Plus expires tomorrow"
-        : `Your PhraseAlert Plus expires in ${daysLeft} days`,
+        ? `Your PhraseAlert ${label} expires tomorrow`
+        : `Your PhraseAlert ${label} expires in ${daysLeft} days`,
     text: [
-      `Your prepaid PhraseAlert Plus access ends on ${when}.`,
+      `Your prepaid PhraseAlert ${label} access ends on ${when}.`,
       "",
-      "Top up before then to keep up to 25 active alerts. If it expires, we'll pause your newest alerts down to the free limit of 3.",
+      `Top up before then to keep up to ${cap} active alerts. If it expires, we'll pause your newest alerts down to the free limit of ${FREE_TIER_MAX_WATCHES}.`,
       "",
       `Extend here: ${billingUrl}`,
     ].join("\n"),
@@ -60,9 +77,11 @@ export async function sendDowngradeEmail(
   const billingUrl = `${getPublicAppUrl()}/billing`;
   const lines =
     paused.length === 0
-      ? ["You're now on the Free plan (3 active alerts)."]
+      ? [
+          `You're now on the Free plan (${FREE_TIER_MAX_WATCHES} active alerts).`,
+        ]
       : [
-          "You're now on the Free plan (3 active alerts).",
+          `You're now on the Free plan (${FREE_TIER_MAX_WATCHES} active alerts).`,
           "",
           "We paused your newest alerts so you stay within the free limit:",
           ...paused.map((w) => `• ${w.rawInput}`),
@@ -73,7 +92,7 @@ export async function sendDowngradeEmail(
   await resend.emails.send({
     from: fromAddress(),
     to: email,
-    subject: "PhraseAlert Plus ended, moved to Free",
-    text: [...lines, "", `Renew Plus: ${billingUrl}`].join("\n"),
+    subject: "PhraseAlert paid plan ended, moved to Free",
+    text: [...lines, "", `Renew: ${billingUrl}`].join("\n"),
   });
 }

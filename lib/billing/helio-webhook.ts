@@ -4,7 +4,12 @@ import {
   recordBillingEvent,
 } from "@/lib/billing/subscriptions";
 import {
+  MAX_MONTHLY_PRICE_CENTS,
+  PLUS_MONTHLY_PRICE_CENTS,
+} from "@/lib/constants";
+import {
   extractHelioEventId,
+  extractHelioPlan,
   extractHelioUserId,
   verifyHelioSignature,
 } from "@/lib/billing/helio";
@@ -43,7 +48,12 @@ export async function handleHelioWebhook(
     throw new Error("Helio webhook missing userId metadata");
   }
 
-  await activatePrepaid(userId, "helio", eventId);
+  const plan = extractHelioPlan(payload);
+  await activatePrepaid(userId, "helio", eventId, {
+    plan,
+    amountCents:
+      plan === "max" ? MAX_MONTHLY_PRICE_CENTS : PLUS_MONTHLY_PRICE_CENTS,
+  });
   await recordBillingEvent(eventId, "helio", "payment_completed");
   return { ok: true };
 }

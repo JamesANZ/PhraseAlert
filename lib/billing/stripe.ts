@@ -1,6 +1,13 @@
 import Stripe from "stripe";
-import { PLUS_MONTHLY_PRICE_CENTS } from "@/lib/constants";
-import { getUser, setStripeCustomerId } from "@/lib/billing/entitlements";
+import {
+  MAX_MONTHLY_PRICE_CENTS,
+  PLUS_MONTHLY_PRICE_CENTS,
+} from "@/lib/constants";
+import {
+  getUser,
+  setStripeCustomerId,
+  type PaidPlan,
+} from "@/lib/billing/entitlements";
 
 let stripeClient: Stripe | null = null;
 
@@ -68,6 +75,35 @@ export function getPublicAppUrl(): string {
   return isLocalhostUrl(url) ? PRODUCTION_APP_URL : url;
 }
 
+function monthlyPriceId(plan: PaidPlan): string {
+  if (plan === "max") {
+    const id = process.env.STRIPE_PRICE_ID_MAX_MONTHLY;
+    if (!id) throw new Error("STRIPE_PRICE_ID_MAX_MONTHLY is not configured");
+    return id;
+  }
+  const id = process.env.STRIPE_PRICE_ID_PLUS_MONTHLY;
+  if (!id) throw new Error("STRIPE_PRICE_ID_PLUS_MONTHLY is not configured");
+  return id;
+}
+
+function prepaidPriceId(plan: PaidPlan): string | undefined {
+  return plan === "max"
+    ? process.env.STRIPE_PRICE_ID_MAX_PREPAID
+    : process.env.STRIPE_PRICE_ID_PLUS_PREPAID;
+}
+
+function planAmountCents(plan: PaidPlan): number {
+  return plan === "max" ? MAX_MONTHLY_PRICE_CENTS : PLUS_MONTHLY_PRICE_CENTS;
+}
+
+function planLabel(plan: PaidPlan): string {
+  return plan === "max" ? "Max" : "Plus";
+}
+
+function planWatchCap(plan: PaidPlan): number {
+  return plan === "max" ? 100 : 25;
+}
+
 export async function getOrCreateStripeCustomer(
   userId: string,
 ): Promise<string> {
@@ -87,13 +123,10 @@ export async function getOrCreateStripeCustomer(
 
 export async function createSubscriptionCheckout(
   userId: string,
+  plan: PaidPlan = "plus",
 ): Promise<string> {
   const stripe = getStripe();
-  const priceId = process.env.STRIPE_PRICE_ID_PLUS_MONTHLY;
-  if (!priceId) {
-    throw new Error("STRIPE_PRICE_ID_PLUS_MONTHLY is not configured");
-  }
-
+  const priceId = monthlyPriceId(plan);
   const customerId = await getOrCreateStripeCustomer(userId);
   const appUrl = getAppUrl();
 
@@ -103,9 +136,9 @@ export async function createSubscriptionCheckout(
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${appUrl}/billing?success=1`,
     cancel_url: `${appUrl}/billing?canceled=1`,
-    metadata: { userId, kind: "subscription" },
+    metadata: { userId, kind: "subscription", plan },
     subscription_data: {
-      metadata: { userId },
+      metadata: { userId, plan },
     },
   });
 
@@ -113,12 +146,17 @@ export async function createSubscriptionCheckout(
   return session.url;
 }
 
-export async function createPrepaidCheckout(userId: string): Promise<string> {
+export async function createPrepaidCheckout(
+  userId: string,
+  plan: PaidPlan = "plus",
+): Promise<string> {
   const stripe = getStripe();
   const customerId = await getOrCreateStripeCustomer(userId);
   const appUrl = getAppUrl();
+  const label = planLabel(plan);
+  const amount = planAmountCents(plan);
 
-  const priceId = process.env.STRIPE_PRICE_ID_PLUS_PREPAID;
+  const priceId = prepaidPriceId(plan);
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = priceId
     ? [{ price: priceId, quantity: 1 }]
     : [
@@ -126,10 +164,10 @@ export async function createPrepaidCheckout(userId: string): Promise<string> {
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: PLUS_MONTHLY_PRICE_CENTS,
+            unit_amount: amount,
             product_data: {
-              name: "PhraseAlert Plus, 1 month",
-              description: "One month of Plus (25 active alerts)",
+              name: `PhraseAlert ${label}, 1 month`,
+              description: `One month of ${label} (${planWatchCap(plan)} active alerts)`,
             },
           },
         },
@@ -141,7 +179,7 @@ export async function createPrepaidCheckout(userId: string): Promise<string> {
     line_items: lineItems,
     success_url: `${appUrl}/billing?success=1`,
     cancel_url: `${appUrl}/billing?canceled=1`,
-    metadata: { userId, kind: "prepaid_month" },
+    metadata: { userId, kind: "prepaid_month", plan },
   });
 
   if (!session.url) throw new Error("Failed to create Stripe Checkout session");
@@ -161,4 +199,8 @@ export async function createCustomerPortal(userId: string): Promise<string> {
   });
 
   return session.url;
+}
+
+export function parsePaidPlan(value: unknown): PaidPlan {
+  return value === "max" ? "max" : "plus";
 }

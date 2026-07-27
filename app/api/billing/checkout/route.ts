@@ -15,6 +15,7 @@ import { initDb } from "@/lib/db";
 
 const BodySchema = z.object({
   method: z.enum(["stripe_sub", "stripe_prepaid", "helio"]),
+  plan: z.enum(["plus", "max"]).default("plus"),
 });
 
 export async function POST(request: Request) {
@@ -25,11 +26,11 @@ export async function POST(request: Request) {
 
     let url: string;
     if (body.method === "stripe_sub") {
-      url = await createSubscriptionCheckout(userId);
+      url = await createSubscriptionCheckout(userId, body.plan);
     } else if (body.method === "stripe_prepaid") {
-      url = await createPrepaidCheckout(userId);
+      url = await createPrepaidCheckout(userId, body.plan);
     } else {
-      url = await createHelioCheckout(userId);
+      url = await createHelioCheckout(userId, body.plan);
     }
 
     return NextResponse.json({ url });

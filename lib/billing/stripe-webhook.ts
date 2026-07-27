@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { getStripe } from "@/lib/billing/stripe";
+import { getStripe, parsePaidPlan } from "@/lib/billing/stripe";
 import {
   activatePrepaid,
   activateSubscription,
@@ -10,6 +10,10 @@ import {
 } from "@/lib/billing/subscriptions";
 import { sendDowngradeEmail } from "@/lib/billing/email";
 import { getUser } from "@/lib/billing/entitlements";
+import {
+  MAX_MONTHLY_PRICE_CENTS,
+  PLUS_MONTHLY_PRICE_CENTS,
+} from "@/lib/constants";
 
 function periodEndFromSubscription(sub: Stripe.Subscription): Date | null {
   const end = sub.items?.data?.[0]?.current_period_end;
@@ -21,6 +25,10 @@ function subscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
   const sub = invoice.parent?.subscription_details?.subscription;
   if (!sub) return null;
   return typeof sub === "string" ? sub : sub.id;
+}
+
+function amountForPlan(plan: "plus" | "max"): number {
+  return plan === "max" ? MAX_MONTHLY_PRICE_CENTS : PLUS_MONTHLY_PRICE_CENTS;
 }
 
 export async function handleStripeWebhook(
@@ -42,10 +50,14 @@ export async function handleStripeWebhook(
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
       const kind = session.metadata?.kind;
+      const plan = parsePaidPlan(session.metadata?.plan);
       if (!userId) break;
 
       if (kind === "prepaid_month" && session.payment_status === "paid") {
-        await activatePrepaid(userId, "stripe", session.id);
+        await activatePrepaid(userId, "stripe", session.id, {
+          plan,
+          amountCents: amountForPlan(plan),
+        });
       } else if (kind === "subscription" && session.subscription) {
         const subId =
           typeof session.subscription === "string"
@@ -57,6 +69,8 @@ export async function handleStripeWebhook(
           providerRef: sub.id,
           status: sub.status,
           periodEnd: periodEndFromSubscription(sub),
+          plan: parsePaidPlan(sub.metadata?.plan ?? plan),
+          amountCents: amountForPlan(plan),
         });
       }
       break;
@@ -65,11 +79,14 @@ export async function handleStripeWebhook(
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.userId;
       if (!userId) break;
+      const plan = parsePaidPlan(sub.metadata?.plan);
       await activateSubscription({
         userId,
         providerRef: sub.id,
         status: sub.status,
         periodEnd: periodEndFromSubscription(sub),
+        plan,
+        amountCents: amountForPlan(plan),
       });
       break;
     }
@@ -93,11 +110,14 @@ export async function handleStripeWebhook(
       const sub = await stripe.subscriptions.retrieve(subId);
       const userId = sub.metadata?.userId;
       if (!userId) break;
+      const plan = parsePaidPlan(sub.metadata?.plan);
       await activateSubscription({
         userId,
         providerRef: sub.id,
         status: sub.status,
         periodEnd: periodEndFromSubscription(sub),
+        plan,
+        amountCents: amountForPlan(plan),
       });
       break;
     }
