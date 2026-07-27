@@ -1,15 +1,20 @@
 /**
  * @title Billing entitlements
- * @notice Resolves effective plan, watch limits, and Plus grant/revoke for a user.
- * @dev Plus is active for subscription (until period end) or prepaid (until planPeriodEnd).
+ * @notice Resolves effective plan, watch limits, and paid-plan grant/revoke for a user.
+ * @dev Plus/Max stay active for subscription (until period end) or prepaid (until planPeriodEnd).
  */
-import { eq } from "drizzle-orm";
-import { FREE_TIER_MAX_WATCHES, PLUS_TIER_MAX_WATCHES } from "@/lib/constants";
+import { eq, inArray } from "drizzle-orm";
+import {
+  FREE_TIER_MAX_WATCHES,
+  MAX_TIER_MAX_WATCHES,
+  PLUS_TIER_MAX_WATCHES,
+} from "@/lib/constants";
 import { db } from "@/lib/db";
 import { authUsers, type DbUser } from "@/lib/db/schema";
 
 export type BillingMode = "none" | "subscription" | "prepaid";
-export type Plan = "free" | "plus";
+export type Plan = "free" | "plus" | "max";
+export type PaidPlan = "plus" | "max";
 
 /** @notice Snapshot returned by GET /api/billing/status. */
 export interface BillingStatus {
@@ -20,11 +25,14 @@ export interface BillingStatus {
   stripeCustomerId: string | null;
   watchLimit: number;
   email: string | null;
+  phoneE164: string | null;
 }
 
+const PAID_PLANS: PaidPlan[] = ["plus", "max"];
+
 /** @dev Subscription stays active without period end; prepaid requires future planPeriodEnd. */
-function isPlusActive(user: DbUser, now = Date.now()): boolean {
-  if (user.plan !== "plus") return false;
+function isPaidPlanActive(user: DbUser, now = Date.now()): boolean {
+  if (user.plan !== "plus" && user.plan !== "max") return false;
 
   if (user.billingMode === "subscription") {
     return !(user.planPeriodEnd && user.planPeriodEnd.getTime() <= now);
@@ -37,6 +45,25 @@ function isPlusActive(user: DbUser, now = Date.now()): boolean {
   return Boolean(user.planPeriodEnd && user.planPeriodEnd.getTime() > now);
 }
 
+/** @notice Effective plan after expiry checks (max > plus > free). */
+export function getEffectivePlan(user: DbUser, now = Date.now()): Plan {
+  if (!isPaidPlanActive(user, now)) return "free";
+  if (user.plan === "max") return "max";
+  if (user.plan === "plus") return "plus";
+  return "free";
+}
+
+export function watchLimitForPlan(plan: Plan): number {
+  if (plan === "max") return MAX_TIER_MAX_WATCHES;
+  if (plan === "plus") return PLUS_TIER_MAX_WATCHES;
+  return FREE_TIER_MAX_WATCHES;
+}
+
+/** @notice True when the effective plan includes SMS alerts. */
+export function planAllowsSms(plan: Plan): boolean {
+  return plan === "plus" || plan === "max";
+}
+
 export async function getUser(userId: string): Promise<DbUser | null> {
   const rows = await db
     .select()
@@ -47,9 +74,7 @@ export async function getUser(userId: string): Promise<DbUser | null> {
 }
 
 export function getWatchLimitForUser(user: DbUser, now = Date.now()): number {
-  return isPlusActive(user, now)
-    ? PLUS_TIER_MAX_WATCHES
-    : FREE_TIER_MAX_WATCHES;
+  return watchLimitForPlan(getEffectivePlan(user, now));
 }
 
 /** @notice Active watch cap for a user id (free default if user missing). */
@@ -69,15 +94,16 @@ export async function getBillingStatus(
   const user = await getUser(userId);
   if (!user) return null;
 
-  const active = isPlusActive(user, now);
+  const effectivePlan = getEffectivePlan(user, now);
   return {
-    plan: user.plan,
-    effectivePlan: active ? "plus" : "free",
+    plan: user.plan as Plan,
+    effectivePlan,
     billingMode: user.billingMode,
     planPeriodEnd: user.planPeriodEnd,
     stripeCustomerId: user.stripeCustomerId,
-    watchLimit: active ? PLUS_TIER_MAX_WATCHES : FREE_TIER_MAX_WATCHES,
+    watchLimit: watchLimitForPlan(effectivePlan),
     email: user.email,
+    phoneE164: user.phoneE164 ?? null,
   };
 }
 
@@ -91,22 +117,45 @@ export async function setStripeCustomerId(
     .where(eq(authUsers.id, userId));
 }
 
-export async function grantPlus(params: {
+export async function setUserPhone(
+  userId: string,
+  phoneE164: string | null,
+): Promise<void> {
+  await db
+    .update(authUsers)
+    .set({
+      phoneE164,
+      phoneVerifiedAt: phoneE164 ? new Date() : null,
+    })
+    .where(eq(authUsers.id, userId));
+}
+
+export async function grantPlan(params: {
   userId: string;
+  plan: PaidPlan;
   mode: BillingMode;
   periodEnd: Date | null;
 }): Promise<void> {
   await db
     .update(authUsers)
     .set({
-      plan: "plus",
+      plan: params.plan,
       billingMode: params.mode,
       planPeriodEnd: params.periodEnd,
     })
     .where(eq(authUsers.id, params.userId));
 }
 
-export async function revokePlus(userId: string): Promise<void> {
+/** @deprecated Prefer grantPlan — kept for call-site clarity during Plus-only flows. */
+export async function grantPlus(params: {
+  userId: string;
+  mode: BillingMode;
+  periodEnd: Date | null;
+}): Promise<void> {
+  await grantPlan({ ...params, plan: "plus" });
+}
+
+export async function revokePaidPlan(userId: string): Promise<void> {
   await db
     .update(authUsers)
     .set({
@@ -115,6 +164,11 @@ export async function revokePlus(userId: string): Promise<void> {
       planPeriodEnd: null,
     })
     .where(eq(authUsers.id, userId));
+}
+
+/** @deprecated Prefer revokePaidPlan. */
+export async function revokePlus(userId: string): Promise<void> {
+  await revokePaidPlan(userId);
 }
 
 export async function listUsersNeedingExpiryReminders(
@@ -127,7 +181,7 @@ export async function listUsersNeedingExpiryReminders(
       .select()
       .from(authUsers)
       .where(eq(authUsers.billingMode, "prepaid"))
-  ).filter((u) => u.plan === "plus" && u.planPeriodEnd);
+  ).filter((u) => PAID_PLANS.includes(u.plan as PaidPlan) && u.planPeriodEnd);
 
   const matches: Array<DbUser & { daysLeft: number }> = [];
   for (const user of users) {
@@ -140,16 +194,48 @@ export async function listUsersNeedingExpiryReminders(
   return matches;
 }
 
-export async function listExpiredPlusUsers(
+export async function listExpiredPaidUsers(
   now = Date.now(),
 ): Promise<DbUser[]> {
   return (
-    await db.select().from(authUsers).where(eq(authUsers.plan, "plus"))
+    await db
+      .select()
+      .from(authUsers)
+      .where(inArray(authUsers.plan, ["plus", "max"]))
   ).filter((u) => {
     if (!u.planPeriodEnd) {
-      // Subscription without period end still considered active until webhook says otherwise
       return u.billingMode !== "subscription";
     }
     return u.planPeriodEnd.getTime() <= now;
   });
+}
+
+/** @deprecated Prefer listExpiredPaidUsers. */
+export async function listExpiredPlusUsers(
+  now = Date.now(),
+): Promise<DbUser[]> {
+  return listExpiredPaidUsers(now);
+}
+
+/** @notice Batch-resolve effective plans for cron due checks. */
+export async function getEffectivePlansForUsers(
+  userIds: string[],
+  now = Date.now(),
+): Promise<Map<string, Plan>> {
+  const unique = [...new Set(userIds)];
+  const result = new Map<string, Plan>();
+  if (unique.length === 0) return result;
+
+  const rows = await db
+    .select()
+    .from(authUsers)
+    .where(inArray(authUsers.id, unique));
+
+  for (const row of rows) {
+    result.set(row.id, getEffectivePlan(row, now));
+  }
+  for (const id of unique) {
+    if (!result.has(id)) result.set(id, "free");
+  }
+  return result;
 }

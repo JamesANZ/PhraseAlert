@@ -106,7 +106,7 @@ export async function createWatch(
 
   if (!(await canCreateWatch(ownerId))) {
     throw new Error(
-      `Alert limit reached (${limit} active alerts). Upgrade to Plus for more.`,
+      `Alert limit reached (${limit} active alerts). Upgrade your plan for more.`,
     );
   }
 
@@ -145,7 +145,7 @@ export async function updateWatchStatus(
   ) {
     const limit = await getWatchLimit(userId);
     throw new Error(
-      `Alert limit reached (${limit} active alerts). Upgrade to Plus or pause another alert.`,
+      `Alert limit reached (${limit} active alerts). Upgrade your plan or pause another alert.`,
     );
   }
 

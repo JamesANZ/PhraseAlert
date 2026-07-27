@@ -9,8 +9,13 @@ import { z } from "zod";
 /** @notice Lifecycle state of a saved watch. @dev Only `watching` counts toward active-watch limits; `paused` and `triggered` do not. */
 export const WatchStatusSchema = z.enum(["watching", "triggered", "paused"]);
 
-/** @notice How often a watch is scheduled for retrieval and judgment. @dev Hourly is reserved for future tiers. */
-export const CheckFrequencySchema = z.enum(["daily", "hourly"]);
+/** @notice How often a watch is scheduled for retrieval and judgment. */
+export const CheckFrequencySchema = z.enum([
+  "daily",
+  "every_6h",
+  "hourly",
+  "every_15m",
+]);
 
 /** @dev Hard caps on AI-authored monitoring plans so bad model output cannot blow up cost. */
 export const PLAN_MAX_QUERIES = 4;
@@ -106,7 +111,7 @@ export const NextActionSchema = z.object({
   revisit_urls: z.array(z.string()).default([]),
   recheck_after_hours: z
     .number()
-    .min(1)
+    .min(0.25)
     .max(PLAN_MAX_RECHECK_HOURS)
     .nullable()
     .default(null),

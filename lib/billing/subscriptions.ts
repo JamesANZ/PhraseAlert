@@ -2,7 +2,13 @@ import { and, eq } from "drizzle-orm";
 import { PLUS_MONTHLY_PRICE_CENTS, PREPAID_PERIOD_MS } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { billingEvents, subscriptions } from "@/lib/db/schema";
-import { getUser, grantPlus, revokePlus } from "@/lib/billing/entitlements";
+import {
+  getUser,
+  grantPlan,
+  revokePaidPlan,
+  watchLimitForPlan,
+  type PaidPlan,
+} from "@/lib/billing/entitlements";
 import { pauseExcessWatches } from "@/lib/billing/enforce-limits";
 
 export async function hasProcessedEvent(eventId: string): Promise<boolean> {
@@ -95,9 +101,10 @@ export async function activatePrepaid(
   userId: string,
   provider: "stripe" | "helio",
   providerRef: string,
-  periodEnd?: Date,
+  options: { plan?: PaidPlan; periodEnd?: Date; amountCents?: number } = {},
 ): Promise<Date> {
-  const end = periodEnd ?? (await computeExtendedPeriodEnd(userId));
+  const plan = options.plan ?? "plus";
+  const end = options.periodEnd ?? (await computeExtendedPeriodEnd(userId));
   await upsertSubscription({
     userId,
     provider,
@@ -105,8 +112,9 @@ export async function activatePrepaid(
     mode: "prepaid",
     status: "active",
     currentPeriodEnd: end,
+    amountCents: options.amountCents,
   });
-  await grantPlus({ userId, mode: "prepaid", periodEnd: end });
+  await grantPlan({ userId, plan, mode: "prepaid", periodEnd: end });
   return end;
 }
 
@@ -115,7 +123,10 @@ export async function activateSubscription(params: {
   providerRef: string;
   status: string;
   periodEnd: Date | null;
+  plan?: PaidPlan;
+  amountCents?: number;
 }): Promise<void> {
+  const plan = params.plan ?? "plus";
   const active =
     params.status === "active" ||
     params.status === "trialing" ||
@@ -128,11 +139,13 @@ export async function activateSubscription(params: {
     mode: "subscription",
     status: params.status,
     currentPeriodEnd: params.periodEnd,
+    amountCents: params.amountCents,
   });
 
   if (active) {
-    await grantPlus({
+    await grantPlan({
       userId: params.userId,
+      plan,
       mode: "subscription",
       periodEnd: params.periodEnd,
     });
@@ -141,11 +154,27 @@ export async function activateSubscription(params: {
   }
 }
 
-export async function downgradeUser(userId: string): Promise<{
+/**
+ * @notice Revoke paid plan and pause excess watches down to the free cap.
+ * @dev When `toPlan` is plus (e.g. Max→Plus), pause down to Plus cap instead.
+ */
+export async function downgradeUser(
+  userId: string,
+  toPlan: "free" | "plus" = "free",
+): Promise<{
   paused: Awaited<ReturnType<typeof pauseExcessWatches>>;
 }> {
-  await revokePlus(userId);
-  const paused = await pauseExcessWatches(userId);
+  if (toPlan === "free") {
+    await revokePaidPlan(userId);
+  } else {
+    await grantPlan({
+      userId,
+      plan: "plus",
+      mode: "none",
+      periodEnd: null,
+    });
+  }
+  const paused = await pauseExcessWatches(userId, watchLimitForPlan(toPlan));
   return { paused };
 }
 

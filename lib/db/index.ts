@@ -53,9 +53,13 @@ async function ensureSchema(): Promise<void> {
         plan TEXT NOT NULL DEFAULT 'free',
         stripe_customer_id TEXT,
         plan_period_end TIMESTAMP,
-        billing_mode TEXT NOT NULL DEFAULT 'none'
+        billing_mode TEXT NOT NULL DEFAULT 'none',
+        phone_e164 TEXT,
+        phone_verified_at TIMESTAMP
       )
     `,
+    sql`ALTER TABLE "user" ADD COLUMN IF NOT EXISTS phone_e164 TEXT`,
+    sql`ALTER TABLE "user" ADD COLUMN IF NOT EXISTS phone_verified_at TIMESTAMP`,
     sql`
       CREATE TABLE IF NOT EXISTS account (
         "userId" TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,

@@ -25,7 +25,7 @@ export const authUsers = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-  plan: text("plan", { enum: ["free", "plus"] })
+  plan: text("plan", { enum: ["free", "plus", "max"] })
     .notNull()
     .default("free"),
   stripeCustomerId: text("stripe_customer_id"),
@@ -35,6 +35,9 @@ export const authUsers = pgTable("user", {
   })
     .notNull()
     .default("none"),
+  /** @dev E.164 phone for SMS alerts (Plus/Max). */
+  phoneE164: text("phone_e164"),
+  phoneVerifiedAt: timestamp("phone_verified_at", { mode: "date" }),
 });
 
 /** @dev Stripe or Helio subscription/prepaid records linked to user. */
