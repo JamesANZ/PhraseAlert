@@ -87,40 +87,49 @@ In the UI, saved items are called **alerts**. In code and APIs they are still **
 
 Auth uses NextAuth with Google sign-in only. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI for local development.
 
-## Billing (Plus)
+## Billing (Free / Plus / Max)
 
-| Plan | Active alerts | Price    |
-| ---- | ------------- | -------- |
-| Free | 3             | $0       |
-| Plus | 25            | $9/month |
+| Plan | Active alerts | Checks                          | Notifications | Price        |
+| ---- | ------------- | ------------------------------- | ------------- | ------------ |
+| Free | 3             | Daily                           | Email         | $0           |
+| Plus | 25            | Every 6h (up to hourly)         | Email + SMS   | $9.99/month  |
+| Max  | 100           | Hourly (up to every 15 minutes) | Email + SMS   | $39.99/month |
 
 Only alerts with status `watching` count toward the limit. Triggered and paused alerts do not.
 
 Users can:
 
-- **Subscribe** with a card (Stripe Checkout subscription)
+- **Subscribe** with a card (Stripe Checkout subscription) for Plus or Max
 - **Pay one month** with a card (Stripe Checkout payment) or **crypto** (Helio / MoonPay Commerce)
 - **Top up** prepaid months before they expire (reminders at 7, 3, and 1 days)
+- **Add a phone** on Plus/Max for SMS (Twilio; optional)
 
-When prepaid Plus expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active (`watching`) alerts are paused until at most 3 remain.
+When a paid plan expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active (`watching`) alerts are paused until at most 3 remain (oldest stay active).
+
+Checks cron runs every 15 minutes (`vercel.json`); each watch is due based on the owner's plan baseline, or sooner when the planner schedules a follow-up (not faster than the plan ceiling).
 
 ### Stripe setup
 
-1. Create a Product “PhraseAlert Plus” with a recurring monthly price ($9) → set `STRIPE_PRICE_ID_PLUS_MONTHLY`
-2. Optional one-time $9 price → `STRIPE_PRICE_ID_PLUS_PREPAID` (otherwise Checkout uses inline `price_data`)
-3. Add webhook endpoint `POST /api/billing/webhook/stripe` for:
+1. Create Product “PhraseAlert Plus” with recurring monthly price ($9.99) → `STRIPE_PRICE_ID_PLUS_MONTHLY`
+2. Create Product “PhraseAlert Max” with recurring monthly price ($39.99) → `STRIPE_PRICE_ID_MAX_MONTHLY`
+3. Optional one-time prepaid prices → `STRIPE_PRICE_ID_PLUS_PREPAID` / `STRIPE_PRICE_ID_MAX_PREPAID` (otherwise Checkout uses inline `price_data`)
+4. Add webhook endpoint `POST /api/billing/webhook/stripe` for:
    - `checkout.session.completed`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
    - `invoice.paid`
    - `invoice.payment_failed`
-4. Enable Customer Portal in Stripe Dashboard for cancel/update card
+5. Enable Customer Portal in Stripe Dashboard for cancel/update card
 
 ### Helio setup
 
-1. Create a $9 pay link in the Helio / MoonPay Commerce dashboard → `HELIO_PAYLINK_ID`
+1. Create a Plus pay link → `HELIO_PAYLINK_ID` (optional Max pay link → `HELIO_PAYLINK_ID_MAX`)
 2. Public API key → `HELIO_API_KEY`, secret → `HELIO_SECRET_KEY`
 3. Global webhook to `POST /api/billing/webhook/helio` → store `sharedToken` as `HELIO_WEBHOOK_SECRET`
+
+### SMS (Twilio)
+
+Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Users save a phone on `/billing`.
 
 ### Expiry emails
 
@@ -296,7 +305,6 @@ See `docs/natspec-userdoc.md` and `docs/natspec-devdoc.md`.
 
 ## Roadmap
 
-- Faster / more frequent checks
-- SMS, push, and webhook delivery
+- Push and webhook delivery
 - Additional retrieval providers (Brave, RSS)
 - Richer findings history across multiple checks

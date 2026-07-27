@@ -162,7 +162,7 @@ export default function HomePage() {
 
         <section className="section" id="pricing">
           <p className="eyebrow">Pricing</p>
-          <h2>Free to start. Plus if you need more alerts.</h2>
+          <h2>Free to start. Plus and Max when you need more.</h2>
           <div className="pricing-grid">
             <div className="plan reveal">
               <h3 className="plan-name">Free</h3>
@@ -171,8 +171,8 @@ export default function HomePage() {
               </p>
               <ul className="plan-features">
                 <li>3 active alerts</li>
+                <li>Daily checks</li>
                 <li>Email notifications</li>
-                <li>No credit card required</li>
               </ul>
               <Link className="btn btn-ghost" href="/watches/new">
                 Create an alert
@@ -181,16 +181,31 @@ export default function HomePage() {
             <div className="plan plan-featured reveal">
               <h3 className="plan-name">Plus</h3>
               <p className="plan-price">
-                <span className="plan-amount">$9</span>
+                <span className="plan-amount">$9.99</span>
                 <span className="plan-period">/month</span>
               </p>
               <ul className="plan-features">
                 <li>25 active alerts</li>
-                <li>More frequent checks</li>
-                <li>Push, SMS, and webhook notifications</li>
+                <li>Checks every 6 hours, up to hourly</li>
+                <li>Email and SMS notifications</li>
               </ul>
               <Link className="btn btn-primary" href="/billing">
                 Upgrade to Plus
+              </Link>
+            </div>
+            <div className="plan reveal">
+              <h3 className="plan-name">Max</h3>
+              <p className="plan-price">
+                <span className="plan-amount">$39.99</span>
+                <span className="plan-period">/month</span>
+              </p>
+              <ul className="plan-features">
+                <li>100 active alerts</li>
+                <li>Hourly checks, up to every 15 minutes</li>
+                <li>Email and SMS notifications</li>
+              </ul>
+              <Link className="btn btn-primary" href="/billing">
+                Upgrade to Max
               </Link>
             </div>
           </div>

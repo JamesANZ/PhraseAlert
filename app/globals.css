@@ -53,7 +53,14 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   overflow-x: clip;
+}
+
+body > main {
+  flex: 1 0 auto;
 }
 
 body::before {
@@ -971,9 +978,9 @@ textarea:focus-visible {
 .pricing-grid {
   margin-top: 44px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  max-width: 720px;
+  max-width: 1080px;
 }
 
 .plan {
@@ -1724,6 +1731,91 @@ textarea:focus-visible {
 
 .billing-page .page-header p {
   max-width: 560px;
+}
+
+.billing-plans {
+  margin-top: 8px;
+  margin-bottom: 32px;
+}
+
+.billing-plans .plan-muted {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(213, 224, 255, 0.12);
+  box-shadow: none;
+}
+
+.billing-plans .plan-muted:hover {
+  transform: none;
+  border-color: rgba(213, 224, 255, 0.18);
+}
+
+.billing-plans .plan-muted .plan-name,
+.billing-plans .plan-muted .plan-features {
+  color: var(--muted);
+}
+
+.billing-plans .plan-muted .plan-features li::before {
+  background: var(--muted);
+  opacity: 0.45;
+}
+
+.billing-plans .plan-featured {
+  background: rgba(129, 151, 255, 0.14);
+  border-color: rgba(129, 151, 255, 0.4);
+  box-shadow: none;
+}
+
+.billing-plans .plan-featured:hover {
+  border-color: rgba(129, 151, 255, 0.55);
+  transform: translateY(-2px);
+}
+
+.billing-plans .plan-featured .plan-name {
+  color: var(--brass-bright);
+}
+
+.billing-plans .plan-featured .plan-features {
+  color: var(--text);
+}
+
+.billing-plans .plan-max {
+  background: rgba(72, 180, 160, 0.14);
+  border-color: rgba(110, 210, 190, 0.4);
+}
+
+.billing-plans .plan-max:hover {
+  border-color: rgba(140, 230, 210, 0.55);
+}
+
+.billing-plans .plan-max .plan-name {
+  color: #9eebdb;
+}
+
+.billing-plans .plan-max .plan-features li::before {
+  background: #7ddcc9;
+}
+
+.billing-plan-current,
+.billing-plan-tag {
+  margin-top: auto;
+  padding-top: 18px;
+  font-family:
+    var(--font-ibm-plex-mono), "IBM Plex Mono", "SF Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.billing-plan-current {
+  color: var(--muted);
+}
+
+.billing-plan-tag {
+  color: var(--brass-bright);
+}
+
+.billing-plans .plan-max .billing-plan-tag {
+  color: #9eebdb;
 }
 
 .billing-status {

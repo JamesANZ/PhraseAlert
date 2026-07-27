@@ -210,7 +210,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
             {upgradeUrl && (
               <>
                 {" "}
-                <Link href={upgradeUrl}>Upgrade to Plus</Link>
+                <Link href={upgradeUrl}>Upgrade your plan</Link>
               </>
             )}
           </div>
@@ -295,7 +295,7 @@ export function WatchCreator({ initialInput = "" }: { initialInput?: string }) {
           {upgradeUrl && (
             <>
               {" "}
-              <Link href={upgradeUrl}>Upgrade to Plus</Link>
+              <Link href={upgradeUrl}>Upgrade your plan</Link>
             </>
           )}
         </div>

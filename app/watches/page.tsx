@@ -22,7 +22,12 @@ export default async function WatchesPage() {
   const activeCount = await countActiveWatches(userId);
   const billing = await getBillingStatus(userId);
   const limit = billing?.watchLimit ?? 3;
-  const planLabel = billing?.effectivePlan === "plus" ? "Plus" : "Free";
+  const planLabel =
+    billing?.effectivePlan === "max"
+      ? "Max"
+      : billing?.effectivePlan === "plus"
+        ? "Plus"
+        : "Free";
 
   const items = watches.map((w) => ({
     id: w.id,
@@ -58,9 +63,11 @@ export default async function WatchesPage() {
             <Link className="btn btn-primary btn-small" href="/watches/new">
               New alert
             </Link>
-            {billing?.effectivePlan === "free" && (
+            {billing?.effectivePlan !== "max" && (
               <Link className="btn btn-ghost btn-small" href="/billing">
-                Upgrade to Plus
+                {billing?.effectivePlan === "plus"
+                  ? "Upgrade to Max"
+                  : "Upgrade"}
               </Link>
             )}
           </div>
