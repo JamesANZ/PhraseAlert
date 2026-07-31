@@ -56,32 +56,34 @@ Three keyword alerts. One mattered. PhraseAlert sent that one.
 
 1. **Describe it.** Write a specific future event in one sentence. Topic keywords alone (e.g. "Bitcoin") are rejected.
 2. **Clarify until clear.** If the sentence is vague, PhraseAlert suggests more specific alert sentences and will not save until it is unambiguous.
-3. **Compile.** A model produces a structured watch spec: trigger conditions, non-triggers, search queries, authoritative domains.
-4. **Watch.** On a daily schedule (and on demand), the system retrieves new web content via Tavily, filters out pre-watch and irrelevant results, and evaluates each candidate.
-5. **Notify.** When credible evidence confirms the event occurred _after_ the alert was created, you get an email with a findings summary and source trail. The same findings appear on the alert detail page.
+3. **Compile.** A model produces a structured watch spec: trigger conditions, non-triggers, search queries, authoritative domains, and a monitoring plan (baseline queries, follow-ups, optional page revisits).
+4. **Watch.** A 15-minute cron runs due checks based on the owner's plan. Each round retrieves web content via Tavily, filters out pre-watch and irrelevant results, evaluates candidates, and may dig deeper (follow-up queries / re-fetch known pages) when evidence is thin.
+5. **Notify.** When credible evidence confirms the event occurred _after_ the alert was created, you get email (and SMS on Plus/Max if a phone is saved). The same findings appear on the alert detail page.
 
 ## This repository
 
-PhraseAlert is a Next.js App Router product with a judgment layer, live retrieval, email notifications, billing, and a dashboard.
+PhraseAlert is a Next.js App Router product with a judgment layer, live retrieval, plan-gated check cadence, email + SMS notifications, Stripe/Helio billing, and a dashboard.
 
 **Judgment layer**
 
-- Watch compiler (strict vagueness + structured watch spec)
+- Watch compiler (strict vagueness + structured watch spec + monitoring plan)
 - Detection and decision pipeline (high-confidence confirmation or two independent triggers)
+- AI monitoring planner: after a non-notify round, may dig deeper once or schedule an earlier recheck (clamped to the plan ceiling)
 - Hard lock: notify only when TRIGGERED evidence has a parseable event date on/after watch creation
-- Backdated eval harness with historical fixtures, multi-turn dialogue smoke, and live Tavily retrieval
+- Backdated eval harness with historical fixtures, multi-turn dialogue smoke, page-revisit cases, and live Tavily retrieval
 - Hugging Face Inference Providers (default `meta-llama/Llama-3.3-70B-Instruct`)
 
 **Product**
 
-- Landing page with hero alert composer
+- Landing page with hero alert composer and Free / Plus / Max pricing
 - Create flow with clarification at `/watches/new`
 - Dashboard at `/watches` (“My alerts”) with Active / Triggered filters, pause, resume, delete, and check-now
 - Alert detail / findings page at `/watches/[id]` (same content as the trigger email)
+- Billing at `/billing`: current plan, checkout (card or crypto), Stripe portal, optional SMS phone
 - Google sign-in via NextAuth
 - Neon Postgres via Drizzle (Vercel-ready)
-- Daily cron checks at `GET|POST /api/checks/run` (08:00 UTC) with Tavily Search + Extract
-- HTML trigger emails via Resend to the Google signup address on `user.email`
+- Checks cron every 15 minutes at `GET|POST /api/checks/run` (plan baseline / ceiling + time budget)
+- HTML trigger emails via Resend; optional SMS via Twilio on Plus/Max
 
 In the UI, saved items are called **alerts**. In code and APIs they are still **watches**.
 
@@ -89,24 +91,44 @@ Auth uses NextAuth with Google sign-in only. Set `GOOGLE_CLIENT_ID` and `GOOGLE_
 
 ## Billing (Free / Plus / Max)
 
-| Plan | Active alerts | Checks                          | Notifications | Price        |
-| ---- | ------------- | ------------------------------- | ------------- | ------------ |
-| Free | 3             | Daily                           | Email         | $0           |
-| Plus | 25            | Every 6h (up to hourly)         | Email + SMS   | $9.99/month  |
-| Max  | 100           | Hourly (up to every 15 minutes) | Email + SMS   | $39.99/month |
+Premium is fully wired: three tiers, Stripe card checkout (subscription + prepaid), Helio crypto prepaid, Twilio SMS on paid plans, and automatic pause-on-downgrade. Caps and cadences live in `lib/constants.ts`.
+
+| Plan | Active alerts | Quiet baseline | Fastest AI follow-up | Notifications | Price        |
+| ---- | ------------- | -------------- | -------------------- | ------------- | ------------ |
+| Free | 3             | ~daily (23h)   | ~daily (23h)         | Email         | $0           |
+| Plus | 25            | Every 6h       | Hourly               | Email + SMS   | $9.99/month  |
+| Max  | 100           | Hourly         | Every 15 minutes     | Email + SMS   | $39.99/month |
 
 Only alerts with status `watching` count toward the limit. Triggered and paused alerts do not.
 
+### What paid unlocks
+
+- **More active alerts** — Free 3 → Plus 25 → Max 100
+- **Faster checks** — Plus baseline every 6h (AI can pull forward to hourly); Max baseline hourly (AI can pull forward to every 15 minutes)
+- **SMS** — Plus and Max can save an E.164 phone on `/billing` and receive a short Twilio SMS when an alert triggers (email still always sends)
+
+Free stays email-only with roughly daily checks.
+
+### How to pay
+
+Checkout is `POST /api/billing/checkout` with `{ method, plan }` where `plan` is `plus` or `max`:
+
+| Method           | Provider                 | Mode                     | Notes                                    |
+| ---------------- | ------------------------ | ------------------------ | ---------------------------------------- |
+| `stripe_sub`     | Stripe Checkout          | Recurring monthly        | Manage/cancel via Stripe Customer Portal |
+| `stripe_prepaid` | Stripe Checkout          | One-time (30-day access) | Top up before `planPeriodEnd`            |
+| `helio`          | Helio / MoonPay Commerce | One-time crypto (30-day) | Optional dedicated Max pay link          |
+
 Users can:
 
-- **Subscribe** with a card (Stripe Checkout subscription) for Plus or Max
-- **Pay one month** with a card (Stripe Checkout payment) or **crypto** (Helio / MoonPay Commerce)
+- **Subscribe** with a card for Plus or Max (or upgrade Free/Plus → Max)
+- **Pay one month** with a card or crypto for Plus or Max
 - **Top up** prepaid months before they expire (reminders at 7, 3, and 1 days)
-- **Add a phone** on Plus/Max for SMS (Twilio; optional)
+- **Add a phone** on Plus/Max for SMS (`PUT /api/billing/phone`; optional test SMS)
 
-When a paid plan expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active (`watching`) alerts are paused until at most 3 remain (oldest stay active).
+When a paid plan expires unpaid (or a Stripe subscription is canceled), the account returns to Free and newest active (`watching`) alerts are paused until at most 3 remain (oldest stay active). Downgrades use the same pause-newest rule when moving to a lower cap.
 
-Checks cron runs every 15 minutes (`vercel.json`); each watch is due based on the owner's plan baseline, or sooner when the planner schedules a follow-up (not faster than the plan ceiling).
+Checks cron runs every 15 minutes (`vercel.json`). Each watch is due from the owner's plan baseline, or sooner when the planner schedules a follow-up — never faster than the plan ceiling. Each cron invocation has a soft ~50s time budget so long runs defer remaining work to the next tick.
 
 ### Stripe setup
 
@@ -120,28 +142,29 @@ Checks cron runs every 15 minutes (`vercel.json`); each watch is due based on th
    - `invoice.paid`
    - `invoice.payment_failed`
 5. Enable Customer Portal in Stripe Dashboard for cancel/update card
+6. Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and optionally `STRIPE_PUBLISH_KEY`
 
 ### Helio setup
 
-1. Create a Plus pay link → `HELIO_PAYLINK_ID` (optional Max pay link → `HELIO_PAYLINK_ID_MAX`)
+1. Create a Plus pay link → `HELIO_PAYLINK_ID` (optional Max pay link → `HELIO_PAYLINK_ID_MAX`; otherwise the Plus link is charged at the Max amount)
 2. Public API key → `HELIO_API_KEY`, secret → `HELIO_SECRET_KEY`
 3. Global webhook to `POST /api/billing/webhook/helio` → store `sharedToken` as `HELIO_WEBHOOK_SECRET`
 
 ### SMS (Twilio)
 
-Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Users save a phone on `/billing`.
+Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM_NUMBER`. Users save a phone on `/billing`. Without Twilio env vars, paid users still get email; SMS is skipped with a warning log.
 
 ### Expiry emails
 
-Set `RESEND_API_KEY` and `EMAIL_FROM`. Daily cron `GET|POST /api/billing/run` (09:00 UTC; see `vercel.json`) sends reminders and applies downgrades. Protect with `CRON_SECRET`.
+Set `RESEND_API_KEY` and `EMAIL_FROM`. Daily cron `GET|POST /api/billing/run` (09:00 UTC; see `vercel.json`) sends prepaid reminders and applies downgrades. Protect with `CRON_SECRET`.
 
 ## App structure
 
 ```
 app/
-  page.tsx                 Landing page
+  page.tsx                 Landing page (pricing: Free / Plus / Max)
   login/page.tsx           Google sign-in
-  billing/page.tsx         Plan status + checkout
+  billing/page.tsx         Plan status + checkout + SMS phone
   watches/page.tsx         My alerts dashboard
   watches/new/page.tsx     Create + clarify flow
   watches/[id]/page.tsx    Alert detail / findings
@@ -149,16 +172,18 @@ app/
   api/watch/confirm/       Compile + persist watch
   api/watch/[id]/          Get, pause, resume, delete
   api/watch/[id]/check/    Manual check-now
-  api/billing/checkout/    Stripe / Helio checkout
+  api/billing/checkout/    Stripe / Helio checkout (plan: plus|max)
   api/billing/portal/      Stripe Customer Portal
   api/billing/status/      Plan + limit for session user
+  api/billing/phone/       Save / test SMS phone (Plus/Max)
   api/billing/webhook/     Stripe + Helio webhooks
   api/billing/run/         Expiry reminders + downgrade
-  api/checks/run/          Scheduled Tavily checks (GET for Vercel Cron)
-components/                UI (HeroWatchBox, WatchCreator, WatchList, findings, billing)
-lib/                       Compiler, detector, decide, filter, findings, db, watches, billing, notifications
+  api/checks/run/          Due Tavily checks every 15m (GET for Vercel Cron)
+components/                UI (HeroWatchBox, WatchCreator, WatchList, findings, BillingActions)
+lib/                       Compiler, detector, decide, filter, findings, monitoring-plan,
+                           constants (tier caps/cadence), db, watches, billing, notifications
 docs/                      Generated NatSpec user/dev docs (`npm run docs:extract`)
-evals/                     Judgment-layer eval harness
+evals/                     Judgment-layer eval harness (incl. revisit.json)
 ```
 
 ## Getting started
@@ -211,7 +236,7 @@ CRON_SECRET=your-secret
 # DATABASE_URL_UNPOOLED=...  # direct Neon URL for migrations
 ```
 
-For Plus billing, copy Stripe / Helio keys from `.env.example`.
+For Plus / Max billing and SMS, copy Stripe, Helio, and Twilio keys from `.env.example` (`STRIPE_PRICE_ID_PLUS_MONTHLY`, `STRIPE_PRICE_ID_MAX_MONTHLY`, Helio pay links, Twilio credentials).
 
 Database helpers:
 
@@ -269,6 +294,12 @@ Live past-event tracking (requires `TAVILY_API_KEY` + model key). Compiles watch
 npm run eval:retrieval
 ```
 
+Page-revisit policy (authoritative URL re-admitted and re-judged within budget):
+
+```bash
+npm run eval:revisit
+```
+
 Type check:
 
 ```bash
@@ -289,9 +320,9 @@ Vague topic watches (e.g. `"Bitcoin"`) must stay `VAGUE` until a concrete outcom
 
 ## Retrieval
 
-Set `TAVILY_API_KEY` for live checks. Scheduled `GET|POST /api/checks/run` (and owner `POST /api/watch/[id]/check`) search each watch’s `search_queries` via Tavily, extract top pages, filter, run the detector, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. On notify, Resend emails HTML findings (`RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_APP_URL` for links).
+Set `TAVILY_API_KEY` for live checks. Scheduled `GET|POST /api/checks/run` (every 15 minutes; due watches only) and owner `POST /api/watch/[id]/check` search via Tavily using the monitoring plan’s baseline (and optional follow-up) queries, extract top pages, filter, run the detector, optionally revisit allowed URLs, persist `checks`/`evidence`, and mark the watch triggered when evidence confirms the event. On notify: Resend HTML email always; Twilio SMS when the owner is on Plus/Max and has a saved phone.
 
-Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches (including US election 2024 with a 2023 watch timestamp). Brave and RSS providers are typed but not implemented.
+Fixture evals in `evals/events.json` remain the stable judgment-layer gate. `evals/live-retrieval.json` exercises real Tavily search on backdated historical watches (including US election 2024 with a 2023 watch timestamp). `evals/revisit.json` covers in-place page updates. Brave and RSS providers are typed but not implemented.
 
 ## Documentation
 
@@ -305,6 +336,6 @@ See `docs/natspec-userdoc.md` and `docs/natspec-devdoc.md`.
 
 ## Roadmap
 
-- Push and webhook delivery
+- Push and webhook delivery (SMS is shipped for Plus/Max)
 - Additional retrieval providers (Brave, RSS)
 - Richer findings history across multiple checks
