@@ -4,6 +4,8 @@
  * @dev Phase 2. Dedupes by normalized URL. Does NOT pass Tavily start_date — that filter
  *      silently drops undated live/official pages that often hold the confirmation. Temporal
  *      safety stays in applyRetrievalFilters + decide (event_date_claimed).
+ *      Cost: "baseline" uses cheap 1-credit searches (news-only, capped queries, conditional
+ *      site:); "deep" keeps dual-topic advanced searches for dig-deeper / follow-up rounds.
  * @custom:pipeline step 2 — retrieve
  * @custom:env TAVILY_API_KEY
  */
@@ -11,12 +13,54 @@ import { normalizeUrl } from "@/lib/filter";
 import type { RetrievalCandidate, WatchSpec } from "@/types";
 import { tavilyExtract, tavilySearch, type TavilySearchResult } from "./tavily";
 
+/** @dev Quiet check vs dig-deeper / AI follow-up. Controls Tavily credit spend. */
+export type RetrievalMode = "baseline" | "deep";
+
 /** @dev Max Tavily search hits per query before merge. */
 const MAX_RESULTS_PER_QUERY = 5;
-/** @dev Top unique URLs sent to Tavily extract for richer snippets. */
+/** @dev Top unique URLs considered for Tavily extract. */
 const MAX_EXTRACT_URLS = 5;
 /** @dev Parallel Tavily search calls (one per search_query × topic). */
 const SEARCH_CONCURRENCY = 3;
+/** @dev Baseline: cap queries so quiet checks stay cheap. */
+const BASELINE_MAX_QUERIES = 2;
+/** @dev Deep: allow the full plan budget. */
+const DEEP_MAX_QUERIES = 4;
+/** @dev Skip extract when search already returned a usable snippet (chars). */
+const MIN_SNIPPET_SKIP_EXTRACT = 500;
+
+type SearchTopic = "general" | "news";
+
+interface ModePolicy {
+  searchDepth: "basic" | "advanced";
+  topics: SearchTopic[];
+  maxQueries: number;
+  /** @dev Max site: searches when open results miss authoritative domains. */
+  maxSiteSearches: number;
+  /** @dev When true, always schedule site: searches (deep). */
+  alwaysSiteSearch: boolean;
+  /** @dev When true, extract only URLs whose search content is thin. */
+  skipExtractWhenRich: boolean;
+}
+
+const MODE_POLICY: Record<RetrievalMode, ModePolicy> = {
+  baseline: {
+    searchDepth: "basic",
+    topics: ["news"],
+    maxQueries: BASELINE_MAX_QUERIES,
+    maxSiteSearches: 1,
+    alwaysSiteSearch: false,
+    skipExtractWhenRich: true,
+  },
+  deep: {
+    searchDepth: "advanced",
+    topics: ["general", "news"],
+    maxQueries: DEEP_MAX_QUERIES,
+    maxSiteSearches: 3,
+    alwaysSiteSearch: true,
+    skipExtractWhenRich: false,
+  },
+};
 
 /** @dev Hostname without www prefix; "unknown" on parse failure. */
 function domainFromUrl(url: string): string {
@@ -161,43 +205,9 @@ export function urlLooksHistorical(
   return years.every((y) => y < createdYear);
 }
 
-/**
- * @notice Retrieve web candidates for a watch using its compiled search_queries
- *         (or an explicit query list from the monitoring plan's current round).
- * @dev Merges general + news topic searches at advanced depth, enriches top URLs
- *      via extract, returns RetrievalCandidate[]. Undated hits keep a retrievedAt
- *      fallback so official observation pages are not silently discarded.
- * @param spec WatchSpec with search_queries and created_at.
- * @param options.retrievedAt Used as published_at when Tavily omits a date.
- * @param options.queries Bounded query list for this round; defaults to spec.search_queries.
- * @return Deduplicated candidates ready for applyRetrievalFilters.
- */
-export async function retrieveCandidates(
-  spec: WatchSpec,
-  options: { retrievedAt?: string; queries?: string[] } = {},
-): Promise<RetrievalCandidate[]> {
-  const retrievedAt = options.retrievedAt ?? new Date().toISOString();
-  const queries =
-    options.queries && options.queries.length > 0
-      ? options.queries
-      : spec.search_queries;
-
-  // Run each query against both general and news indexes. News often has dates;
-  // general (advanced) finds local/official pages Google surfaces that news misses.
-  // Do not pass Tavily start_date — it drops undated confirmation pages entirely.
-  const searchJobs: Array<{
-    query: string;
-    topic: "general" | "news";
-  }> = queries.flatMap((query) => [
-    { query, topic: "general" as const },
-    { query, topic: "news" as const },
-  ]);
-
-  // Also search inside authoritative domains. Tavily's open web ranking often
-  // buries official observation/result pages under forecast aggregators; site:
-  // queries surface them the way a human would on Google.
-  const seed = queries[0] ?? spec.clarified_statement;
-  const authDomains = spec.authoritative_domains
+/** @dev Normalize authoritative domain list from the watch spec. */
+function normalizeAuthDomains(spec: WatchSpec): string[] {
+  return spec.authoritative_domains
     .map((d) =>
       d
         .toLowerCase()
@@ -206,20 +216,95 @@ export async function retrieveCandidates(
     )
     .filter(Boolean)
     .slice(0, 4);
-  for (const domain of authDomains.slice(0, 3)) {
-    searchJobs.push({
-      query: `site:${domain} ${seed}`,
-      topic: "general",
-    });
-  }
+}
 
-  const searchBatches = await mapPool(
-    searchJobs,
+function isAuthoritativeUrl(url: string, authDomains: string[]): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return authDomains.some((a) => host === a || host.endsWith(`.${a}`));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @dev Build open-web search jobs for the mode (query × topic).
+ * @notice Exported for unit tests that assert credit-saving job shape.
+ */
+export function buildOpenSearchJobs(
+  queries: string[],
+  mode: RetrievalMode,
+): Array<{ query: string; topic: SearchTopic }> {
+  const policy = MODE_POLICY[mode];
+  const capped = queries.slice(0, policy.maxQueries);
+  return capped.flatMap((query) =>
+    policy.topics.map((topic) => ({ query, topic })),
+  );
+}
+
+/**
+ * @dev site: jobs for domains not already present in open results (unless always).
+ * @notice Exported for unit tests.
+ */
+export function buildSiteSearchJobs(args: {
+  mode: RetrievalMode;
+  seed: string;
+  authDomains: string[];
+  openResults: Array<{ url: string }>;
+}): Array<{ query: string; topic: SearchTopic }> {
+  const policy = MODE_POLICY[args.mode];
+  if (policy.maxSiteSearches <= 0 || args.authDomains.length === 0) return [];
+
+  const hitAuth = args.openResults.some((r) =>
+    isAuthoritativeUrl(r.url, args.authDomains),
+  );
+  if (!policy.alwaysSiteSearch && hitAuth) return [];
+
+  return args.authDomains.slice(0, policy.maxSiteSearches).map((domain) => ({
+    query: `site:${domain} ${args.seed}`,
+    topic: "general" as const,
+  }));
+}
+
+/**
+ * @notice Retrieve web candidates for a watch using its compiled search_queries
+ *         (or an explicit query list from the monitoring plan's current round).
+ * @dev Merges searches per mode policy, enriches thin snippets via extract,
+ *      returns RetrievalCandidate[]. Undated hits keep a retrievedAt fallback
+ *      so official observation pages are not silently discarded.
+ * @param spec WatchSpec with search_queries and created_at.
+ * @param options.retrievedAt Used as published_at when Tavily omits a date.
+ * @param options.queries Bounded query list for this round; defaults to spec.search_queries.
+ * @param options.mode "baseline" (cheap quiet check) or "deep" (dig-deeper / follow-up).
+ * @return Deduplicated candidates ready for applyRetrievalFilters.
+ */
+export async function retrieveCandidates(
+  spec: WatchSpec,
+  options: {
+    retrievedAt?: string;
+    queries?: string[];
+    mode?: RetrievalMode;
+  } = {},
+): Promise<RetrievalCandidate[]> {
+  const retrievedAt = options.retrievedAt ?? new Date().toISOString();
+  const mode = options.mode ?? "baseline";
+  const policy = MODE_POLICY[mode];
+  const queries =
+    options.queries && options.queries.length > 0
+      ? options.queries
+      : spec.search_queries;
+
+  // Do not pass Tavily start_date — it drops undated confirmation pages entirely.
+  const openJobs = buildOpenSearchJobs(queries, mode);
+  const authDomains = normalizeAuthDomains(spec);
+
+  const openBatches = await mapPool(
+    openJobs,
     SEARCH_CONCURRENCY,
     async ({ query, topic }) => {
       const response = await tavilySearch(query, {
         maxResults: MAX_RESULTS_PER_QUERY,
-        searchDepth: "advanced",
+        searchDepth: policy.searchDepth,
         topic,
         // Bias news searches toward the watch's preferred domains when set.
         includeDomains:
@@ -229,8 +314,29 @@ export async function retrieveCandidates(
     },
   );
 
+  const openResults = openBatches.flat();
+  const seed = queries[0] ?? spec.clarified_statement;
+  const siteJobs = buildSiteSearchJobs({
+    mode,
+    seed,
+    authDomains,
+    openResults,
+  });
+
+  const siteBatches =
+    siteJobs.length > 0
+      ? await mapPool(siteJobs, SEARCH_CONCURRENCY, async ({ query, topic }) => {
+          const response = await tavilySearch(query, {
+            maxResults: MAX_RESULTS_PER_QUERY,
+            searchDepth: policy.searchDepth,
+            topic,
+          });
+          return response.results ?? [];
+        })
+      : [];
+
   const byUrl = new Map<string, TavilySearchResult>();
-  for (const batch of searchBatches) {
+  for (const batch of [...openBatches, ...siteBatches]) {
     for (const result of batch) {
       if (!result?.url) continue;
       const key = normalizeUrl(result.url);
@@ -255,26 +361,14 @@ export async function retrieveCandidates(
     }
   }
 
-  const authDomainSet = new Set(authDomains);
-  const isAuthoritativeUrl = (url: string) => {
-    try {
-      const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-      return [...authDomainSet].some(
-        (a) => host === a || host.endsWith(`.${a}`),
-      );
-    } catch {
-      return false;
-    }
-  };
-
   // Prefer authoritative domains, then dated hits, then Tavily score. Demote
   // live dashboards so extract + judge see confirmation pages first.
   const rankedResults = [...byUrl.values()].sort((a, b) => {
     const dashA = looksLikeLiveDashboard(a.title || "", a.url) ? 1 : 0;
     const dashB = looksLikeLiveDashboard(b.title || "", b.url) ? 1 : 0;
     if (dashA !== dashB) return dashA - dashB;
-    const authA = isAuthoritativeUrl(a.url) ? 0 : 1;
-    const authB = isAuthoritativeUrl(b.url) ? 0 : 1;
+    const authA = isAuthoritativeUrl(a.url, authDomains) ? 0 : 1;
+    const authB = isAuthoritativeUrl(b.url, authDomains) ? 0 : 1;
     if (authA !== authB) return authA - authB;
     const datedA = a.published_date ? 0 : 1;
     const datedB = b.published_date ? 0 : 1;
@@ -282,9 +376,16 @@ export async function retrieveCandidates(
     return (b.score ?? 0) - (a.score ?? 0);
   });
   const uniqueResults = diversifyResultsByDomain(rankedResults);
-  const extractUrls = uniqueResults
-    .slice(0, MAX_EXTRACT_URLS)
-    .map((r) => r.url);
+
+  const extractCandidates = uniqueResults.slice(0, MAX_EXTRACT_URLS);
+  const extractUrls = policy.skipExtractWhenRich
+    ? extractCandidates
+        .filter(
+          (r) =>
+            !(r.content && r.content.trim().length >= MIN_SNIPPET_SKIP_EXTRACT),
+        )
+        .map((r) => r.url)
+    : extractCandidates.map((r) => r.url);
 
   const extractedByUrl = new Map<string, string>();
   if (extractUrls.length > 0) {

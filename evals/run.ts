@@ -410,7 +410,8 @@ async function runLiveRetrievalEval(
 
       console.log(`  queries: ${spec.search_queries.join(" | ")}`);
 
-      const retrieved = await retrieveCandidates(spec);
+      // Deep mode: past-event smoke needs dual-topic advanced coverage.
+      const retrieved = await retrieveCandidates(spec, { mode: "deep" });
       const tavilyOk = retrieved.every((c) => c.retrieval_source === "tavily");
       const shapedOk = retrieved.every(
         (c) =>

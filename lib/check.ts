@@ -35,7 +35,11 @@ import {
 } from "@/lib/monitoring-plan";
 import { sendWatchTriggeredEmail } from "@/lib/notifications/email";
 import { sendWatchTriggeredSms } from "@/lib/notifications/sms";
-import { retrieveByUrls, retrieveCandidates } from "@/lib/retrieval";
+import {
+  retrieveByUrls,
+  retrieveCandidates,
+  type RetrievalMode,
+} from "@/lib/retrieval";
 import {
   updateWatchPlanState,
   updateWatchStatus,
@@ -63,10 +67,10 @@ export interface CheckRunResult {
 
 /**
  * @notice Execute a scheduled or manual check for one watch.
- * @dev Round 1 runs the plan's baseline queries (plus any follow-up work the AI
- *      queued on a previous run). If the result is inconclusive, the AI may run
- *      one bounded extra round now and/or schedule a recheck. Notification rules
- *      in decideFromEvidence are unchanged.
+ * @dev Round 1 runs baseline queries in cheap "baseline" retrieval mode, or
+ *      pending follow-up queries alone in "deep" mode (lists are never merged).
+ *      If inconclusive, the AI may run one bounded deep round and/or schedule a
+ *      recheck. Notification rules in decideFromEvidence are unchanged.
  * @param watch WatchRow with embedded WatchSpec.
  * @return CheckRunResult with persisted check id and decision summary.
  */
@@ -94,10 +98,11 @@ export async function runCheckForWatch(
     queries: string[],
     revisitUrls: string[],
     maxCandidates: number,
+    mode: RetrievalMode,
   ): Promise<void> {
     const [searched, revisited] = await Promise.all([
       queries.length > 0
-        ? retrieveCandidates(spec, { queries, retrievedAt: now })
+        ? retrieveCandidates(spec, { queries, retrievedAt: now, mode })
         : Promise.resolve([]),
       retrieveByUrls(spec, revisitUrls),
     ]);
@@ -133,11 +138,17 @@ export async function runCheckForWatch(
     }
   }
 
-  // Round 1: baseline queries, plus whatever the AI queued on a previous run.
-  const round1Queries =
-    pending?.use_follow_up_queries && plan.follow_up_queries.length > 0
-      ? [...new Set([...plan.baseline_queries, ...plan.follow_up_queries])]
-      : plan.baseline_queries;
+  // Round 1: baseline (cheap) OR pending follow-up queries alone (deep) —
+  // never merge both lists; that doubled Tavily spend for little gain.
+  const followUpsUsedInRound1 =
+    Boolean(pending?.use_follow_up_queries) &&
+    plan.follow_up_queries.length > 0;
+  const round1Queries = followUpsUsedInRound1
+    ? plan.follow_up_queries
+    : plan.baseline_queries;
+  const round1Mode: RetrievalMode = followUpsUsedInRound1
+    ? "deep"
+    : "baseline";
   const round1Revisits = filterRevisitUrls(
     plan,
     planState,
@@ -145,11 +156,13 @@ export async function runCheckForWatch(
     seenUrls,
   );
   planState = recordRevisits(planState, round1Revisits, now);
-  const followUpsUsedInRound1 =
-    Boolean(pending?.use_follow_up_queries) &&
-    plan.follow_up_queries.length > 0;
 
-  await runRound(round1Queries, round1Revisits, MAX_CANDIDATES_TO_EVALUATE);
+  await runRound(
+    round1Queries,
+    round1Revisits,
+    MAX_CANDIDATES_TO_EVALUATE,
+    round1Mode,
+  );
   let decision = decideFromEvidence(spec, evidenceRecords);
 
   // Ask the AI what to do next; optionally run one bounded extra round now.
@@ -187,7 +200,12 @@ export async function runCheckForWatch(
 
       if (round2Queries.length > 0 || round2Revisits.length > 0) {
         planState = recordRevisits(planState, round2Revisits, now);
-        await runRound(round2Queries, round2Revisits, MAX_FOLLOW_UP_CANDIDATES);
+        await runRound(
+          round2Queries,
+          round2Revisits,
+          MAX_FOLLOW_UP_CANDIDATES,
+          "deep",
+        );
         decision = decideFromEvidence(spec, evidenceRecords);
         followUpRan = true;
       }

@@ -177,13 +177,48 @@ describe("runCheckForWatch", () => {
     expect(vi.mocked(retrieveCandidates)).toHaveBeenCalledTimes(2);
     expect(vi.mocked(retrieveCandidates).mock.calls[0]![1]).toMatchObject({
       queries: plan().baseline_queries,
+      mode: "baseline",
     });
     expect(vi.mocked(retrieveCandidates).mock.calls[1]![1]).toMatchObject({
       queries: plan().follow_up_queries,
+      mode: "deep",
     });
     // One planner consultation, no third retrieval round.
     expect(vi.mocked(decideNextAction)).toHaveBeenCalledTimes(1);
     expect(result.triggered).toBe(false);
+  });
+
+  it("runs pending follow-up queries alone in deep mode (does not merge baseline)", async () => {
+    vi.mocked(retrieveCandidates).mockResolvedValueOnce([
+      candidate("https://news.example.com/follow"),
+    ]);
+    mockDetect(() => ({ verdict: "NOT_TRIGGERED", confidence: 0.7 }));
+
+    await runCheckForWatch(
+      watchRow({
+        plan_state: {
+          last_check_at: "2026-07-25T06:00:00Z",
+          pending_follow_up: true,
+          next_eligible_at: "2026-07-25T10:00:00Z",
+          pending_actions: {
+            use_follow_up_queries: true,
+            revisit_urls: [],
+          },
+          planner_note: null,
+          url_revisits: {},
+        },
+      }),
+    );
+
+    expect(vi.mocked(retrieveCandidates)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(retrieveCandidates).mock.calls[0]![1]).toMatchObject({
+      queries: plan().follow_up_queries,
+      mode: "deep",
+    });
+    // Follow-ups already spent in round 1 — planner must not offer them again.
+    expect(vi.mocked(decideNextAction).mock.calls[0]![0]).toMatchObject({
+      followUpQueriesAvailable: false,
+    });
   });
 
   it("does not consult the planner or keep searching once it notifies", async () => {
@@ -338,6 +373,7 @@ describe("runCheckForWatch", () => {
     expect(result.sourcesEvaluated).toBe(1);
     expect(vi.mocked(retrieveCandidates).mock.calls[0]![1]).toMatchObject({
       queries: spec().search_queries,
+      mode: "baseline",
     });
   });
 });

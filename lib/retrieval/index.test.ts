@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildOpenSearchJobs,
+  buildSiteSearchJobs,
   diversifyResultsByDomain,
   publishedDateFromUrl,
   toIsoDate,
@@ -81,6 +83,77 @@ describe("publishedDateFromUrl", () => {
         "https://www.metservice.com/towns-cities/regions/auckland/locations/auckland",
       ),
     ).toBeNull();
+  });
+});
+
+describe("buildOpenSearchJobs", () => {
+  const queries = ["q1", "q2", "q3", "q4"];
+
+  it("baseline: news-only and caps at 2 queries", () => {
+    expect(buildOpenSearchJobs(queries, "baseline")).toEqual([
+      { query: "q1", topic: "news" },
+      { query: "q2", topic: "news" },
+    ]);
+  });
+
+  it("deep: dual topic and allows up to 4 queries", () => {
+    expect(buildOpenSearchJobs(queries, "deep")).toEqual([
+      { query: "q1", topic: "general" },
+      { query: "q1", topic: "news" },
+      { query: "q2", topic: "general" },
+      { query: "q2", topic: "news" },
+      { query: "q3", topic: "general" },
+      { query: "q3", topic: "news" },
+      { query: "q4", topic: "general" },
+      { query: "q4", topic: "news" },
+    ]);
+  });
+});
+
+describe("buildSiteSearchJobs", () => {
+  const authDomains = ["metservice.com", "niwa.co.nz", "stuff.co.nz"];
+
+  it("baseline skips site: when an authoritative URL already hit", () => {
+    expect(
+      buildSiteSearchJobs({
+        mode: "baseline",
+        seed: "Auckland rain",
+        authDomains,
+        openResults: [
+          { url: "https://www.metservice.com/towns-cities/auckland" },
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it("baseline schedules one site: search when open results miss auth domains", () => {
+    expect(
+      buildSiteSearchJobs({
+        mode: "baseline",
+        seed: "Auckland rain",
+        authDomains,
+        openResults: [{ url: "https://news.example.com/rain" }],
+      }),
+    ).toEqual([
+      { query: "site:metservice.com Auckland rain", topic: "general" },
+    ]);
+  });
+
+  it("deep always schedules up to three site: searches", () => {
+    expect(
+      buildSiteSearchJobs({
+        mode: "deep",
+        seed: "Auckland rain",
+        authDomains,
+        openResults: [
+          { url: "https://www.metservice.com/towns-cities/auckland" },
+        ],
+      }),
+    ).toEqual([
+      { query: "site:metservice.com Auckland rain", topic: "general" },
+      { query: "site:niwa.co.nz Auckland rain", topic: "general" },
+      { query: "site:stuff.co.nz Auckland rain", topic: "general" },
+    ]);
   });
 });
 
